@@ -4,16 +4,486 @@ import logo from './assets/wellsaid.svg';
 import Lottie from 'lottie-react';
 import animationData from './assets/animations/TypeBounce.json';
 
+const LandingPage = ({ onGetStarted }) => {
+  return (
+    <div className="fixed inset-0 bg-gradient-to-br from-blue-50 to-indigo-50 z-50 overflow-y-auto flex items-center justify-center p-4">
+      {/* Enhanced Card Container */}
+      <div className="w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden">
+        {/* Card Header with Gradient */}
+        <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-6 text-center">
+          <div className="flex justify-center mb-4">
+            <img src={logo} alt="WellSaid" className="h-12" />
+          </div>
+          <h1 className="text-2xl font-bold text-white mb-2">Capture and Share What Matters</h1>
+        </div>
+
+        {/* Card Body */}
+        <div className="p-6 space-y-6">
+          <div className="space-y-4 text-gray-700">
+            <div className="flex items-start space-x-3">
+              <div className="flex-shrink-0 mt-1">
+                <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center">
+                  <MessageCircle className="w-3 h-3 text-blue-600" />
+                </div>
+              </div>
+              <p className="text-base leading-relaxed">
+                WellSaid helps you preserve meaningful messages for the people who matter most — before the moment passes.
+              </p>
+            </div>
+
+            <div className="flex items-start space-x-3">
+              <div className="flex-shrink-0 mt-1">
+                <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center">
+                  <Mic className="w-3 h-3 text-blue-600" />
+                </div>
+              </div>
+              <p className="text-base leading-relaxed">
+                Whether it's a milestone or everyday wisdom, our thoughtful prompts help you express what truly matters in your own words or voice.
+              </p>
+            </div>
+
+            <div className="flex items-start space-x-3">
+              <div className="flex-shrink-0 mt-1">
+                <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center">
+                  <Book className="w-3 h-3 text-blue-600" />
+                </div>
+              </div>
+              <p className="text-base leading-relaxed">
+                Create a living archive of connection, encouragement, and legacy.
+              </p>
+            </div>
+          </div>
+
+          {/* Get Started Button */}
+          <button
+            onClick={onGetStarted}
+            className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 px-6 rounded-xl font-medium text-lg shadow-md hover:shadow-lg transition-all hover:scale-[1.02] active:scale-95"
+          >
+            Let's Get Started
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// New Onboarding Components
+const OnboardingFlow = ({ onComplete }) => {
+  const [currentStep, setCurrentStep] = useState(1);
+  const [userData, setUserData] = useState({
+    name: '',
+    email: '',
+    story: '',
+    questions: '',
+    audience: '',
+    sharingGoals: ''
+  });
+  const [isListening, setIsListening] = useState(false);
+  const recognitionRef = useRef(null);
+
+  const steps = [
+    { id: 1, title: "Welcome to WellSaid", subtitle: "Let's start by getting to know you" },
+    { id: 2, title: "Tell us your story", subtitle: "What experiences have shaped who you are?" },
+    { id: 3, title: "Meaningful questions", subtitle: "What topics would you like to explore?" },
+    { id: 4, title: "Your audience", subtitle: "Who are you sharing these messages with?" },
+    { id: 5, title: "Setup complete", subtitle: "You're ready to start capturing wisdom" }
+  ];
+
+  // Initialize speech recognition
+  useEffect(() => {
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      recognitionRef.current = new SpeechRecognition();
+      recognitionRef.current.continuous = false;
+      recognitionRef.current.interimResults = false;
+      recognitionRef.current.lang = 'en-US';
+    }
+  }, []);
+
+  const handleVoiceInput = (stepNumber) => {
+    if (!recognitionRef.current) {
+      alert('Voice recording not supported in this browser');
+      return;
+    }
+
+    if (isListening) {
+      recognitionRef.current.stop();
+      return;
+    }
+
+    setIsListening(true);
+    recognitionRef.current.start();
+
+    recognitionRef.current.onresult = (event) => {
+      const transcript = event.results[0][0].transcript;
+      switch(stepNumber) {
+        case 1:
+          setUserData(prev => ({ ...prev, name: transcript }));
+          break;
+        case 2:
+          setUserData(prev => ({ ...prev, story: transcript }));
+          break;
+        case 3:
+          setUserData(prev => ({ ...prev, questions: transcript }));
+          break;
+        case 4:
+          setUserData(prev => ({ ...prev, sharingGoals: transcript }));
+          break;
+      }
+      setIsListening(false);
+    };
+
+    recognitionRef.current.onerror = () => {
+      setIsListening(false);
+    };
+
+    recognitionRef.current.onend = () => {
+      setIsListening(false);
+    };
+  };
+
+  const nextStep = () => {
+    if (validateCurrentStep()) {
+      setCurrentStep(prev => prev + 1);
+      if (currentStep === 4) {
+        generateSummary();
+      }
+    }
+  };
+
+  const previousStep = () => {
+    setCurrentStep(prev => prev - 1);
+  };
+
+  const validateCurrentStep = () => {
+    switch(currentStep) {
+      case 1:
+        if (!userData.name.trim() || !userData.email.trim()) {
+          alert('Please enter your name and email address.');
+          return false;
+        }
+        if (!userData.email.includes('@')) {
+          alert('Please enter a valid email address.');
+          return false;
+        }
+        return true;
+      case 2:
+        if (!userData.story.trim()) {
+          alert('Please share a bit about yourself to help us understand you better.');
+          return false;
+        }
+        return true;
+      case 3:
+        if (!userData.questions.trim()) {
+          alert('Please share some questions or topics you\'d like to explore.');
+          return false;
+        }
+        return true;
+      case 4:
+        if (!userData.audience) {
+          alert('Please select who you want to share your insights with.');
+          return false;
+        }
+        return true;
+      default:
+        return true;
+    }
+  };
+
+  const generateSummary = () => {
+    const audienceText = {
+      'children': 'your children or grandchildren',
+      'family': 'family members and relatives',
+      'mentees': 'students, mentees, or colleagues',
+      'friends': 'close friends and community',
+      'future': 'future generations',
+      'personal': 'personal reflection and growth'
+    };
+
+    return `
+      <div class="summary-item">
+        <span class="summary-icon">👋</span>
+        <span>You're ${userData.name}, and you want to share meaningful insights with ${audienceText[userData.audience]}.</span>
+      </div>
+      <div class="summary-item">
+        <span class="summary-icon">💭</span>
+        <span>You're interested in exploring questions about ${userData.questions.substring(0, 100)}${userData.questions.length > 100 ? '...' : ''}</span>
+      </div>
+      <div class="summary-item">
+        <span class="summary-icon">🎯</span>
+        <span>Your story and experiences will help us ask the right questions at the right time.</span>
+      </div>
+    `;
+  };
+
+  const generateAIResponse = (step) => {
+    const responses = {
+      2: [
+        "Thank you for sharing that with us! Your background gives us great insight into the kinds of meaningful questions that might resonate with you.",
+        "What a rich story! We can already see some themes emerging that we'd love to explore further with you.",
+        "Your experiences sound fascinating. We're excited to help you capture the wisdom you've gained along the way."
+      ],
+      3: [
+        "These are exactly the kinds of deep, meaningful questions that create lasting impact. We'll use these to guide our conversations with you.",
+        "What thoughtful questions! These topics will help us create personalized conversations that really matter to you.",
+        "We love how you think about these big questions. This gives us a perfect foundation for meaningful dialogue."
+      ]
+    };
+
+    return responses[step][Math.floor(Math.random() * responses[step].length)];
+  };
+
+  const handleAudienceSelect = (audience) => {
+    setUserData(prev => ({ ...prev, audience }));
+  };
+
+  const VoiceSection = ({ stepNumber, title, subtitle }) => (
+    <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl p-6 text-center text-white mb-6">
+      <button
+        onClick={() => handleVoiceInput(stepNumber)}
+        className={`w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 transition-all ${
+          isListening
+            ? 'bg-white/40 animate-pulse border-2 border-white/50'
+            : 'bg-white/20 hover:bg-white/30 border-2 border-white/30'
+        }`}
+      >
+        <Mic size={24} />
+      </button>
+      <div className="text-lg font-medium mb-1">{title}</div>
+      <div className="text-sm opacity-80">{subtitle}</div>
+    </div>
+  );
+
+  const renderStepContent = () => {
+    switch(currentStep) {
+      case 1:
+        return (
+          <>
+            <VoiceSection
+              stepNumber={1}
+              title="Tap to tell us about yourself"
+              subtitle="Or type below if you prefer"
+            />
+
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">What's your name?</label>
+              <input
+                type="text"
+                value={userData.name}
+                onChange={(e) => setUserData(prev => ({ ...prev, name: e.target.value }))}
+                className="w-full p-4 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="Enter your full name"
+              />
+            </div>
+
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Email address</label>
+              <input
+                type="email"
+                value={userData.email}
+                onChange={(e) => setUserData(prev => ({ ...prev, email: e.target.value }))}
+                className="w-full p-4 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="your@email.com"
+              />
+            </div>
+          </>
+        );
+      case 2:
+        return (
+          <>
+            <VoiceSection
+              stepNumber={2}
+              title="Share your story with us"
+              subtitle="We're listening..."
+            />
+
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">What would you like to share about yourself?</label>
+              <textarea
+                value={userData.story}
+                onChange={(e) => setUserData(prev => ({ ...prev, story: e.target.value }))}
+                className="w-full p-4 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent h-40"
+                placeholder="Tell us about your background, experiences, values, or anything that's important to who you are..."
+              />
+            </div>
+
+            {userData.story && (
+              <div className="bg-blue-50 rounded-xl p-4 border-l-4 border-blue-500 mb-6">
+                <div className="text-xs font-semibold text-blue-600 uppercase tracking-wider mb-2">WellSaid AI</div>
+                <div className="text-blue-800">{generateAIResponse(2)}</div>
+              </div>
+            )}
+          </>
+        );
+      case 3:
+        return (
+          <>
+            <VoiceSection
+              stepNumber={3}
+              title="Tell us about meaningful questions"
+              subtitle="What questions have shaped you?"
+            />
+
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">What questions or topics would you like to explore?</label>
+              <textarea
+                value={userData.questions}
+                onChange={(e) => setUserData(prev => ({ ...prev, questions: e.target.value }))}
+                className="w-full p-4 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent h-40"
+                placeholder="Examples: What lessons did you learn from failure? What would you tell your younger self? What values guide your decisions?"
+              />
+            </div>
+
+            {userData.questions && (
+              <div className="bg-blue-50 rounded-xl p-4 border-l-4 border-blue-500 mb-6">
+                <div className="text-xs font-semibold text-blue-600 uppercase tracking-wider mb-2">WellSaid AI</div>
+                <div className="text-blue-800">{generateAIResponse(3)}</div>
+              </div>
+            )}
+          </>
+        );
+      case 4:
+        return (
+          <>
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-3">Select who you want to share with:</label>
+              <div className="grid gap-3">
+                {[
+                  { value: 'children', label: 'My children or grandchildren' },
+                  { value: 'family', label: 'Family members and relatives' },
+                  { value: 'mentees', label: 'Students, mentees, or colleagues' },
+                  { value: 'friends', label: 'Close friends and community' },
+                  { value: 'future', label: 'Future generations' },
+                  { value: 'personal', label: 'Personal reflection and growth' }
+                ].map(option => (
+                  <button
+                    key={option.value}
+                    onClick={() => handleAudienceSelect(option.value)}
+                    className={`p-4 text-left rounded-xl border-2 transition-all ${
+                      userData.audience === option.value
+                        ? 'border-blue-500 bg-blue-50'
+                        : 'border-gray-200 hover:border-blue-300'
+                    }`}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <VoiceSection
+              stepNumber={4}
+              title="Tell us more about your sharing goals"
+              subtitle="Any specific hopes or intentions?"
+            />
+
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Additional thoughts about who you want to reach</label>
+              <textarea
+                value={userData.sharingGoals}
+                onChange={(e) => setUserData(prev => ({ ...prev, sharingGoals: e.target.value }))}
+                className="w-full p-4 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent h-32"
+                placeholder="Tell us more about your hopes for sharing these stories and insights..."
+              />
+            </div>
+          </>
+        );
+      case 5:
+        return (
+          <>
+            <div className="text-center text-6xl mb-6">🎉</div>
+
+            <div className="bg-gradient-to-r from-blue-500 to-indigo-600 rounded-2xl p-6 text-white mb-6">
+              <div className="text-lg font-semibold mb-4">Here's what we learned about you:</div>
+              <div
+                className="space-y-3"
+                dangerouslySetInnerHTML={{ __html: generateSummary() }}
+              />
+            </div>
+
+            <div className="bg-blue-50 rounded-xl p-4 border-l-4 border-blue-500">
+              <div className="text-xs font-semibold text-blue-600 uppercase tracking-wider mb-2">Your First Question</div>
+              <div className="text-blue-800">
+                Based on what you've shared, here's a thoughtful question to get you started: What's one piece of advice you wish someone had given you when you were starting out in life?
+              </div>
+            </div>
+          </>
+        );
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-gradient-to-br from-blue-50 via-blue-50 to-indigo-50 z-50 overflow-y-auto">
+      <div className="min-h-screen flex flex-col max-w-md mx-auto px-4 py-8">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <img src={logo} alt="WellSaid" className="h-10 mx-auto mb-3" />
+          <h1 className="text-2xl font-bold text-gray-800">{steps[currentStep - 1].title}</h1>
+          <p className="text-gray-600 mt-2">{steps[currentStep - 1].subtitle}</p>
+        </div>
+
+        {/* Progress Bar */}
+        <div className="w-full bg-gray-200 rounded-full h-2 mb-8">
+          <div
+            className="bg-blue-500 h-2 rounded-full transition-all duration-300"
+            style={{ width: `${(currentStep / steps.length) * 100}%` }}
+          />
+        </div>
+
+        {/* Step Content */}
+        <div className="flex-1">
+          {renderStepContent()}
+        </div>
+
+        {/* Navigation */}
+        <div className="flex justify-between mt-8">
+          {currentStep > 1 && (
+            <button
+              onClick={previousStep}
+              className="py-3 px-6 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors"
+            >
+              Back
+            </button>
+          )}
+
+          <button
+            onClick={currentStep === steps.length ? onComplete : nextStep}
+            className={`py-3 px-6 rounded-xl transition-colors ml-auto ${
+              currentStep === steps.length
+                ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white hover:from-blue-600 hover:to-indigo-700'
+                : 'bg-blue-500 text-white hover:bg-blue-600'
+            }`}
+          >
+            {currentStep === steps.length ? 'Start Using WellSaid' : 'Continue'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const SplashScreen = ({ onComplete }) => {
   const animationRef = useRef();
+  const [showLanding, setShowLanding] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      onComplete();
+      setShowLanding(true);
     }, 3000);
 
     return () => clearTimeout(timer);
-  }, [onComplete]);
+  }, []);
+
+  if (showOnboarding) {
+    return <OnboardingFlow onComplete={onComplete} />;
+  }
+
+  if (showLanding) {
+    return <LandingPage onGetStarted={() => setShowOnboarding(true)} />;
+  }
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-white z-50 overflow-hidden">
@@ -32,6 +502,7 @@ const SplashScreen = ({ onComplete }) => {
     </div>
   );
 };
+
 
 const QuickCaptureFlow = ({ onClose }) => {
   const questions = [
