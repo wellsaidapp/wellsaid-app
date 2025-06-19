@@ -1,0 +1,2538 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { Wand2, MicOff, Check, Shuffle, RefreshCw, BookOpen, Share2, ChevronLeft, X, Download, Sparkles, Printer, ShoppingCart, ChevronDown, ChevronUp, Plus, Home, MessageSquare, Book, User, ArrowRight, ArrowLeft, Calendar, Target, Trophy, Zap, Heart, Mic, Send, Users, Settings, MessageCircle, Edit3, FolderOpen, Search, Tag, Clock, ChevronRight, Star, Bell } from 'lucide-react';
+import logo from './assets/wellsaid.svg';
+import Lottie from 'lottie-react';
+import animationData from './assets/animations/TypeBounce.json';
+
+const SplashScreen = ({ onComplete }) => {
+  const animationRef = useRef();
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onComplete();
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, [onComplete]);
+
+  return (
+    <div className="fixed inset-0 flex items-center justify-center bg-white z-50 overflow-hidden">
+      <div className="w-full max-w-[90vw] aspect-[16/9]">
+        <Lottie
+          lottieRef={animationRef}
+          animationData={animationData}
+          loop={false}
+          autoplay={true}
+          rendererSettings={{
+            preserveAspectRatio: 'xMidYMid meet'
+          }}
+          className="w-full h-full"
+        />
+      </div>
+    </div>
+  );
+};
+
+const QuickCaptureFlow = ({ onClose }) => {
+  const questions = [
+    "What's one lesson you learned this week?",
+    "What made you feel grateful today?",
+    "What would you tell your younger self?"
+  ];
+
+  return (
+    <div className="space-y-4">
+      <div className="text-center">
+        <div className="bg-blue-50 rounded-xl p-6 mb-4 min-h-[120px] flex items-center justify-center">
+          <p className="text-lg font-medium">{questions[currentQuestionIndex]}</p>
+        </div>
+        <div className="flex justify-center gap-2 mb-6">
+          {questions.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => setCurrentQuestionIndex(i)}
+              className={`w-2 h-2 rounded-full ${i === currentQuestionIndex ? 'bg-blue-500' : 'bg-gray-300'}`}
+            />
+          ))}
+        </div>
+      </div>
+
+      <textarea
+        className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        rows={4}
+        placeholder="Type your thoughts here..."
+      />
+
+      <div className="flex gap-3">
+        <button
+          onClick={onClose}
+          className="flex-1 py-2 px-4 border rounded-lg hover:bg-gray-50"
+        >
+          Cancel
+        </button>
+        <button
+          onClick={() => {
+            // Handle submission
+            onClose();
+          }}
+          className="flex-1 bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600"
+        >
+          Submit
+        </button>
+      </div>
+    </div>
+  );
+};
+
+const MilestoneFlow = ({ onClose }) => {
+  const [selectedOccasion, setSelectedOccasion] = useState(null);
+
+  const occasions = [
+    { type: 'Birthday', icon: <Cake size={18} /> },
+    { type: 'Wedding', icon: <Rings size={18} /> },
+    { type: 'Graduation', icon: <GraduationCap size={18} /> },
+    { type: 'Holiday', icon: <Gift size={18} /> }
+  ];
+
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-2 gap-3">
+        {occasions.map((occasion) => (
+          <button
+            key={occasion.type}
+            onClick={() => setSelectedOccasion(occasion.type)}
+            className={`p-3 border rounded-lg flex flex-col items-center gap-2 ${
+              selectedOccasion === occasion.type
+                ? 'border-indigo-500 bg-indigo-50'
+                : 'hover:bg-gray-50'
+            }`}
+          >
+            <span className="text-indigo-500">{occasion.icon}</span>
+            <span>{occasion.type}</span>
+          </button>
+        ))}
+      </div>
+
+      <input
+        type="text"
+        placeholder="Or enter custom occasion"
+        className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+        value={selectedOccasion?.startsWith('Custom:') ? selectedOccasion.substring(8) : ''}
+        onChange={(e) => setSelectedOccasion(`Custom: ${e.target.value}`)}
+      />
+
+      <div className="flex gap-3 pt-2">
+        <button
+          onClick={onClose}
+          className="flex-1 py-2 px-4 border rounded-lg hover:bg-gray-50"
+        >
+          Cancel
+        </button>
+        <button
+          onClick={() => {
+            // Handle milestone creation
+            onClose();
+          }}
+          className="flex-1 bg-gradient-to-r from-indigo-500 to-purple-500 text-white py-2 px-4 rounded-lg hover:from-indigo-600 hover:to-purple-600"
+          disabled={!selectedOccasion}
+        >
+          Continue
+        </button>
+      </div>
+    </div>
+  );
+};
+
+const WellSaidApp = () => {
+  const [showCaptureOptions, setShowCaptureOptions] = useState(false);
+  const [currentView, setCurrentView] = useState('home');
+  const [showSplash, setShowSplash] = useState(true);
+  const [selectedBook, setSelectedBook] = useState(null);
+  const [user, setUser] = useState({
+    name: 'Brad Blanchard',
+    topics: ['Finances', 'Relationships', 'Career', 'Health', 'Education', 'Family Values'],
+    dailyGoal: 2,
+    streak: 12
+  });
+  const [showCapture, setShowCapture] = useState(false);
+  const [captureMode, setCaptureMode] = useState('quick');
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [individuals, setIndividuals] = useState([
+    { id: 1, name: 'Sage', age: 15, relationship: 'Daughter', avatar: 'S', gender: 'female', color: 'bg-blue-500' },
+    { id: 2, name: 'Cohen', age: 16, relationship: 'Son', avatar: 'C', gender: 'male', color: 'bg-blue-500' },
+    { id: 3, name: 'Kove', age: 3, relationship: 'Son', avatar: 'K', gender: 'male', color: 'bg-blue-500' }
+  ]);
+  const [insights, setInsights] = useState([
+    {
+      id: 1,
+      text: "Remember that every challenge is an opportunity to grow stronger. Your resilience inspires me every day.",
+      recipients: [1],
+      date: '2025-06-16',
+      topics: ['Resilience', 'Personal Growth'],
+      question: "What lesson about overcoming challenges do you want Sage to remember?",
+      shared: true,
+      collection: null
+    },
+    {
+      id: 2,
+      text: "Your curiosity about the world is one of your greatest strengths. Keep asking questions!",
+      recipients: [2],
+      date: '2025-06-15',
+      topics: ['Education', 'Personal Growth'],
+      question: "What quality do you most admire in Cohen?",
+      shared: false,
+      collection: null
+    },
+    {
+      id: 3,
+      content: "Draft thought about teaching resilience - not ready to share yet",
+      topic: "Parenting",
+      subtopic: "Draft",
+      date: "2025-06-16",
+      recipients: [],
+      shared: false,
+      collection: null,
+      isDraft: true
+    },
+    {
+      id: 4,
+      content: "Voice note about work boundaries and family time",
+      topic: "",
+      subtopic: "",
+      date: "2025-06-15",
+      recipients: [],
+      shared: false,
+      collection: null,
+      isVoiceNote: true
+    }
+  ]);
+  const resetForm = () => {
+    setNewInsight('');
+    setSelectedRecipients([]);
+    setSelectedTopics([]);
+  };
+  // Sample data for occasions and questions
+  const occasions = [
+    { id: 'wedding', name: 'Wedding', icon: '💒', color: 'bg-gradient-to-br from-purple-500 to-pink-500' },
+    { id: 'first-child', name: 'First Child', icon: '👶', color: 'bg-gradient-to-br from-blue-400 to-teal-400' },
+    { id: 'graduation', name: 'Graduation', icon: '🎓', color: 'bg-gradient-to-br from-indigo-500 to-blue-500' },
+    { id: 'milestone-birthday', name: 'Milestone Birthday', icon: '🎂', color: 'bg-gradient-to-br from-amber-500 to-pink-500' },
+  ];
+
+  const occasionQuestions = {
+    wedding: [
+      "What's the most important lesson about love you've learned?",
+      "What advice would you give about building a strong partnership?",
+      "What moment made you realize they were 'the one'?"
+    ],
+    'first-child': [
+      "What hopes do you have for your child's future?",
+      "What value is most important to pass down?",
+      "How has becoming a parent changed your perspective?"
+    ],
+    graduation: [
+      "What's the most valuable lesson from this chapter?",
+      "How have you grown during this time?",
+      "What advice would you give to someone starting this journey?"
+    ],
+    'milestone-birthday': [
+      "What hopes do you have for your child's future?",
+      "What value is most important to pass down?",
+      "How has becoming a parent changed your perspective?"
+    ]
+  };
+  const [selectedOccasion, setSelectedOccasion] = useState(null);
+  const [questionSet, setQuestionSet] = useState([]);
+  const [newInsight, setNewInsight] = useState('');
+  const [selectedRecipients, setSelectedRecipients] = useState([]);
+  const [selectedTopics, setSelectedTopics] = useState([]);
+  const [currentQuestion, setCurrentQuestion] = useState('');
+  const resetCaptureForm = () => {
+    setNewInsight('');
+    setSelectedRecipients([]);
+    setSelectedTopics([]);
+  };
+
+  const [availableTopics] = useState([
+    'Finances', 'Relationships', 'Marriage', 'School', 'Friends', 'Work', 'Career',
+    'Health', 'Family Values', 'Personal Growth', 'Resilience', 'Education',
+    'Life Skills', 'Character', 'Faith', 'Traditions', 'Dreams', 'Challenges'
+  ]);
+  const [collections, setCollections] = useState([
+    { id: 1, name: "Letters to Sage", count: 12, color: "bg-pink-500" },
+    { id: 2, name: "Money Wisdom", count: 8, color: "bg-green-500" }
+  ]);
+  const [prompts] = useState([
+    "What's the most important lesson you've learned recently?",
+    "What's something your children should know about handling failure?",
+    "What do you wish someone had told you at their age?",
+    "What's a family tradition you want to continue?",
+    "What's your best advice about friendship?"
+  ]);
+  const upcomingEvents = [
+    {
+      id: 1,
+      name: "Sage's Graduation",
+      type: "graduation", // Explicit type
+      date: '2025-06-15',
+      daysAway: 27
+    },
+    {
+      id: 2,
+      name: "Cohen's 17th Birthday", // Will be matched via name
+      date: '2025-11-20',
+      daysAway: 103
+    }
+  ];
+
+  const BookPreviewModal = ({ book, onClose }) => {
+    const [currentPage, setCurrentPage] = useState(0);
+    const [isFlipping, setIsFlipping] = useState(false);
+
+    const flipPage = (direction) => {
+      if (isFlipping) return;
+      setIsFlipping(true);
+
+      if (direction === 'next' && currentPage < book.pages.length - 1) {
+        setTimeout(() => setCurrentPage(currentPage + 1), 150);
+      } else if (direction === 'prev' && currentPage > 0) {
+        setTimeout(() => setCurrentPage(currentPage - 1), 150);
+      }
+
+      setTimeout(() => setIsFlipping(false), 300);
+    };
+
+    if (!book) return null;
+
+    const currentPageData = book.pages[currentPage];
+
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
+        <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[95vh] overflow-hidden flex flex-col shadow-2xl">
+
+          {/* Header - Blue themed */}
+          <div className="relative bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-100">
+            <div className="flex items-center justify-between p-6">
+              <div className="flex items-center space-x-3">
+                <div className={`w-10 h-10 ${book.color || 'bg-blue-500'} rounded-lg flex items-center justify-center shadow-lg`}>
+                  <BookOpen className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-blue-800 tracking-wide">
+                    {book.name}
+                  </h3>
+                  <p className="text-sm text-blue-600 font-medium">
+                    For {book.recipient}
+                  </p>
+                </div>
+              </div>
+
+              <button
+                onClick={onClose}
+                className="w-10 h-10 rounded-full bg-white bg-opacity-70 hover:bg-opacity-100 flex items-center justify-center text-blue-600 hover:text-blue-800 transition-all duration-200 shadow-lg hover:shadow-xl"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+
+          {/* Book Content - Blue themed */}
+          <div className="flex-1 bg-gradient-to-br from-blue-50 to-indigo-50 flex items-center justify-center p-8 relative overflow-hidden">
+
+            <div className="relative w-full max-w-md">
+              <div className={`relative bg-white rounded-lg shadow-xl border border-blue-200 transition-all duration-300 ${isFlipping ? 'scale-95 opacity-70' : 'scale-100 opacity-100'}`}>
+
+                <div className="p-8 aspect-square flex flex-col">
+
+                  {currentPageData.type === 'question' ? (
+                    <>
+                      <div className="mb-6">
+                        <div className="inline-block px-3 py-1 bg-blue-100 rounded-full">
+                          <span className="text-xs font-semibold text-blue-700 uppercase tracking-wider">
+                            Question
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="flex-1 flex items-center justify-center">
+                        <div className="relative">
+                          <div className="absolute -top-4 -left-4 text-6xl text-blue-100">"</div>
+                          <p className="text-lg text-blue-800 text-center leading-relaxed italic px-4">
+                            {currentPageData.content}
+                          </p>
+                          <div className="absolute -bottom-4 -right-4 text-6xl text-blue-100 rotate-180">"</div>
+                        </div>
+                      </div>
+
+                      <div className="flex justify-center mt-6">
+                        <div className="w-12 h-0.5 bg-gradient-to-r from-transparent via-blue-300 to-transparent"></div>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="mb-6">
+                        <div className="inline-block px-3 py-1 bg-blue-100 rounded-full">
+                          <span className="text-xs font-semibold text-blue-700 uppercase tracking-wider">
+                            Your Insight
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="flex-1 space-y-6">
+                        <p className="text-blue-800 leading-relaxed">
+                          {currentPageData.content.text}
+                        </p>
+
+                        <div className="space-y-3">
+                          {currentPageData.content.points.map((point, idx) => (
+                            <div key={idx} className="flex items-start space-x-3 group">
+                              <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 group-hover:scale-125 transition-transform duration-200"></div>
+                              <span className="text-blue-700 leading-relaxed flex-1">
+                                {point}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="flex justify-center mt-6">
+                        <Heart className="w-4 h-4 text-blue-400 fill-blue-400" />
+                      </div>
+                    </>
+                  )}
+
+                  <div className="absolute bottom-4 right-6">
+                    <span className="text-xs text-blue-300 font-medium">
+                      {currentPageData.pageNumber}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Navigation Arrows */}
+            {currentPage > 0 && (
+              <button
+                onClick={() => flipPage('prev')}
+                className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-white bg-opacity-80 hover:bg-opacity-100 rounded-full shadow-lg hover:shadow-xl flex items-center justify-center text-blue-600 hover:text-blue-800 transition-all duration-200"
+              >
+                <ChevronLeft className="w-5 h-5" />
+              </button>
+            )}
+
+            {currentPage < book.pages.length - 1 && (
+              <button
+                onClick={() => flipPage('next')}
+                className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-white bg-opacity-80 hover:bg-opacity-100 rounded-full shadow-lg hover:shadow-xl flex items-center justify-center text-blue-600 hover:text-blue-800 transition-all duration-200"
+              >
+                <ChevronRight className="w-5 h-5" />
+              </button>
+            )}
+          </div>
+
+          {/* Page Indicators */}
+          <div className="flex justify-center py-3 bg-blue-50 border-t border-blue-100">
+            <div className="flex space-x-2">
+              {book.pages.map((_, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => !isFlipping && setCurrentPage(idx)}
+                  className={`w-2 h-2 rounded-full transition-all duration-200 ${
+                    idx === currentPage
+                      ? 'bg-blue-600 scale-125'
+                      : 'bg-blue-200 hover:bg-blue-300'
+                  }`}
+                />
+              ))}
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-t border-blue-100 p-6">
+            <div className="flex justify-center space-x-4">
+              <button className="group flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105">
+                <Download className="w-4 h-4 group-hover:scale-110 transition-transform duration-200" />
+                <span className="font-medium">Download PDF</span>
+              </button>
+
+              <button className="group flex items-center space-x-2 px-6 py-3 bg-white hover:bg-blue-50 text-blue-700 rounded-xl shadow-lg hover:shadow-xl border border-blue-200 transition-all duration-200 transform hover:scale-105">
+                <Printer className="w-4 h-4 group-hover:scale-110 transition-transform duration-200" />
+                <span className="font-medium">Print Book</span>
+              </button>
+
+              <button className="group flex items-center space-x-2 px-6 py-3 bg-white hover:bg-blue-50 text-blue-700 rounded-xl shadow-lg hover:shadow-xl border border-blue-200 transition-all duration-200 transform hover:scale-105">
+                <Share2 className="w-4 h-4 group-hover:scale-110 transition-transform duration-200" />
+                <span className="font-medium">Share</span>
+              </button>
+            </div>
+
+            <p className="text-center text-xs text-blue-500 mt-4 font-medium">
+              Perfect for 6" × 6" printing • Premium gift quality
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  if (showSplash) {
+    return <SplashScreen onComplete={() => setShowSplash(false)} />;
+  }
+
+  const WellSaidLogo = () => (
+    <img
+      src={logo}
+      alt="WellSaid"
+      className="h-10 w-auto"
+    />
+  );
+
+  const WellSaidIcon = ({ size = 24 }) => (
+    <div
+      className="rounded-full flex items-center justify-center shadow-sm"
+      style={{ width: size, height: size }}
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 831.63 816.56"
+        className="w-full h-full"
+      >
+        <defs>
+          <style>{`.cls-1{fill:#4c89fe}.cls-2{fill:#fff}`}</style>
+        </defs>
+        <path className="cls-1" d="M406.54,84.52c-175.35,0-317.5,142.15-317.5,317.5s142.15,317.5,317.5,317.5h264.86c29.07,0,52.63-23.56,52.63-52.63v-264.86c0-175.35-142.15-317.5-317.5-317.5Z"/>
+        <path className="cls-2" d="M245.15,458.27c-2.1,0-3.93-.52-5.48-1.58-1.55-1.05-2.77-2.72-3.67-5.02l-22.05-58.35c-.8-2-1.05-3.77-.75-5.33.3-1.55,1.07-2.77,2.33-3.67,1.25-.9,2.87-1.35,4.88-1.35,1.8,0,3.27.43,4.42,1.27,1.15.85,2.12,2.48,2.93,4.88l19.65,55.35h-3.6l20.4-55.95c.7-1.9,1.65-3.3,2.85-4.2,1.2-.9,2.75-1.35,4.65-1.35s3.47.45,4.73,1.35c1.25.9,2.17,2.3,2.77,4.2l19.95,55.95h-3.3l19.95-55.65c.8-2.3,1.82-3.85,3.08-4.65,1.25-.8,2.67-1.2,4.27-1.2,2,0,3.52.5,4.57,1.5,1.05,1,1.65,2.28,1.8,3.83.15,1.55-.13,3.22-.83,5.02l-22.05,58.35c-.9,2.2-2.13,3.85-3.68,4.95-1.55,1.1-3.33,1.65-5.32,1.65-2.1,0-3.93-.55-5.48-1.65-1.55-1.1-2.77-2.75-3.67-4.95l-21-56.85h7.5l-20.85,56.85c-.8,2.2-1.98,3.85-3.52,4.95-1.55,1.1-3.38,1.65-5.48,1.65Z"/>
+        <path className="cls-2" d="M400.53,458.57c-8,0-14.88-1.52-20.62-4.57-5.75-3.05-10.2-7.4-13.35-13.05-3.15-5.65-4.73-12.38-4.73-20.17s1.55-14.25,4.65-19.95c3.1-5.7,7.35-10.15,12.75-13.35,5.4-3.2,11.55-4.8,18.45-4.8,5.1,0,9.65.82,13.65,2.47,4,1.65,7.43,4.05,10.28,7.2,2.85,3.15,5,6.97,6.45,11.47,1.45,4.5,2.18,9.55,2.18,15.15,0,1.7-.5,2.98-1.5,3.83-1,.85-2.5,1.27-4.5,1.27h-50.4v-9.3h46.2l-2.55,2.1c0-5-.73-9.25-2.18-12.75-1.45-3.5-3.6-6.17-6.45-8.02-2.85-1.85-6.38-2.78-10.58-2.78-4.7,0-8.68,1.1-11.92,3.3-3.25,2.2-5.73,5.25-7.43,9.15-1.7,3.9-2.55,8.45-2.55,13.65v.9c0,8.8,2.07,15.43,6.23,19.88,4.15,4.45,10.17,6.68,18.07,6.68,3,0,6.17-.4,9.52-1.2,3.35-.8,6.53-2.15,9.53-4.05,1.7-1,3.22-1.45,4.57-1.35,1.35.1,2.45.55,3.3,1.35.85.8,1.37,1.8,1.57,3,.2,1.2,0,2.43-.6,3.67-.6,1.25-1.65,2.38-3.15,3.38-3.4,2.3-7.35,4.03-11.85,5.17s-8.85,1.72-13.05,1.72Z"/>
+        <path className="cls-2" d="M501.32,458.57c-7.8,0-13.68-2.27-17.62-6.82-3.95-4.55-5.93-11.12-5.93-19.73v-73.95c0-2.5.65-4.4,1.95-5.7,1.3-1.3,3.15-1.95,5.55-1.95s4.28.65,5.62,1.95c1.35,1.3,2.03,3.2,2.03,5.7v73.05c0,5,1.02,8.73,3.08,11.18,2.05,2.45,5.02,3.67,8.92,3.67.9,0,1.7-.02,2.4-.08.7-.05,1.4-.12,2.1-.22,1.2-.1,2.05.22,2.55.97.5.75.75,2.28.75,4.58,0,2.1-.45,3.73-1.35,4.88-.9,1.15-2.35,1.88-4.35,2.17-.9.1-1.85.17-2.85.23-1,.05-1.95.07-2.85.07Z"/>
+        <path className="cls-2" d="M583.01,458.57c-7.8,0-13.68-2.27-17.62-6.82-3.95-4.55-5.92-11.12-5.92-19.73v-73.95c0-2.5.65-4.4,1.95-5.7s3.15-1.95,5.55-1.95,4.27.65,5.62,1.95c1.35,1.3,2.02,3.2,2.02,5.7v73.05c0,5,1.02,8.73,3.08,11.17,2.05,2.45,5.03,3.67,8.92,3.67.9,0,1.7-.02,2.4-.08.7-.05,1.4-.12,2.1-.22,1.2-.1,2.05.22,2.55.97.5.75.75,2.28.75,4.58,0,2.1-.45,3.73-1.35,4.88s-2.35,1.88-4.35,2.17c-.9.1-1.85.17-2.85.23-1,.05-1.95.07-2.85.07Z"/>
+      </svg>
+    </div>
+  );
+
+  const Header = () => (
+    <div className="bg-white px-4 py-4 flex items-center justify-center border-b border-gray-100">
+      <WellSaidLogo />
+    </div>
+  );
+
+  const BottomNav = ({ currentView, setCurrentView, setShowCaptureOptions }) => {
+    return (
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 backdrop-blur-lg bg-white/95">
+        <div className="flex">
+          {[
+            { id: 'home', icon: Home, label: 'Home' },
+            {
+              id: 'capture',
+              icon: Edit3,
+              label: 'Capture',
+              onClick: () => setShowCaptureOptions(true) // Special handler for capture button
+            },
+            { id: 'organize', icon: FolderOpen, label: 'Organize' },
+            { id: 'library', icon: Book, label: 'Library' },
+            { id: 'profile', icon: User, label: 'Profile' }
+          ].map(item => (
+            <button
+              key={item.id}
+              onClick={item.onClick || (() => setCurrentView(item.id))} // Use onClick if provided, otherwise default to setCurrentView
+              className={`flex-1 p-3 flex flex-col items-center transition-colors ${
+                currentView === item.id ? 'text-blue-500' : 'text-gray-400 hover:text-gray-600'
+              }`}
+            >
+              <item.icon size={20} />
+              <span className="text-xs mt-1">{item.label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  const HomeView = () => {
+
+    // Calculate metrics
+    const todayInsights = insights.filter(i => i.date === '2025-06-16' && i.shared).length;
+    const weekInsights = insights.filter(i => i.shared).length;
+    const weeklyGoal = 5;
+    const progressPercent = (weekInsights / weeklyGoal) * 100;
+    const [isShuffling, setIsShuffling] = useState(false);
+
+    const CaptureOptionsModal = ({ setShowCaptureOptions, setCurrentView, setCaptureMode }) => (
+      <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-50 flex items-end">
+        <div className="w-full bg-white rounded-t-3xl p-6 animate-slide-up">
+          <div className="w-12 h-1 bg-gray-300 rounded-full mx-auto mb-6"></div>
+
+          <h2 className="text-2xl font-bold text-gray-800 mb-2 text-center">How would you like to capture today?</h2>
+          <p className="text-gray-600 text-center mb-8">Choose the experience that fits</p>
+
+          <div className="space-y-4">
+            {/* Daily Rhythm Option */}
+            <button
+              onClick={() => {
+                setCaptureMode('quick');
+                setShowCaptureOptions(false);
+                setCurrentView('capture');
+              }}
+              className="w-full bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-2xl p-6 text-left hover:shadow-lg transition-all hover:scale-[1.02]"
+            >
+              <div className="flex items-start justify-between mb-3">
+                <div className="flex items-center">
+                  <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center mr-4">
+                    <Clock size={20} className="text-white" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-lg">Daily Reflection</h3>
+                    <p className="text-blue-100 text-sm">Quick & meaningful</p>
+                  </div>
+                </div>
+                <ArrowRight size={20} className="text-white/70" />
+              </div>
+              <p className="text-blue-100 text-sm leading-relaxed mb-2">
+                Answer 1-2 thoughtful questions to maintain your daily wisdom practice
+              </p>
+              <div className="flex items-center text-blue-100 text-xs">
+                <Target size={14} className="mr-1" />
+                <span>5-10 minutes</span>
+              </div>
+            </button>
+
+            <button
+              onClick={() => {
+                // 🧼 Clear previous occasion-related state
+                setSelectedOccasion(null);
+                setQuestionSet([]);
+                setCurrentQuestion('');
+                setCurrentQuestionIndex(0);
+                resetForm(); // optional, if you have form state
+
+                // 🚀 Start fresh
+                setCaptureMode('milestone');
+                setShowCaptureOptions(false);
+                setCurrentView('capture');
+              }}
+              className="w-full bg-gradient-to-br from-purple-500 to-pink-500 text-white rounded-2xl p-6 text-left hover:shadow-lg transition-all hover:scale-[1.02]"
+            >
+              <div className="flex items-start justify-between mb-3">
+                <div className="flex items-center">
+                  <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center mr-4">
+                    <Sparkles size={20} className="text-white" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-lg">Special Occasion</h3>
+                    <p className="text-purple-100 text-sm">Deep & comprehensive</p>
+                  </div>
+                </div>
+                <ArrowRight size={20} className="text-white/70" />
+              </div>
+              <p className="text-purple-100 text-sm leading-relaxed mb-2">
+                Prepare meaningful insights for upcoming milestones, celebrations, or life events
+              </p>
+              <div className="flex items-center text-purple-100 text-xs">
+                <Calendar size={14} className="mr-1" />
+                <span>20-45 minutes</span>
+              </div>
+            </button>
+          </div>
+
+          <button
+            onClick={() => setShowCaptureOptions(false)}
+            className="w-full mt-6 py-3 text-gray-500 font-medium"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    );
+
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-blue-50 to-indigo-50 pb-20">
+        <Header showLogo={true} />
+
+        <div className="p-4">
+          {/* Hero Section - Now Clickable */}
+          <div
+            onClick={() => setShowCaptureOptions(true)}
+            className="bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-600 rounded-2xl p-8 text-white mb-8 relative overflow-hidden shadow-lg cursor-pointer transition-transform hover:scale-[1.02] active:scale-[0.99]"
+          >
+            <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-10 rounded-full -translate-y-16 translate-x-16"></div>
+            <div className="absolute bottom-0 left-0 w-24 h-24 bg-white opacity-5 rounded-full translate-y-12 -translate-x-12"></div>
+            <div className="relative z-10">
+              <h1 className="text-xl font-bold mb-3">Good morning, {user.name.split(' ')[0]}!</h1>
+              <p className="text-blue-100 text-base leading-relaxed mb-6">
+                Use today to <strong>say what matters</strong>, so that it's there when it matters most.
+              </p>
+
+              {/* Visual CTA Indicator */}
+              <div className="flex items-center justify-center w-10 h-10 bg-white/20 rounded-full animate-pulse mx-auto mt-4">
+                <Plus size={20} className="text-white" />
+              </div>
+            </div>
+          </div>
+
+          {/* Upcoming Events Section */}
+          {upcomingEvents.length > 0 && (
+            <div className="bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl p-6 text-white mb-6 shadow-lg">
+              <div className="flex items-center mb-4">
+                <Calendar size={20} className="mr-2 text-white/90" />
+                <h3 className="font-semibold text-white drop-shadow-md">Upcoming Occasions</h3>
+              </div>
+              <div className="space-y-3">
+                {upcomingEvents.slice(0, 2).map(event => (
+                  <button
+                    key={event.id}
+                    onClick={() => {
+                      console.log('--- STARTING OCCASION FLOW ---');
+                      console.log('Event clicked:', event.name);
+                      // Determine occasion type based on event name
+                      let occasionType = 'custom';
+                      if (event.name.includes('Birthday')) occasionType = 'milestone-birthday';
+                      if (event.name.includes('Graduation')) occasionType = 'graduation';
+                      if (event.name.includes('Wedding')) occasionType = 'wedding';
+                      console.log('Determined occasion type:', occasionType);
+                      // Find the matching occasion
+                      const occasion = occasions.find(o => o.id === occasionType) || {
+                        id: 'custom',
+                        name: event.name,
+                        icon: '✨',
+                        color: 'bg-gradient-to-br from-purple-500 to-pink-500'
+                      };
+                      console.log('Selected occasion:', occasion);
+                      // Initialize multi-mode directly with this occasion
+                      console.log('Setting capture mode to milestone');
+                      setCaptureMode('milestone');
+                      console.log('Setting selected occasion:', occasion);
+                      setSelectedOccasion(occasion);
+
+                      // Get the appropriate questions or use default ones
+                      const questions = occasionQuestions[occasionType] || [
+                        `What do you want to share about ${event.name}?`,
+                        `What makes ${event.name} special?`,
+                        `What advice would you give about ${event.name}?`
+                      ];
+                      console.log('Question set:', questions);
+                      setQuestionSet(questions);
+                      setCurrentQuestion(questions[0] || '');
+                      setCurrentQuestionIndex(0);
+                      resetForm();
+                      console.log('Navigating to capture view');
+                      // Go directly to capture view
+                      setCurrentView('capture');
+                    }}
+                    className="w-full bg-white/10 hover:bg-white/20 rounded-xl p-4 backdrop-blur-sm transition-all text-left"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium">{event.name}</p>
+                        <p className="text-purple-100 text-sm">{event.daysAway} days away</p>
+                      </div>
+                      <div className="flex items-center text-purple-100">
+                        <Sparkles size={16} className="mr-1" />
+                        <span className="text-sm">Prepare</span>
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Weekly Progress */}
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 mb-6 shadow-sm border border-white/50">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-800">Weekly Progress</h3>
+              <div className="flex items-center text-orange-500 bg-orange-50 px-3 py-1 rounded-full">
+                <Zap size={16} className="mr-1" />
+                <span className="font-bold text-sm">{user.streak} week streak!</span>
+              </div>
+            </div>
+
+            <div className="mb-4">
+              <div className="flex justify-between text-sm text-gray-600 mb-2">
+                <span>{weekInsights} of {weeklyGoal} insights shared this week</span>
+                <span>{Math.round(progressPercent)}%</span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+                <div
+                  className="bg-gradient-to-r from-blue-500 to-blue-600 h-3 rounded-full transition-all duration-500 ease-out"
+                  style={{ width: `${Math.min(progressPercent, 100)}%` }}
+                ></div>
+              </div>
+            </div>
+
+            {weekInsights >= weeklyGoal ? (
+              <div className="text-center p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-100">
+                <Trophy className="text-blue-500 mx-auto mb-2" size={24} />
+                <p className="text-blue-700 font-medium">Weekly goal achieved! Streak continues!</p>
+              </div>
+            ) : (
+              <p className="text-gray-600 text-center">
+                {weeklyGoal - weekInsights} more insight{weeklyGoal - weekInsights !== 1 ? 's' : ''} to maintain your streak
+              </p>
+            )}
+          </div>
+
+          {/* Recent Insights */}
+          <div className="mb-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-800">Your Recent Wisdom</h3>
+              <button
+                onClick={() => setCurrentView('library')}
+                className="text-blue-500 text-sm font-medium hover:text-blue-600 transition-colors"
+              >
+                View All
+              </button>
+            </div>
+            <div className="space-y-4">
+              {insights.filter(i => i.shared).slice(0, 2).map(insight => {
+                const recipients = insight.recipients.map(id => individuals.find(p => p.id === id)).filter(Boolean);
+                return (
+                  <div key={insight.id} className="bg-white/80 backdrop-blur-sm rounded-2xl p-5 shadow-sm border border-white/50">
+                    <div className="flex items-center mb-3">
+                      <div className="flex -space-x-2 mr-3">
+                        {recipients.map(person => (
+                          <div key={person.id} className={`w-8 h-8 rounded-full ${person.color} flex items-center justify-center border-2 border-white shadow-sm`}>
+                            <span className="text-white text-sm font-bold">{person.avatar}</span>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-medium text-gray-800 text-sm">
+                          For {recipients.map(p => p.name).join(', ')}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {new Date(insight.date).toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}
+                        </p>
+                      </div>
+                      <Heart size={16} className="text-blue-400 fill-current" />
+                    </div>
+                    <p className="text-gray-700 leading-relaxed text-sm mb-3">{insight.text}</p>
+                    <div className="flex flex-wrap gap-1 mb-2">
+                      {insight.topics.map(topic => (
+                        <span key={topic} className="px-2 py-1 bg-gradient-to-r from-blue-100 to-blue-200 text-blue-700 text-xs rounded-full">
+                          {topic}
+                        </span>
+                      ))}
+                    </div>
+                    <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+                      <span className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded-full">Shared</span>
+                      <button className="text-xs text-gray-500 hover:text-gray-700 transition-colors">View Full</button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Stats Overview */}
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-sm border border-white/50 mb-6">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">Your Legacy Stats</h3>
+            <div className="grid grid-cols-3 gap-4 text-center">
+              <div className="p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl">
+                <div className="text-2xl font-bold text-blue-600">{insights.filter(i => i.shared).length}</div>
+                <div className="text-sm text-gray-600">Insights</div>
+              </div>
+              <div className="p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl">
+                <div className="text-2xl font-bold text-blue-600">{individuals.length}</div>
+                <div className="text-sm text-gray-600">People</div>
+              </div>
+              <div className="p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl">
+                <div className="text-2xl font-bold text-blue-600">{collections.length}</div>
+                <div className="text-sm text-gray-600">Books</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Capture Options Modal */}
+        {showCaptureOptions && (
+          <CaptureOptionsModal
+            setShowCaptureOptions={setShowCaptureOptions}
+            setCurrentView={setCurrentView}
+            setCaptureMode={setCaptureMode}
+          />
+        )}
+
+        <style>{`
+          @keyframes slide-up {
+            from {
+              transform: translateY(100%);
+            }
+            to {
+              transform: translateY(0);
+            }
+          }
+
+          .animate-slide-up {
+            animation: slide-up 0.3s ease-out;
+          }
+        `}</style>
+      </div>
+    );
+  };
+
+  const CaptureView = ({ captureMode, setCurrentView, resetForm }) => {
+    // State management
+    const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+
+    // Existing state from your original code
+    const [currentQuestion, setCurrentQuestion] = useState('');
+    const [newInsight, setNewInsight] = useState('');
+    const [selectedRecipients, setSelectedRecipients] = useState([]);
+    const [selectedTopics, setSelectedTopics] = useState([]);
+    const [insights, setInsights] = useState([]);
+
+    // Sample data for occasions and questions
+    const occasions = [
+      { id: 'wedding', name: 'Wedding', icon: '💒', color: 'bg-gradient-to-br from-purple-500 to-pink-500' },
+      { id: 'first-child', name: 'First Child', icon: '👶', color: 'bg-gradient-to-br from-blue-400 to-teal-400' },
+      { id: 'graduation', name: 'Graduation', icon: '🎓', color: 'bg-gradient-to-br from-indigo-500 to-blue-500' },
+      { id: 'milestone-birthday', name: 'Milestone Birthday', icon: '🎂', color: 'bg-gradient-to-br from-amber-500 to-pink-500' },
+    ];
+
+    const occasionQuestions = {
+      wedding: [
+        "What's the most important lesson about love you've learned?",
+        "What advice would you give about building a strong partnership?",
+        "What moment made you realize they were 'the one'?"
+      ],
+      'first-child': [
+        "What hopes do you have for your child's future?",
+        "What value is most important to pass down?",
+        "How has becoming a parent changed your perspective?"
+      ],
+      graduation: [
+        "What's the most valuable lesson from this chapter?",
+        "How have you grown during this time?",
+        "What advice would you give to someone starting this journey?"
+      ],
+      'milestone-birthday': [
+        "What hopes do you have for your child's future?",
+        "What value is most important to pass down?",
+        "How has becoming a parent changed your perspective?"
+      ]
+    };
+
+    // Initialize based on captureMode
+    useEffect(() => {
+      if (captureMode === 'quick') {
+        setCurrentQuestion(prompts[Math.floor(Math.random() * prompts.length)]);
+      }
+      // For 'milestone' mode, we'll wait for occasion selection
+    }, [captureMode]);
+
+    const initMultiMode = (occasion) => {
+      setSelectedOccasion(occasion);
+      const questions = occasionQuestions[occasion.id] || [];
+      setQuestionSet(questions);
+      setCurrentQuestion(questions[0] || '');
+      setCurrentQuestionIndex(0);
+      resetForm();
+    };
+
+    useEffect(() => {
+      console.log("📦 selectedOccasion updated:", selectedOccasion);
+    }, [selectedOccasion]);
+
+    const generateQuestion = () => {
+      setCurrentQuestion(prompts[Math.floor(Math.random() * prompts.length)]);
+    };
+
+    const [isEditingQuestion, setIsEditingQuestion] = useState(false);
+    const [customQuestion, setCustomQuestion] = useState('');
+    const [isRecording, setIsRecording] = useState(false);
+    const [polishedAnswer, setPolishedAnswer] = useState('');
+    const [showPolish, setShowPolish] = useState(false);
+
+    const handleEditQuestion = () => {
+      setCustomQuestion(currentQuestion);
+      setIsEditingQuestion(true);
+    };
+
+    const saveCustomQuestion = () => {
+      setCurrentQuestion(customQuestion);
+      setIsEditingQuestion(false);
+      setCustomQuestion('');
+    };
+
+    const toggleRecording = () => {
+      setIsRecording(!isRecording);
+      if (!isRecording) {
+        // Simulate voice recording
+        setTimeout(() => {
+          setNewInsight("This is a simulated voice-to-text response that would capture your spoken answer.");
+          setIsRecording(false);
+        }, 3000);
+      }
+    };
+
+    const polishAnswer = () => {
+      // Simulate AI polishing
+      const polished = newInsight
+        .replace(/um|uh|like,/gi, '')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .split('. ')
+        .map(sentence => sentence.charAt(0).toUpperCase() + sentence.slice(1))
+        .join('. ');
+
+      setPolishedAnswer(polished + (polished.endsWith('.') ? '' : '.'));
+      setShowPolish(true);
+    };
+
+    const handleSubmit = () => {
+      if (newInsight.trim() && selectedRecipients.length > 0) {
+        const newInsightObj = {
+          id: insights.length + 1,
+          text: newInsight,
+          recipients: selectedRecipients,
+          date: new Date().toISOString().split('T')[0],
+          topics: selectedTopics,
+          question: currentQuestion,
+          shared: true,
+          occasion: captureMode === 'milestone' ? selectedOccasion?.name : 'Daily Reflection'
+        };
+
+        setInsights([newInsightObj, ...insights]);
+        resetForm();
+
+        if (captureMode === 'milestone' && currentQuestionIndex < questionSet.length - 1) {
+          // Move to next question
+          const nextIndex = currentQuestionIndex + 1;
+          setCurrentQuestionIndex(nextIndex);
+          setCurrentQuestion(questionSet[nextIndex]);
+        } else if (captureMode === 'milestone') {
+          // Completed all questions
+          setCurrentView('home');
+        } else {
+          // Return to home after single submission
+          setCurrentView('home');
+        }
+      }
+    };
+
+    // Occasion Selection Screen (only for milestone mode)
+    if (captureMode === 'milestone' && !selectedOccasion) {
+      console.log('Milestone mode active. No occasion selected yet.');
+      console.log('Available occasions:', occasions);
+
+      return (
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-blue-50 to-indigo-50 pb-20">
+          <Header />
+
+          <div className="p-4 max-w-md mx-auto pt-4">
+            <button
+              onClick={() => {
+                console.log('Returning to Home');
+                setCurrentView('home');
+              }}
+              className="flex items-center text-gray-600 mb-6 hover:text-gray-800"
+            >
+              <ArrowLeft className="w-5 h-5 mr-2" />
+              Back
+            </button>
+
+            <h2 className="text-2xl font-bold text-gray-800 mb-6">Select Occasion</h2>
+
+            <div className="grid grid-cols-2 gap-3">
+              {occasions.map(occasion => (
+                <button
+                  key={occasion.id}
+                  onClick={() => {
+                    console.log('Selected occasion:', occasion);
+                    initMultiMode(occasion);
+                  }}
+                  className={`${occasion.color} text-white rounded-2xl p-4 shadow-sm hover:shadow-md transition-all text-center`}
+                >
+                  <div className="text-2xl mb-2">{occasion.icon}</div>
+                  <h3 className="font-medium text-white">{occasion.name}</h3>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Completion Screen (if we want to keep it)
+    if (captureMode === 'milestone' && currentQuestionIndex >= questionSet.length - 1 && newInsight.trim() && selectedRecipients.length > 0) {
+      return (
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-blue-50 to-indigo-50 pb-20">
+          <Header />
+
+          <div className="p-4 max-w-md mx-auto pt-16 text-center">
+            <div className="text-6xl mb-6">🎉</div>
+            <h2 className="text-2xl font-bold text-gray-800 mb-4">Occasion Complete!</h2>
+            <p className="text-gray-600 mb-8">
+              You've captured {questionSet.length} insights for your {selectedOccasion?.name}.
+            </p>
+            <button
+              onClick={() => setCurrentView('home')}
+              className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-8 py-3 rounded-2xl font-medium shadow-lg"
+            >
+              Return Home
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    // Main Capture Screen (shared by both modes)
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-blue-50 to-indigo-50 pb-20">
+        <Header />
+
+        <div className="p-4">
+          {/* Progress indicator for milestone mode */}
+          {captureMode === 'milestone' && (
+            <div className="mb-6">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center">
+                  <span className="text-2xl mr-2">{selectedOccasion?.icon}</span>
+                  <span className="font-medium text-gray-700">{selectedOccasion?.name}</span>
+                </div>
+                <div className="text-sm text-gray-600">
+                  {currentQuestionIndex + 1} of {questionSet.length}
+                </div>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div
+                  className="bg-blue-500 h-2 rounded-full transition-all duration-300"
+                  style={{ width: `${((currentQuestionIndex + 1) / questionSet.length) * 100}%` }}
+                ></div>
+              </div>
+            </div>
+          )}
+
+          {/* Enhanced Question Prompt Section */}
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 mb-6 shadow-sm border border-white/50">
+            <div className="flex items-start gap-3 mb-4">
+              <div className="flex-1">
+                {isEditingQuestion ? (
+                  <div>
+                    <textarea
+                      value={customQuestion}
+                      onChange={(e) => setCustomQuestion(e.target.value)}
+                      className="w-full p-3 border rounded-lg resize-none focus:ring-2 focus:ring-blue-500"
+                      rows="3"
+                      placeholder="Write your own question..."
+                    />
+                    <div className="flex gap-2 mt-2">
+                      <button
+                        onClick={saveCustomQuestion}
+                        className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm flex items-center"
+                      >
+                        <Check className="w-4 h-4 mr-1" />
+                        Save
+                      </button>
+                      <button
+                        onClick={() => setIsEditingQuestion(false)}
+                        className="bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded-lg text-sm flex items-center"
+                      >
+                        <X className="w-4 h-4 mr-1" />
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex justify-between items-start">
+                      <h3 className="text-lg font-semibold text-gray-800">
+                        {captureMode === 'milestone' ? 'Question' : 'Question'}
+                      </h3>
+                      {captureMode === 'quick' && (
+                        <div className="flex gap-2">
+                          <button
+                            onClick={generateQuestion}
+                            className="text-blue-500 text-sm font-medium hover:text-blue-600 transition-colors px-3 py-1 bg-blue-50 rounded-full flex items-center"
+                          >
+                            <Shuffle className="w-4 h-4 mr-1" />
+                            Shuffle
+                          </button>
+                          <button
+                            onClick={handleEditQuestion}
+                            className="text-blue-500 text-sm font-medium hover:text-blue-600 transition-colors px-3 py-1 bg-blue-50 rounded-full flex items-center"
+                          >
+                            <Edit3 className="w-4 h-4 mr-1" />
+                            Edit
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-xl border border-blue-100 mt-3">
+                      <p className="text-gray-700">
+                        {currentQuestion || "What's the most important lesson you've learned recently?"}
+                      </p>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Enhanced Answer Section with Voice Recording */}
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 mb-6 shadow-sm border border-white/50">
+            <div className="mb-4">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-lg font-semibold text-gray-800">
+                  Answer
+                </h3>
+                <button
+                  onClick={toggleRecording}
+                  className={`flex items-center px-3 py-2 rounded-lg text-sm transition-all ${
+                    isRecording
+                      ? 'bg-red-500 text-white'
+                      : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                  }`}
+                >
+                  {isRecording ? <MicOff className="w-4 h-4 mr-1" /> : <Mic className="w-4 h-4 mr-1" />}
+                  {isRecording ? 'Stop' : 'Voice'}
+                </button>
+              </div>
+
+              <textarea
+                value={newInsight}
+                onChange={(e) => setNewInsight(e.target.value)}
+                className="w-full p-4 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent h-32 bg-white/50 backdrop-blur-sm resize-none"
+                placeholder="Share your wisdom, experience, or advice..."
+                maxLength={280}
+                disabled={isRecording}
+              />
+
+              {isRecording && (
+                <div className="mt-2 flex items-center text-red-500 text-sm">
+                  <div className="animate-pulse w-2 h-2 bg-red-500 rounded-full mr-2"></div>
+                  Recording...
+                </div>
+              )}
+            </div>
+
+            <div className="flex items-center justify-between mt-4">
+              <span className="text-sm text-gray-500">{newInsight.length}/280</span>
+              {newInsight && !showPolish && (
+                <button
+                  onClick={polishAnswer}
+                  className="flex items-center text-blue-600 hover:text-blue-800 font-medium text-sm"
+                >
+                  <Wand2 className="w-4 h-4 mr-2" />
+                  Polish with AI
+                </button>
+              )}
+            </div>
+
+            {showPolish && (
+              <div className="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-medium text-gray-700">AI Polished Version</span>
+                  <button
+                    onClick={() => setShowPolish(false)}
+                    className="text-gray-500 hover:text-gray-700"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+                <p className="text-gray-800">{polishedAnswer}</p>
+              </div>
+            )}
+          </div>
+
+          {/* AI Assistant (unchanged) */}
+          <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl border border-blue-100">
+            <div className="flex items-center">
+              <WellSaidIcon size={32} />
+              <div className="ml-3">
+                <p className="font-medium text-blue-800">AI Assistant</p>
+                <p className="text-sm text-blue-600">Ask me to help craft your message</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Select Recipients (unchanged) */}
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 mb-6 shadow-sm border border-white/50">
+            <h3 className="font-semibold text-gray-800 mb-4">Who is this for?</h3>
+            <div className="grid grid-cols-2 gap-3">
+              {individuals.map(person => (
+                <label key={person.id} className="flex items-center p-3 border border-gray-200 rounded-xl cursor-pointer hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 hover:border-blue-200 transition-all">
+                  <input
+                    type="checkbox"
+                    className="mr-3 rounded text-blue-500 focus:ring-blue-500"
+                    checked={selectedRecipients.includes(person.id)}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setSelectedRecipients([...selectedRecipients, person.id]);
+                      } else {
+                        setSelectedRecipients(selectedRecipients.filter(id => id !== person.id));
+                      }
+                    }}
+                  />
+                  <div className={`w-6 h-6 rounded-full ${person.color} flex items-center justify-center mr-2`}>
+                    <span className="text-white text-xs font-bold">{person.avatar}</span>
+                  </div>
+                  <span className="font-medium text-gray-800">{person.name}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {/* Select Topics (unchanged) */}
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 mb-6 shadow-sm border border-white/50">
+            <h3 className="font-semibold text-gray-800 mb-4">Topics</h3>
+            <div className="flex flex-wrap gap-2">
+              {availableTopics.map(topic => (
+                <button
+                  key={topic}
+                  onClick={() => {
+                    if (selectedTopics.includes(topic)) {
+                      setSelectedTopics(selectedTopics.filter(t => t !== topic));
+                    } else {
+                      setSelectedTopics([...selectedTopics, topic]);
+                    }
+                  }}
+                  className={`px-3 py-2 rounded-full text-sm font-medium transition-all ${
+                    selectedTopics.includes(topic)
+                      ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gradient-to-r hover:from-blue-100 hover:to-indigo-100 hover:text-blue-700'
+                  }`}
+                >
+                  {topic}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Submit Button */}
+          <button
+            onClick={handleSubmit}
+            disabled={!newInsight.trim() || selectedRecipients.length === 0}
+            className="w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-2xl p-4 font-semibold text-lg shadow-lg hover:shadow-xl transition-all hover:scale-105 disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:shadow-lg"
+          >
+            <Send size={20} className="inline mr-2" />
+            {captureMode === 'milestone' && currentQuestionIndex < questionSet.length - 1 ? 'Next Question' : 'Share This Wisdom'}
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+const OrganizeView = () => {
+    const [organizeView, setOrganizeView] = useState('inbox');
+    const [selectedEntries, setSelectedEntries] = useState([]);
+    const [bulkAction, setBulkAction] = useState('');
+    const [showTagEditor, setShowTagEditor] = useState(false);
+    const [selectedEntry, setSelectedEntry] = useState(null);
+
+    const unorganizedEntries = insights.filter(entry => !entry.collection);
+
+    const topicSuggestions = [
+      "Parenting", "Relationships", "Work", "Money", "Health", "Faith",
+      "Education", "Life Skills", "Character", "Dreams"
+    ];
+
+    const handleEntrySelect = (entryId) => {
+      setSelectedEntries(prev =>
+        prev.includes(entryId)
+          ? prev.filter(id => id !== entryId)
+          : [...prev, entryId]
+      );
+    };
+
+    const handleBulkAction = () => {
+      if (bulkAction === 'tag' && selectedEntries.length > 0) {
+        setShowTagEditor(true);
+      }
+    };
+
+    const TagEditor = ({ entry, onClose, onSave }) => (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div className="bg-white rounded-lg p-6 w-full max-w-sm">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-semibold text-gray-800">Organize Entry</h3>
+            <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+              <ArrowLeft size={20} />
+            </button>
+          </div>
+
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">Topic</label>
+            <select className="w-full p-2 border border-gray-200 rounded-lg">
+              <option value="">Select topic...</option>
+              {topicSuggestions.map(topic => (
+                <option key={topic} value={topic}>{topic}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">Tags</label>
+            <div className="flex flex-wrap gap-2 mb-2">
+              {individuals.map(person => (
+                <button
+                  key={person.id}
+                  className="px-3 py-1 border border-gray-200 rounded-full text-sm hover:bg-gray-50"
+                >
+                  {person.name}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">Add to Collection</label>
+            <select className="w-full p-2 border border-gray-200 rounded-lg">
+              <option value="">Choose collection...</option>
+              {collections.map(collection => (
+                <option key={collection.id} value={collection.id}>{collection.name}</option>
+              ))}
+              <option value="new">+ Create new collection</option>
+            </select>
+          </div>
+
+          <div className="flex gap-2">
+            <button
+              onClick={onClose}
+              className="flex-1 py-2 px-4 border border-gray-200 rounded-lg text-gray-600"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={() => { onSave(); onClose(); }}
+              className="flex-1 py-2 px-4 bg-blue-600 text-white rounded-lg"
+            >
+              Save
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-blue-50 to-indigo-50 pb-20">
+        <Header />
+
+        <div className="p-4">
+          {/* Tab Navigation */}
+          <div className="flex bg-white rounded-lg p-1 mb-6">
+            <button
+              onClick={() => setOrganizeView('inbox')}
+              className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+                organizeView === 'inbox'
+                  ? 'bg-blue-600 text-white'
+                  : 'text-gray-600 hover:text-gray-800'
+              }`}
+            >
+              Inbox ({unorganizedEntries.length})
+            </button>
+            <button
+              onClick={() => setOrganizeView('collections')}
+              className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+                organizeView === 'collections'
+                  ? 'bg-blue-600 text-white'
+                  : 'text-gray-600 hover:text-gray-800'
+              }`}
+            >
+              Collections
+            </button>
+            <button
+              onClick={() => setOrganizeView('tags')}
+              className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+                organizeView === 'tags'
+                  ? 'bg-blue-600 text-white'
+                  : 'text-gray-600 hover:text-gray-800'
+              }`}
+            >
+              Tags
+            </button>
+          </div>
+
+          {/* Inbox View */}
+          {organizeView === 'inbox' && (
+            <div>
+              <div className="bg-blue-50 rounded-lg p-4 mb-4">
+                <div className="flex items-center mb-2">
+                  <FolderOpen className="w-5 h-5 text-blue-600 mr-2" />
+                  <span className="font-medium text-blue-800">Organization Inbox</span>
+                </div>
+                <p className="text-sm text-blue-700">
+                  {unorganizedEntries.length} items need tags, topics, or collections.
+                </p>
+              </div>
+
+              {/* Bulk Actions */}
+              {selectedEntries.length > 0 && (
+                <div className="bg-white rounded-lg p-3 mb-4 flex items-center justify-between">
+                  <span className="text-sm text-gray-600">{selectedEntries.length} selected</span>
+                  <div className="flex gap-2">
+                    <select
+                      value={bulkAction}
+                      onChange={(e) => setBulkAction(e.target.value)}
+                      className="text-sm border border-gray-200 rounded px-2 py-1"
+                    >
+                      <option value="">Bulk actions...</option>
+                      <option value="tag">Add tags</option>
+                      <option value="topic">Set topic</option>
+                      <option value="collection">Add to collection</option>
+                    </select>
+                    <button
+                      onClick={handleBulkAction}
+                      className="bg-blue-600 text-white px-3 py-1 rounded text-sm"
+                    >
+                      Apply
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Enhanced Entry List with Q&A Cards */}
+              <div className="space-y-4">
+                {unorganizedEntries.map(entry => (
+                  <div
+                    key={entry.id}
+                    className={`bg-white rounded-xl overflow-hidden shadow-sm border ${selectedEntries.includes(entry.id) ? 'border-blue-500' : 'border-gray-100'}`}
+                  >
+                    <div className="flex items-center p-3 border-b border-gray-100 bg-gray-50">
+                      <input
+                        type="checkbox"
+                        checked={selectedEntries.includes(entry.id)}
+                        onChange={() => handleEntrySelect(entry.id)}
+                        className="mr-3 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      />
+                      <div className="flex-1 flex items-center justify-between">
+                        <div className="flex items-center space-x-2">
+                          {entry.isVoiceNote && (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800">
+                              <Mic className="w-3 h-3 mr-1" /> Voice Note
+                            </span>
+                          )}
+                          {entry.isDraft && (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-orange-100 text-orange-800">
+                              Draft
+                            </span>
+                          )}
+                          <span className="text-xs text-gray-500">
+                            {new Date(entry.date).toLocaleDateString()}
+                          </span>
+                        </div>
+                        <button
+                          onClick={() => {
+                            setSelectedEntry(entry);
+                            setShowTagEditor(true);
+                          }}
+                          className="text-sm font-medium text-blue-600 hover:text-blue-800"
+                        >
+                          Organize
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Q&A Card */}
+                    <div className="p-4">
+                      <div className="mb-4">
+                        <div className="flex items-center mb-1">
+                          <span className="text-xs font-semibold text-blue-600 uppercase tracking-wider">Question</span>
+                        </div>
+                        <div className="bg-blue-50 rounded-lg p-3 text-sm text-gray-800">
+                          {entry.question || "What would you like to share?"}
+                        </div>
+                      </div>
+
+                      <div className="">
+                        <div className="flex items-center mb-1">
+                          <span className="text-xs font-semibold text-green-600 uppercase tracking-wider">Answer</span>
+                        </div>
+                        <div className="bg-green-50 rounded-lg p-3 text-sm text-gray-800">
+                          {entry.text || entry.content || "No content yet"}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Tags and Recipients */}
+                    <div className="px-4 pb-3 pt-2 border-t border-gray-100">
+                      <div className="flex flex-wrap gap-2 mb-2">
+                        {entry.topics?.map(topic => (
+                          <span key={topic} className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-full">
+                            {topic}
+                          </span>
+                        ))}
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {entry.recipients?.map(id => {
+                          const person = individuals.find(p => p.id === id);
+                          return person ? (
+                            <span key={person.id} className="inline-flex items-center px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full">
+                              <span className={`w-2 h-2 rounded-full ${person.color} mr-1`}></span>
+                              {person.name}
+                            </span>
+                          ) : null;
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Collections View */}
+          {organizeView === 'collections' && (
+            <div>
+              <div className="mb-4">
+                <div className="flex items-center justify-between mb-3">
+                  <h2 className="text-lg font-semibold text-gray-800">Collections</h2>
+                  <span className="text-sm text-gray-500">{collections.length} collections</span>
+                </div>
+                <p className="text-sm text-gray-600 mb-4">
+                  Group related entries into meaningful collections and books.
+                </p>
+              </div>
+
+              {collections.map(collection => (
+                <div key={collection.id} className="bg-white rounded-lg p-4 mb-3">
+                  <div className="flex items-center">
+                    <div className={`w-10 h-10 rounded-lg ${collection.color} flex items-center justify-center mr-3`}>
+                      <FolderOpen className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <div className="font-medium text-gray-800">{collection.name}</div>
+                      <div className="text-sm text-gray-500">{collection.count} entries</div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+
+              <button className="w-full bg-gray-50 border-2 border-dashed border-gray-200 rounded-lg p-4 text-center text-gray-500 hover:bg-gray-100">
+                <Plus className="w-5 h-5 mx-auto mb-1" />
+                <div className="text-sm">Create New Collection</div>
+              </button>
+            </div>
+          )}
+
+          {/* Tags View */}
+          {organizeView === 'tags' && (
+            <div>
+              <div className="mb-4">
+                <h2 className="text-lg font-semibold text-gray-800 mb-3">Tag Management</h2>
+                <p className="text-sm text-gray-600 mb-4">
+                  Organize and manage your tags to keep your content structured.
+                </p>
+              </div>
+
+              <div className="bg-white rounded-lg p-4 mb-4">
+                <h3 className="font-medium text-gray-800 mb-3">Topics</h3>
+                <div className="flex flex-wrap gap-2">
+                  {topicSuggestions.map(topic => (
+                    <span key={topic} className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm">
+                      {topic}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              <div className="bg-white rounded-lg p-4">
+                <h3 className="font-medium text-gray-800 mb-3">People Tags</h3>
+                <div className="space-y-2">
+                  {individuals.map(person => (
+                    <div key={person.id} className="flex items-center justify-between py-2">
+                      <div className="flex items-center">
+                        <div className={`w-6 h-6 rounded-full ${person.color} flex items-center justify-center mr-3`}>
+                          <span className="text-white text-xs font-bold">{person.avatar}</span>
+                        </div>
+                        <span className="text-gray-800">{person.name}</span>
+                      </div>
+                      <span className="text-xs text-gray-500">2 entries</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Tag Editor Modal */}
+          {showTagEditor && selectedEntry && (
+            <TagEditor
+              entry={selectedEntry}
+              onClose={() => {
+                setShowTagEditor(false);
+                setSelectedEntry(null);
+              }}
+              onSave={() => {
+                console.log('Saving entry organization');
+              }}
+            />
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  const LibraryView = ({ resetForm }) => {
+      // Search-related state (NEW)
+      const [searchQuery, setSearchQuery] = useState('');
+      const [searchResults, setSearchResults] = useState([]);
+      const [isSearching, setIsSearching] = useState(false);
+      const [selectedFilters, setSelectedFilters] = useState({
+          topics: [],
+          recipients: [],
+          entryTypes: []
+      });
+      const [currentPage, setCurrentPage] = useState(0); // For tracking which page is shown in the modal
+      const [showFilters, setShowFilters] = useState(false);
+      const [isFlipping, setIsFlipping] = useState(false);
+      const flipPage = (direction) => {
+        if (isFlipping) return;
+        setIsFlipping(true);
+
+        if (direction === 'next' && currentPage < selectedBook?.pages?.length - 1) {
+          setTimeout(() => setCurrentPage(currentPage + 1), 150);
+        } else if (direction === 'prev' && currentPage > 0) {
+          setTimeout(() => setCurrentPage(currentPage - 1), 150);
+        }
+
+        setTimeout(() => setIsFlipping(false), 300);
+      };
+      // Your existing state (PRESERVED)
+      const [libraryView, setLibraryView] = useState('personal');
+      const sharedBooks = [
+        {
+          id: 1,
+          name: "Letters to Sage",
+          recipient: "Sage",
+          description: "Life lessons and love letters for my daughter",
+          count: 12,
+          color: "bg-pink-500",
+          lastUpdated: "2 days ago",
+          type: "book",
+          pages: [
+            {
+              type: "question",
+              content: "How can I teach you about resilience when life gets difficult?",
+              pageNumber: 1
+            },
+            {
+              type: "answer",
+              content: {
+                text: "Resilience isn't about avoiding falls, but learning how to get up. When you face challenges:",
+                points: [
+                  "Remember that struggles are temporary",
+                  "Ask for help when you need it",
+                  "Know that I'll always be here for you"
+                ]
+              },
+              pageNumber: 2
+            },
+            {
+              type: "question",
+              content: "What do I want you to know about finding true happiness?",
+              pageNumber: 3
+            },
+            {
+              type: "answer",
+              content: {
+                text: "Happiness comes from within and grows when you:",
+                points: [
+                  "Cultivate gratitude daily",
+                  "Build meaningful relationships",
+                  "Pursue purpose, not just pleasure"
+                ]
+              },
+              pageNumber: 4
+            }
+          ]
+        },
+        {
+          id: 2,
+          name: "First Year Lessons",
+          recipient: "Cohen",
+          description: "What I learned in your first year of life",
+          count: 6,
+          color: "bg-blue-500",
+          lastUpdated: "1 week ago",
+          type: "book",
+          pages: [
+            {
+              type: "question",
+              content: "What surprised me most about becoming your parent?",
+              pageNumber: 1
+            },
+            {
+              type: "answer",
+              content: {
+                text: "The depth of love and responsibility I felt immediately:",
+                points: [
+                  "How your smile could brighten my worst day",
+                  "The instinct to protect you at all costs",
+                  "The joy in your smallest discoveries"
+                ]
+              },
+              pageNumber: 2
+            },
+            {
+              type: "question",
+              content: "What advice would I give to new parents?",
+              pageNumber: 3
+            },
+            {
+              type: "answer",
+              content: {
+                text: "The things that matter most:",
+                points: [
+                  "Trust your instincts - you know your child best",
+                  "Don't compare milestones - every child develops differently",
+                  "Take time to just be present together"
+                ]
+              },
+              pageNumber: 4
+            }
+          ]
+        },
+        {
+          id: 3,
+          name: "For When You're Older",
+          recipient: "Both kids",
+          description: "Wisdom for their teenage years and beyond",
+          count: 4,
+          color: "bg-purple-500",
+          lastUpdated: "3 days ago",
+          type: "book",
+          pages: [
+            {
+              type: "question",
+              content: "How should you handle heartbreak when it comes?",
+              pageNumber: 1
+            },
+            {
+              type: "answer",
+              content: {
+                text: "Though painful, heartbreak teaches valuable lessons:",
+                points: [
+                  "It's okay to grieve - don't rush the healing",
+                  "Every ending makes space for new beginnings",
+                  "Your worth isn't defined by any relationship"
+                ]
+              },
+              pageNumber: 2
+            },
+            {
+              type: "question",
+              content: "What financial principles will serve you best?",
+              pageNumber: 3
+            },
+            {
+              type: "answer",
+              content: {
+                text: "Money management fundamentals:",
+                points: [
+                  "Live below your means and save consistently",
+                  "Invest early - time is your greatest asset",
+                  "True wealth is freedom, not possessions"
+                ]
+              },
+              pageNumber: 4
+            },
+            {
+              type: "question",
+              content: "How do I want you to remember me?",
+              pageNumber: 5
+            },
+            {
+              type: "answer",
+              content: {
+                text: "I hope you remember:",
+                points: [
+                  "I loved you unconditionally, always",
+                  "I did my best, even when I made mistakes",
+                  "My greatest legacy is the people you become"
+                ]
+              },
+              pageNumber: 6
+            }
+          ]
+        }
+      ];
+
+      // Get unique topics and recipients for filters
+      const allTopics = [...new Set(insights.flatMap(entry => entry.topics || []))];
+      const allRecipients = individuals.map(person => person.id);
+
+      // Mock RAG search function
+      const performRAGSearch = async (query) => {
+          setIsSearching(true);
+
+          // Simulate API delay
+          await new Promise(resolve => setTimeout(resolve, 500));
+
+          // Filter logic (replace with actual RAG API call)
+          const results = insights.filter(entry => {
+              const matchesText = entry.text?.toLowerCase().includes(query.toLowerCase()) ||
+                                entry.content?.toLowerCase().includes(query.toLowerCase()) ||
+                                entry.question?.toLowerCase().includes(query.toLowerCase());
+
+              const matchesTopics = selectedFilters.topics.length === 0 ||
+                                  entry.topics?.some(topic => selectedFilters.topics.includes(topic));
+
+              const matchesRecipients = selectedFilters.recipients.length === 0 ||
+                                      entry.recipients?.some(id => selectedFilters.recipients.includes(id));
+
+              const matchesType = selectedFilters.entryTypes.length === 0 ||
+                                (selectedFilters.entryTypes.includes('draft') && entry.isDraft) ||
+                                (selectedFilters.entryTypes.includes('voice') && entry.isVoiceNote) ||
+                                (selectedFilters.entryTypes.includes('insight') && !entry.isDraft && !entry.isVoiceNote);
+
+              return matchesText && matchesTopics && matchesRecipients && matchesType;
+          });
+
+          setSearchResults(results);
+          setIsSearching(false);
+      };
+
+      const handleSearch = (e) => {
+          e.preventDefault();
+          if (searchQuery.trim()) {
+              performRAGSearch(searchQuery);
+          } else {
+              setSearchResults([]);
+          }
+      };
+
+      const toggleFilter = (filterType, value) => {
+          setSelectedFilters(prev => ({
+              ...prev,
+              [filterType]: prev[filterType].includes(value)
+                  ? prev[filterType].filter(item => item !== value)
+                  : [...prev[filterType], value]
+          }));
+      };
+
+      // Determine which entries to display
+      const displayedEntries = searchQuery.trim() ? searchResults : insights;
+
+      return (
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-blue-50 to-indigo-50 pb-20">
+          <Header />
+
+          <div className="p-4">
+            {/* New Search Bar */}
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 mb-6 shadow-sm border border-white/50">
+              {/* Combined search row */}
+              <form onSubmit={handleSearch} className="flex items-center gap-2">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search your wisdom..."
+                    className="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={isSearching}
+                  className="bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600 transition-colors"
+                >
+                  {isSearching ? (
+                    <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                  ) : (
+                    <Search className="w-4 h-4" />
+                  )}
+                </button>
+
+                <button
+                  onClick={() => setShowFilters(!showFilters)}
+                  className={`p-2 rounded-lg transition-colors ${showFilters ? 'bg-blue-100 text-blue-600' : 'hover:bg-gray-100 text-gray-600'}`}
+                  aria-label={showFilters ? "Hide filters" : "Show filters"}
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                  </svg>
+                </button>
+              </form>
+
+              {/* Filters section */}
+              {showFilters && (
+                <div className="mt-3 pt-3 border-t border-gray-100 space-y-3">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-xs font-medium text-gray-500">FILTER BY:</span>
+                    {allTopics.map(topic => (
+                      <button
+                        key={topic}
+                        onClick={() => toggleFilter('topics', topic)}
+                        className={`px-2.5 py-1 rounded-full text-xs ${
+                          selectedFilters.topics.includes(topic)
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        }`}
+                      >
+                        {topic}
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-2">
+                    {allRecipients.map(id => {
+                      const person = individuals.find(p => p.id === id);
+                      return (
+                        <button
+                          key={id}
+                          onClick={() => toggleFilter('recipients', id)}
+                          className={`px-2.5 py-1 rounded-full text-xs flex items-center gap-1 ${
+                            selectedFilters.recipients.includes(id)
+                              ? 'bg-blue-600 text-white'
+                              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                          }`}
+                        >
+                          <span className={`w-2 h-2 rounded-full ${person.color}`}></span>
+                          {person.name}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-2">
+                    {['insight', 'draft', 'voice'].map(type => (
+                      <button
+                        key={type}
+                        onClick={() => toggleFilter('entryTypes', type)}
+                        className={`px-2.5 py-1 rounded-full text-xs capitalize ${
+                          selectedFilters.entryTypes.includes(type)
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        }`}
+                      >
+                        {type}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Search Results Summary */}
+            {searchQuery.trim() && (
+              <div className="mb-4 flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-gray-800">
+                  {searchResults.length} results for "{searchQuery}"
+                </h3>
+                <button
+                  onClick={() => {
+                    setSearchQuery('');
+                    setSearchResults([]);
+                    setSelectedFilters({ topics: [], recipients: [], entryTypes: [] });
+                  }}
+                  className="text-blue-600 text-sm font-medium hover:text-blue-800"
+                >
+                  Clear search
+                </button>
+              </div>
+            )}
+
+            {/* Your Original Tab Navigation */}
+            <div className="flex bg-white rounded-lg p-1 mb-6">
+              <button
+                onClick={() => setLibraryView('personal')}
+                className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+                  libraryView === 'personal'
+                    ? 'bg-blue-600 text-white'
+                    : 'text-gray-600 hover:text-gray-800'
+                }`}
+              >
+                Personal
+              </button>
+              <button
+                onClick={() => setLibraryView('shared')}
+                className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+                  libraryView === 'shared'
+                    ? 'bg-blue-600 text-white'
+                    : 'text-gray-600 hover:text-gray-800'
+                }`}
+              >
+                Shared
+              </button>
+            </div>
+
+            {/* Personal Library View */}
+            {libraryView === 'personal' && (
+              <div>
+                <div className="mb-6">
+                  <div className="flex items-center justify-between mb-3">
+                    <h2 className="text-lg font-semibold text-gray-800">Your Private Vault</h2>
+                    <span className="text-sm text-gray-500">{displayedEntries.length} items</span>
+                  </div>
+                  <p className="text-sm text-gray-600 mb-4">
+                    Everything you've captured — finished thoughts, drafts, voice notes, and incomplete reflections.
+                  </p>
+
+                  <div className="space-y-4">
+                    {displayedEntries.map(entry => (
+                      <div
+                        key={entry.id}
+                        className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100"
+                      >
+                        {/* Entry Header */}
+                        <div className="flex items-center p-3 border-b border-gray-100 bg-gray-50">
+                          <div className="flex-1 flex items-center space-x-2">
+                            {entry.isDraft && (
+                              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-orange-100 text-orange-800">
+                                Draft
+                              </span>
+                            )}
+                            {entry.isVoiceNote && (
+                              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800">
+                                <Mic className="w-3 h-3 mr-1" /> Voice Note
+                              </span>
+                            )}
+                            {!entry.isDraft && !entry.isVoiceNote && (
+                              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
+                                <Star className="w-3 h-3 mr-1" /> Insight
+                              </span>
+                            )}
+                            <span className="text-xs text-gray-500">
+                              {new Date(entry.date).toLocaleDateString()}
+                            </span>
+                          </div>
+                          {!entry.shared && !entry.isDraft && (
+                            <button className="text-sm font-medium text-blue-600 hover:text-blue-800">
+                              Share
+                            </button>
+                          )}
+                        </div>
+
+                        {/* Q&A Card */}
+                        <div className="p-4">
+                          {entry.question && (
+                            <div className="mb-4">
+                              <div className="flex items-center mb-1">
+                                <span className="text-xs font-semibold text-blue-600 uppercase tracking-wider">Question</span>
+                              </div>
+                              <div className="bg-blue-50 rounded-lg p-3 text-sm text-gray-800">
+                                {entry.question}
+                              </div>
+                            </div>
+                          )}
+
+                          <div className="">
+                            <div className="flex items-center mb-1">
+                              <span className="text-xs font-semibold text-green-600 uppercase tracking-wider">
+                                {entry.isDraft ? "Draft Content" : "Your Insight"}
+                              </span>
+                            </div>
+                            <div className={`rounded-lg p-3 text-sm ${
+                              entry.isDraft || entry.isVoiceNote
+                                ? "bg-gray-50 italic text-gray-600"
+                                : "bg-green-50 text-gray-800"
+                            }`}>
+                              {entry.text || entry.content || "No content yet"}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Tags and Recipients */}
+                        <div className="px-4 pb-3 pt-2 border-t border-gray-100">
+                          <div className="flex flex-wrap gap-2 mb-2">
+                            {entry.topics?.map(topic => (
+                              <span key={topic} className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-full">
+                                {topic}
+                              </span>
+                            ))}
+                          </div>
+                          <div className="flex flex-wrap gap-2">
+                            {entry.recipients?.map(id => {
+                              const person = individuals.find(p => p.id === id);
+                              return (
+                                <span key={person.id} className="inline-flex items-center px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full">
+                                  <span className={`w-2 h-2 rounded-full ${person.color} mr-1`}></span>
+                                  {person.name}
+                                </span>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Shared Library View */}
+            {libraryView === 'shared' && (
+              <div>
+                <div className="mb-6">
+                  <div className="flex items-center justify-between mb-3">
+                    <h2 className="text-lg font-semibold text-gray-800">Living Bookshelf</h2>
+                    <span className="text-sm text-gray-500">{sharedBooks.length} books</span>
+                  </div>
+                  <p className="text-sm text-gray-600 mb-4">
+                    Curated collections and books you've created to share with your loved ones.
+                  </p>
+
+                  <div className="space-y-4">
+                    {sharedBooks.map(book => (
+                      <div key={book.id} className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100">
+                        <div className="p-4">
+                          <div className="flex items-start">
+                            <div className={`w-12 h-12 rounded-lg ${book.color} flex items-center justify-center mr-3 flex-shrink-0`}>
+                              <Book className="w-6 h-6 text-white" />
+                            </div>
+                            <div className="flex-1">
+                              <h3 className="font-semibold text-gray-800 mb-1">{book.name}</h3>
+                              <p className="text-sm text-gray-600 mb-2">{book.description}</p>
+                              <div className="flex items-center gap-3 text-xs text-gray-500">
+                                <span>{book.pages.length / 2} chapters</span>
+                                <span>•</span>
+                                <span>For {book.recipient}</span>
+                                <span>•</span>
+                                <span>Updated {book.lastUpdated}</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="px-4 pb-3 border-t border-gray-100">
+                          <div className="flex items-center justify-between pt-3">
+                            <div className="flex items-center gap-2">
+                              <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
+                                <span className="text-xs font-medium text-blue-600">
+                                  {book.recipient === 'Sage' ? 'S' : book.recipient === 'Cohen' ? 'B' : 'B'}
+                                </span>
+                              </div>
+                              <span className="text-xs text-gray-600">
+                                {book.recipient === 'Both kids' ? 'Shared with both children' : `Shared with ${book.recipient}`}
+                              </span>
+                            </div>
+                            <button
+                              onClick={() => {
+                                setSelectedBook(book);
+                                setCurrentPage(0); // Reset to first page when opening a book
+                              }}
+                              className="text-xs font-medium text-blue-600 hover:text-blue-800"
+                            >
+                              View Collection
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Create New Book Section */}
+                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-100">
+                  <div className="flex items-center mb-2">
+                    <Heart className="w-5 h-5 text-blue-600 mr-2" />
+                    <span className="font-medium text-gray-800">Create a New Book</span>
+                  </div>
+                  <p className="text-sm text-gray-600 mb-3">
+                    Turn your insights into a meaningful collection for someone special.
+                  </p>
+                  <button
+                    className="w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white py-2 px-4 rounded-lg font-medium flex items-center justify-center gap-2"
+                    onClick={() => setCurrentView('createBook')}
+                  >
+                    <Plus size={16} />
+                    Start New Book
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* New Capture Modal */}
+          {showCapture && (
+            <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40 flex items-center justify-center p-4">
+              <div className="bg-white rounded-2xl w-full max-w-md overflow-hidden shadow-xl">
+                <div className={`p-6 relative ${captureMode === 'quick' ? 'bg-blue-50' : 'bg-gradient-to-r from-indigo-50 to-purple-50'}`}>
+                  <button
+                    onClick={() => setShowCapture(false)}
+                    className="absolute top-4 right-4 p-1 rounded-full hover:bg-white/50"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                  <h2 className="text-xl font-semibold">
+                    {captureMode === 'quick' ? 'Daily Reflection' : 'Milestone Preparation'}
+                  </h2>
+                  <p className="text-sm mt-1 text-gray-600">
+                    {captureMode === 'quick'
+                      ? "Answer today's question in just 2 minutes"
+                      : "Create lasting memories for this special occasion"}
+                  </p>
+                </div>
+
+                <div className="p-6">
+                  {captureMode === 'quick' ? (
+                    <QuickCaptureFlow
+                      onClose={() => setShowCapture(false)}
+                    />
+                  ) : (
+                    <MilestoneFlow
+                      onClose={() => setShowCapture(false)}
+                    />
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Book Preview Modal - MOVED TO ROOT LEVEL */}
+          {selectedBook && (
+            <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
+              <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[95vh] overflow-hidden flex flex-col">
+                {/* Header */}
+                <div className="relative bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-100">
+                  <div className="flex items-center justify-between p-6">
+                    <div className="flex items-center space-x-3">
+                      <div className={`w-10 h-10 ${selectedBook.color} rounded-lg flex items-center justify-center shadow-lg`}>
+                        <BookOpen className="w-5 h-5 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="text-xl font-bold text-blue-800 tracking-wide">
+                          {selectedBook.name}
+                        </h3>
+                        <p className="text-sm text-blue-600 font-medium">
+                          For {selectedBook.recipient}
+                        </p>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={() => setSelectedBook(null)}
+                      className="w-10 h-10 rounded-full bg-white bg-opacity-70 hover:bg-opacity-100 flex items-center justify-center text-blue-600 hover:text-blue-800 transition-all duration-200 shadow-lg hover:shadow-xl"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Book Content - Fixed size container */}
+                <div className="flex-1 bg-gradient-to-br from-blue-50 to-indigo-50 flex items-center justify-center p-8">
+                  <div className="relative w-full max-w-md h-[500px]">
+                    <div className={`relative bg-white rounded-lg shadow-xl border border-blue-200 h-full overflow-y-auto ${isFlipping ? 'scale-95 opacity-70' : 'scale-100 opacity-100'}`}>
+                      {/* Current Page Content */}
+                      <div className="p-8 h-full flex flex-col">
+                        {selectedBook.pages[currentPage].type === 'question' ? (
+                          <>
+                            <div className="mb-6">
+                              <div className="inline-block px-3 py-1 bg-blue-100 rounded-full">
+                                <span className="text-xs font-semibold text-blue-700 uppercase tracking-wider">
+                                  Question
+                                </span>
+                              </div>
+                            </div>
+
+                            <div className="flex-1 flex items-center justify-center min-h-[300px]">
+                              <p className="text-lg text-blue-800 text-center italic">
+                                {selectedBook.pages[currentPage].content}
+                              </p>
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <div className="mb-6">
+                              <div className="inline-block px-3 py-1 bg-blue-100 rounded-full">
+                                <span className="text-xs font-semibold text-blue-700 uppercase tracking-wider">
+                                  Your Insight
+                                </span>
+                              </div>
+                            </div>
+
+                            <div className="flex-1 min-h-[300px]">
+                              <p className="text-blue-800 mb-4">
+                                {selectedBook.pages[currentPage].content.text}
+                              </p>
+                              <ul className="space-y-2 text-blue-700">
+                                {selectedBook.pages[currentPage].content.points.map((point, i) => (
+                                  <li key={i} className="flex items-start">
+                                    <span className="text-blue-500 mr-2">•</span>
+                                    <span>{point}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          </>
+                        )}
+
+                        <div className="mt-auto pt-4 text-center">
+                          <span className="text-xs text-blue-300 font-medium">
+                            Page {selectedBook.pages[currentPage].pageNumber}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Navigation Arrows */}
+                  {currentPage > 0 && (
+                    <button
+                      onClick={() => flipPage('prev')}
+                      className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-white bg-opacity-80 hover:bg-opacity-100 rounded-full shadow-lg hover:shadow-xl flex items-center justify-center text-blue-600 hover:text-blue-800 transition-all duration-200"
+                    >
+                      <ChevronLeft className="w-5 h-5" />
+                    </button>
+                  )}
+
+                  {currentPage < selectedBook.pages.length - 1 && (
+                    <button
+                      onClick={() => flipPage('next')}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-white bg-opacity-80 hover:bg-opacity-100 rounded-full shadow-lg hover:shadow-xl flex items-center justify-center text-blue-600 hover:text-blue-800 transition-all duration-200"
+                    >
+                      <ChevronRight className="w-5 h-5" />
+                    </button>
+                  )}
+                </div>
+
+                {/* Page Indicators */}
+                <div className="flex justify-center py-3 bg-blue-50 border-t border-blue-100">
+                  <div className="flex space-x-2">
+                    {selectedBook.pages.map((_, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => !isFlipping && setCurrentPage(idx)}
+                        className={`w-2 h-2 rounded-full transition-all duration-200 ${
+                          idx === currentPage
+                            ? 'bg-blue-600 scale-125'
+                            : 'bg-blue-200 hover:bg-blue-300'
+                        }`}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                {/* Icon-only Action Buttons */}
+                <div className="flex justify-center gap-4 p-4 bg-blue-50 border-t border-blue-100">
+                  <button className="p-3 rounded-full bg-blue-100 text-blue-600 hover:bg-blue-200 transition-colors" title="Download PDF">
+                    <Download className="w-5 h-5" />
+                  </button>
+                  <button className="p-3 rounded-full bg-blue-100 text-blue-600 hover:bg-blue-200 transition-colors" title="Print">
+                    <Printer className="w-5 h-5" />
+                  </button>
+                  <button className="p-3 rounded-full bg-blue-100 text-blue-600 hover:bg-blue-200 transition-colors" title="Order">
+                    <ShoppingCart className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      );
+  };
+
+  const ProfileView = () => (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-blue-50 to-indigo-50 pb-20">
+      <Header />
+
+      <div className="p-4">
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 mb-6 shadow-sm border border-white/50 text-center">
+          <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-3">
+            <span className="text-white text-xl font-bold">{user.name.charAt(0)}</span>
+          </div>
+          <div className="font-semibold text-gray-800">{user.name}</div>
+          <div className="text-sm text-gray-500">Member since June 2025</div>
+
+          <div className="flex justify-around mt-4 pt-4 border-t border-gray-100">
+            <div className="text-center">
+              <div className="font-bold text-gray-800">{insights.filter(i => i.shared).length}</div>
+              <div className="text-xs text-gray-500">Insights</div>
+            </div>
+            <div className="text-center">
+              <div className="font-bold text-gray-800">{individuals.length}</div>
+              <div className="text-xs text-gray-500">People</div>
+            </div>
+            <div className="text-center">
+              <div className="font-bold text-gray-800">{collections.length}</div>
+              <div className="text-xs text-gray-500">Books</div>
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-3">
+          <button className="w-full bg-white/80 backdrop-blur-sm rounded-xl p-4 flex items-center justify-between border border-white/50 shadow-sm hover:bg-gray-50 transition-colors">
+            <div className="flex items-center">
+              <Settings size={20} className="text-gray-600 mr-3" />
+              <span className="text-gray-800">Account Settings</span>
+            </div>
+            <ChevronRight size={20} className="text-gray-400" />
+          </button>
+
+          <button className="w-full bg-white/80 backdrop-blur-sm rounded-xl p-4 flex items-center justify-between border border-white/50 shadow-sm hover:bg-gray-50 transition-colors">
+            <div className="flex items-center">
+              <Bell size={20} className="text-gray-600 mr-3" />
+              <span className="text-gray-800">Notification Preferences</span>
+            </div>
+            <ChevronRight size={20} className="text-gray-400" />
+          </button>
+
+          <button className="w-full bg-white/80 backdrop-blur-sm rounded-xl p-4 flex items-center justify-between border border-white/50 shadow-sm hover:bg-gray-50 transition-colors">
+            <div className="flex items-center">
+              <Users size={20} className="text-gray-600 mr-3" />
+              <span className="text-gray-800">Help & Support</span>
+            </div>
+            <ChevronRight size={20} className="text-gray-400" />
+          </button>
+
+          <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-white/50 shadow-sm">
+            <div className="flex items-center mb-3">
+              <Users size={20} className="text-gray-600 mr-3" />
+              <span className="text-gray-800 font-medium">Family Members</span>
+            </div>
+            {individuals.map(person => (
+              <div key={person.id} className="flex items-center justify-between py-2">
+                <div className="flex items-center">
+                  <div className={`w-8 h-8 rounded-full ${person.color} flex items-center justify-center mr-3`}>
+                    <span className="text-white text-sm font-bold">{person.avatar}</span>
+                  </div>
+                  <span className="text-gray-800">{person.name}</span>
+                </div>
+                <button className="text-blue-600 text-sm">Edit</button>
+              </div>
+            ))}
+            <button className="w-full mt-3 py-2 border border-gray-200 rounded-lg text-gray-600 text-sm">
+              + Add Family Member
+            </button>
+          </div>
+
+          <button className="w-full bg-white/80 backdrop-blur-sm rounded-xl p-4 text-red-600 text-center border border-white/50 shadow-sm hover:bg-gray-50 transition-colors">
+            Sign Out
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderView = () => {
+    switch (currentView) {
+      case 'home':
+        return <HomeView
+          setCurrentView={setCurrentView}
+          setCaptureMode={setCaptureMode}
+        />;
+      case 'capture':
+        return <CaptureView
+          captureMode={captureMode}
+          setCurrentView={setCurrentView}
+          resetForm={resetForm}
+        />;
+      case 'organize':
+        return <OrganizeView />;
+      case 'library':
+        return <LibraryView resetForm={resetForm} />;
+      case 'profile':
+        return <ProfileView />;
+      default:
+        return <HomeView />;
+    }
+  };
+
+  return (
+    <div className="relative">
+      {renderView()}
+      <BottomNav
+        currentView={currentView}
+        setCurrentView={setCurrentView}
+        setShowCaptureOptions={setShowCaptureOptions}
+      />
+    </div>
+  );
+};
+
+export default WellSaidApp;
