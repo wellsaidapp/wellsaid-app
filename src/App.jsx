@@ -1,5 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Wand2, MicOff, Check, Shuffle, RefreshCw, BookOpen, Share2, ChevronLeft, X, Download, Sparkles, Printer, ShoppingCart, ChevronDown, ChevronUp, Plus, Home, MessageSquare, Book, User, ArrowRight, ArrowLeft, Calendar, Target, Trophy, Zap, Heart, Mic, Send, Users, Settings, MessageCircle, Edit3, FolderOpen, Search, Tag, Clock, ChevronRight, Star, Bell } from 'lucide-react';
+import {
+  Send, Mic, MicOff, ArrowRight, Check, Plus, User, Mail, Hash,
+  MessageCircle, Wand2, BookOpen, Share2, ChevronLeft, X, Download,
+  Sparkles, Printer, ShoppingCart, ChevronDown, ChevronUp, Home,
+  MessageSquare, Book, FolderOpen, Search, Tag, Clock, ChevronRight,
+  Star, Bell, Settings, Users, Edit3, Calendar, Target, Trophy, Zap,
+  Heart, ArrowLeft, Cake, Orbit, GraduationCap, Gift, Shuffle
+} from 'lucide-react';
 import logo from './assets/wellsaid.svg';
 import Lottie from 'lottie-react';
 import animationData from './assets/animations/TypeBounce.json';
@@ -67,402 +74,525 @@ const LandingPage = ({ onGetStarted }) => {
   );
 };
 
-// New Onboarding Components
-const OnboardingFlow = ({ onComplete }) => {
-  const [currentStep, setCurrentStep] = useState(1);
+// New Typewriter Component for AI messages
+const Typewriter = ({ text, speed = 20, onComplete }) => {
+  const [displayedText, setDisplayedText] = useState('');
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [hasCompleted, setHasCompleted] = useState(false);
+
+  useEffect(() => {
+    if (currentIndex < text.length) {
+      const timeout = setTimeout(() => {
+        setDisplayedText(prev => prev + text[currentIndex]);
+        setCurrentIndex(prev => prev + 1);
+      }, speed);
+      return () => clearTimeout(timeout);
+    } else if (onComplete && !hasCompleted) {
+      setHasCompleted(true);
+      onComplete();
+    }
+  }, [currentIndex, text, speed, onComplete, hasCompleted]);
+
+  return <span>{displayedText}</span>;
+};
+
+const WellSaidOnboarding = ({ onComplete }) => {
+  const [currentStep, setCurrentStep] = useState('welcome');
   const [userData, setUserData] = useState({
     name: '',
     email: '',
-    story: '',
-    questions: '',
-    audience: '',
-    sharingGoals: ''
+    pin: '',
+    motivation: '',
+    topics: '',
+    helpStyle: '',
+    people: []
   });
-  const [isListening, setIsListening] = useState(false);
-  const recognitionRef = useRef(null);
+  const [messages, setMessages] = useState([]);
+  const [currentInput, setCurrentInput] = useState('');
+  const [isRecording, setIsRecording] = useState(false);
+  const [isTyping, setIsTyping] = useState(false);
+  const [showPinInput, setShowPinInput] = useState(false);
+  const [pinDigits, setPinDigits] = useState(['', '', '', '']);
+  const [currentPersonInput, setCurrentPersonInput] = useState('');
+  const [showPersonForm, setShowPersonForm] = useState(false);
+  const messagesEndRef = useRef(null);
 
-  const steps = [
-    { id: 1, title: "Welcome to WellSaid", subtitle: "Let's start by getting to know you" },
-    { id: 2, title: "Tell us your story", subtitle: "What experiences have shaped who you are?" },
-    { id: 3, title: "Meaningful questions", subtitle: "What topics would you like to explore?" },
-    { id: 4, title: "Your audience", subtitle: "Who are you sharing these messages with?" },
-    { id: 5, title: "Setup complete", subtitle: "You're ready to start capturing wisdom" }
-  ];
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
 
-  // Initialize speech recognition
   useEffect(() => {
-    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      recognitionRef.current = new SpeechRecognition();
-      recognitionRef.current.continuous = false;
-      recognitionRef.current.interimResults = false;
-      recognitionRef.current.lang = 'en-US';
-    }
-  }, []);
+    scrollToBottom();
+  }, [messages]);
 
-  const handleVoiceInput = (stepNumber) => {
-    if (!recognitionRef.current) {
-      alert('Voice recording not supported in this browser');
-      return;
-    }
-
-    if (isListening) {
-      recognitionRef.current.stop();
-      return;
-    }
-
-    setIsListening(true);
-    recognitionRef.current.start();
-
-    recognitionRef.current.onresult = (event) => {
-      const transcript = event.results[0][0].transcript;
-      switch(stepNumber) {
-        case 1:
-          setUserData(prev => ({ ...prev, name: transcript }));
-          break;
-        case 2:
-          setUserData(prev => ({ ...prev, story: transcript }));
-          break;
-        case 3:
-          setUserData(prev => ({ ...prev, questions: transcript }));
-          break;
-        case 4:
-          setUserData(prev => ({ ...prev, sharingGoals: transcript }));
-          break;
-      }
-      setIsListening(false);
-    };
-
-    recognitionRef.current.onerror = () => {
-      setIsListening(false);
-    };
-
-    recognitionRef.current.onend = () => {
-      setIsListening(false);
-    };
+  const typeMessage = (message, isBot = true, delay = 1000) => {
+    setTimeout(() => {
+      setIsTyping(true);
+      setTimeout(() => {
+        setMessages(prev => [...prev, {
+          text: message,
+          isBot,
+          timestamp: Date.now(),
+          isTyping: false // This will be set to false when Typewriter completes
+        }]);
+        setIsTyping(false);
+      }, 1500);
+    }, delay);
   };
 
-  const nextStep = () => {
-    if (validateCurrentStep()) {
-      setCurrentStep(prev => prev + 1);
-      if (currentStep === 4) {
-        generateSummary();
+  const startOnboarding = () => {
+    setCurrentStep('registration');
+    typeMessage("Hi there! I'm your AI assistant and I'm here to help you get familiar with the app. What's your name?", true, 500);
+  };
+
+  const handleRegistrationSubmit = (field, value) => {
+    setUserData(prev => ({ ...prev, [field]: value }));
+
+    if (field === 'name') {
+      setMessages(prev => [...prev, { text: value, isBot: false, timestamp: Date.now() }]);
+      typeMessage(`Nice to meet you, ${value}! What's your email address?`, true, 500);
+    } else if (field === 'email') {
+      setMessages(prev => [...prev, { text: value, isBot: false, timestamp: Date.now() }]);
+      typeMessage("Perfect! I've sent you a 4-digit code. Please enter it below:", true, 500);
+      setShowPinInput(true);
+    }
+  };
+
+  const handlePinChange = (index, value) => {
+    if (value.length <= 1 && /^\d*$/.test(value)) {
+      const newPin = [...pinDigits];
+      newPin[index] = value;
+      setPinDigits(newPin);
+
+      if (value && index < 3) {
+        document.getElementById(`pin-${index + 1}`)?.focus();
+      }
+
+      if (newPin.every(digit => digit !== '')) {
+        const fullPin = newPin.join('');
+        setUserData(prev => ({ ...prev, pin: fullPin }));
+        setTimeout(() => {
+          setCurrentStep('conversation');
+          typeMessage("Great! Now let's get to work. Over the next few minutes, I'd like to hear more about you and how you would like to use this app. This will help me help you! You can speak or type your answers using the area below.", true, 1000);
+          typeMessage("What brings you to this app?", true, 3000);
+        }, 500);
       }
     }
   };
 
-  const previousStep = () => {
-    setCurrentStep(prev => prev - 1);
-  };
+  const handleConversationSubmit = () => {
+    if (!currentInput.trim()) return;
 
-  const validateCurrentStep = () => {
-    switch(currentStep) {
-      case 1:
-        if (!userData.name.trim() || !userData.email.trim()) {
-          alert('Please enter your name and email address.');
-          return false;
-        }
-        if (!userData.email.includes('@')) {
-          alert('Please enter a valid email address.');
-          return false;
-        }
-        return true;
-      case 2:
-        if (!userData.story.trim()) {
-          alert('Please share a bit about yourself to help us understand you better.');
-          return false;
-        }
-        return true;
-      case 3:
-        if (!userData.questions.trim()) {
-          alert('Please share some questions or topics you\'d like to explore.');
-          return false;
-        }
-        return true;
-      case 4:
-        if (!userData.audience) {
-          alert('Please select who you want to share your insights with.');
-          return false;
-        }
-        return true;
-      default:
-        return true;
+    const input = currentInput.trim();
+    setMessages(prev => [...prev, { text: input, isBot: false, timestamp: Date.now() }]);
+    setCurrentInput('');
+
+    // Determine next question based on current conversation state
+    if (!userData.motivation) {
+      setUserData(prev => ({ ...prev, motivation: input }));
+      typeMessage("Thanks for sharing! Let's talk about the topics you want to cover. Can you spend a few moments telling me about the types of questions or topics you'd like to answer, or use your input to guide our future interactions within the app? Questions and topics can evolve over time, but this will give us a starting point.", true, 1000);
+      typeMessage("What kinds of insight would you like to capture?", true, 2500);
+    } else if (!userData.topics) {
+      setUserData(prev => ({ ...prev, topics: input }));
+      typeMessage("Great! Now how can I help you stay on track? How would you like to use this app? Is it something you'd like to use daily or weekly or something you plan to use when preparing for a special occasion? Would you like me to push notifications to you so you stay committed to your plan?", true, 1000);
+      typeMessage("How can I help you make use of this app?", true, 2500);
+    } else if (!userData.helpStyle) {
+      setUserData(prev => ({ ...prev, helpStyle: input }));
+      typeMessage("We're on the last step! Your insight is meant to be shared with the people you care most about. WellSaid gives you the opportunity to say what matters to the people who matter. You can add people now by using the icons below or visit your profile in the app to add them later.", true, 1000);
+      typeMessage("Who would you like to share your insight with?", true, 2500);
+      setCurrentStep('people');
     }
   };
 
-  const generateSummary = () => {
-    const audienceText = {
-      'children': 'your children or grandchildren',
-      'family': 'family members and relatives',
-      'mentees': 'students, mentees, or colleagues',
-      'friends': 'close friends and community',
-      'future': 'future generations',
-      'personal': 'personal reflection and growth'
+  const handlePersonSubmit = () => {
+    if (!currentPersonInput.trim()) return;
+
+    const input = currentPersonInput.trim();
+    setMessages(prev => [...prev, { text: input, isBot: false, timestamp: Date.now() }]);
+    setCurrentPersonInput('');
+
+    // Simple parsing - in a real app, you'd use more sophisticated NLP
+    const person = {
+      id: Date.now(),
+      rawInput: input,
+      name: extractName(input),
+      relationship: extractRelationship(input),
+      age: extractAge(input),
+      topics: extractTopics(input)
     };
 
-    return `
-      <div class="summary-item">
-        <span class="summary-icon">👋</span>
-        <span>You're ${userData.name}, and you want to share meaningful insights with ${audienceText[userData.audience]}.</span>
-      </div>
-      <div class="summary-item">
-        <span class="summary-icon">💭</span>
-        <span>You're interested in exploring questions about ${userData.questions.substring(0, 100)}${userData.questions.length > 100 ? '...' : ''}</span>
-      </div>
-      <div class="summary-item">
-        <span class="summary-icon">🎯</span>
-        <span>Your story and experiences will help us ask the right questions at the right time.</span>
-      </div>
-    `;
+    setUserData(prev => ({ ...prev, people: [...prev.people, person] }));
+
+    typeMessage(`I've added ${person.name || 'this person'} to your profile. Would you like to add anyone else, or shall we complete your setup?`, true, 1000);
+    setShowPersonForm(true);
   };
 
-  const generateAIResponse = (step) => {
-    const responses = {
-      2: [
-        "Thank you for sharing that with us! Your background gives us great insight into the kinds of meaningful questions that might resonate with you.",
-        "What a rich story! We can already see some themes emerging that we'd love to explore further with you.",
-        "Your experiences sound fascinating. We're excited to help you capture the wisdom you've gained along the way."
-      ],
-      3: [
-        "These are exactly the kinds of deep, meaningful questions that create lasting impact. We'll use these to guide our conversations with you.",
-        "What thoughtful questions! These topics will help us create personalized conversations that really matter to you.",
-        "We love how you think about these big questions. This gives us a perfect foundation for meaningful dialogue."
-      ]
-    };
-
-    return responses[step][Math.floor(Math.random() * responses[step].length)];
+  const extractName = (text) => {
+    const nameMatch = text.match(/(?:my |named |called )([A-Za-z]+)/i);
+    return nameMatch ? nameMatch[1] : '';
   };
 
-  const handleAudienceSelect = (audience) => {
-    setUserData(prev => ({ ...prev, audience }));
+  const extractRelationship = (text) => {
+    const relationships = ['daughter', 'son', 'wife', 'husband', 'mother', 'father', 'friend', 'partner', 'spouse'];
+    const found = relationships.find(rel => text.toLowerCase().includes(rel));
+    return found || 'person';
   };
 
-  const VoiceSection = ({ stepNumber, title, subtitle }) => (
-    <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl p-6 text-center text-white mb-6">
-      <button
-        onClick={() => handleVoiceInput(stepNumber)}
-        className={`w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 transition-all ${
-          isListening
-            ? 'bg-white/40 animate-pulse border-2 border-white/50'
-            : 'bg-white/20 hover:bg-white/30 border-2 border-white/30'
-        }`}
-      >
-        <Mic size={24} />
-      </button>
-      <div className="text-lg font-medium mb-1">{title}</div>
-      <div className="text-sm opacity-80">{subtitle}</div>
-    </div>
-  );
+  const extractAge = (text) => {
+    const ageMatch = text.match(/(\d+)\s*(?:years?\s*old|yr)/i);
+    return ageMatch ? parseInt(ageMatch[1]) : null;
+  };
 
-  const renderStepContent = () => {
-    switch(currentStep) {
-      case 1:
-        return (
-          <>
-            <VoiceSection
-              stepNumber={1}
-              title="Tap to tell us about yourself"
-              subtitle="Or type below if you prefer"
-            />
+  const extractTopics = (text) => {
+    const topics = [];
+    if (text.includes('school') || text.includes('education')) topics.push('education');
+    if (text.includes('career') || text.includes('work')) topics.push('career');
+    if (text.includes('health') || text.includes('wellness')) topics.push('health');
+    return topics;
+  };
 
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">What's your name?</label>
-              <input
-                type="text"
-                value={userData.name}
-                onChange={(e) => setUserData(prev => ({ ...prev, name: e.target.value }))}
-                className="w-full p-4 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Enter your full name"
-              />
-            </div>
+  const completeOnboarding = () => {
+    setCurrentStep('summary');
+    typeMessage("Here's what I've learned about you so far:", true, 500);
 
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Email address</label>
-              <input
-                type="email"
-                value={userData.email}
-                onChange={(e) => setUserData(prev => ({ ...prev, email: e.target.value }))}
-                className="w-full p-4 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="your@email.com"
-              />
-            </div>
-          </>
-        );
-      case 2:
-        return (
-          <>
-            <VoiceSection
-              stepNumber={2}
-              title="Share your story with us"
-              subtitle="We're listening..."
-            />
+    let summary = `You're ${userData.name}, and you're here because ${userData.motivation.toLowerCase()}. `;
+    summary += `You're interested in ${userData.topics.toLowerCase()}, and you'd like me to ${userData.helpStyle.toLowerCase()}. `;
 
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">What would you like to share about yourself?</label>
-              <textarea
-                value={userData.story}
-                onChange={(e) => setUserData(prev => ({ ...prev, story: e.target.value }))}
-                className="w-full p-4 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent h-40"
-                placeholder="Tell us about your background, experiences, values, or anything that's important to who you are..."
-              />
-            </div>
+    if (userData.people.length > 0) {
+      summary += `You want to share insights with ${userData.people.length} special ${userData.people.length === 1 ? 'person' : 'people'} in your life. `;
+    }
 
-            {userData.story && (
-              <div className="bg-blue-50 rounded-xl p-4 border-l-4 border-blue-500 mb-6">
-                <div className="text-xs font-semibold text-blue-600 uppercase tracking-wider mb-2">WellSaid AI</div>
-                <div className="text-blue-800">{generateAIResponse(2)}</div>
-              </div>
-            )}
-          </>
-        );
-      case 3:
-        return (
-          <>
-            <VoiceSection
-              stepNumber={3}
-              title="Tell us about meaningful questions"
-              subtitle="What questions have shaped you?"
-            />
+    summary += "I'm excited to help you on this journey!";
 
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">What questions or topics would you like to explore?</label>
-              <textarea
-                value={userData.questions}
-                onChange={(e) => setUserData(prev => ({ ...prev, questions: e.target.value }))}
-                className="w-full p-4 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent h-40"
-                placeholder="Examples: What lessons did you learn from failure? What would you tell your younger self? What values guide your decisions?"
-              />
-            </div>
+    typeMessage(summary, true, 2000);
+  };
 
-            {userData.questions && (
-              <div className="bg-blue-50 rounded-xl p-4 border-l-4 border-blue-500 mb-6">
-                <div className="text-xs font-semibold text-blue-600 uppercase tracking-wider mb-2">WellSaid AI</div>
-                <div className="text-blue-800">{generateAIResponse(3)}</div>
-              </div>
-            )}
-          </>
-        );
-      case 4:
-        return (
-          <>
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-3">Select who you want to share with:</label>
-              <div className="grid gap-3">
-                {[
-                  { value: 'children', label: 'My children or grandchildren' },
-                  { value: 'family', label: 'Family members and relatives' },
-                  { value: 'mentees', label: 'Students, mentees, or colleagues' },
-                  { value: 'friends', label: 'Close friends and community' },
-                  { value: 'future', label: 'Future generations' },
-                  { value: 'personal', label: 'Personal reflection and growth' }
-                ].map(option => (
-                  <button
-                    key={option.value}
-                    onClick={() => handleAudienceSelect(option.value)}
-                    className={`p-4 text-left rounded-xl border-2 transition-all ${
-                      userData.audience === option.value
-                        ? 'border-blue-500 bg-blue-50'
-                        : 'border-gray-200 hover:border-blue-300'
-                    }`}
-                  >
-                    {option.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <VoiceSection
-              stepNumber={4}
-              title="Tell us more about your sharing goals"
-              subtitle="Any specific hopes or intentions?"
-            />
-
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Additional thoughts about who you want to reach</label>
-              <textarea
-                value={userData.sharingGoals}
-                onChange={(e) => setUserData(prev => ({ ...prev, sharingGoals: e.target.value }))}
-                className="w-full p-4 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent h-32"
-                placeholder="Tell us more about your hopes for sharing these stories and insights..."
-              />
-            </div>
-          </>
-        );
-      case 5:
-        return (
-          <>
-            <div className="text-center text-6xl mb-6">🎉</div>
-
-            <div className="bg-gradient-to-r from-blue-500 to-indigo-600 rounded-2xl p-6 text-white mb-6">
-              <div className="text-lg font-semibold mb-4">Here's what we learned about you:</div>
-              <div
-                className="space-y-3"
-                dangerouslySetInnerHTML={{ __html: generateSummary() }}
-              />
-            </div>
-
-            <div className="bg-blue-50 rounded-xl p-4 border-l-4 border-blue-500">
-              <div className="text-xs font-semibold text-blue-600 uppercase tracking-wider mb-2">Your First Question</div>
-              <div className="text-blue-800">
-                Based on what you've shared, here's a thoughtful question to get you started: What's one piece of advice you wish someone had given you when you were starting out in life?
-              </div>
-            </div>
-          </>
-        );
-      default:
-        return null;
+  const toggleRecording = () => {
+    setIsRecording(!isRecording);
+    // In a real app, you'd implement actual voice recording here
+    if (!isRecording) {
+      setTimeout(() => {
+        setIsRecording(false);
+        setCurrentInput("This would be transcribed speech...");
+      }, 2000);
     }
   };
+  // ... (keep all your existing helper functions like handlePinChange, handleConversationSubmit, etc.)
+
+  if (currentStep === 'welcome') {
+    return (
+      <div className="fixed inset-0 bg-gradient-to-br from-blue-50 to-indigo-50 z-50 overflow-y-auto flex items-center justify-center p-4">
+        {/* Enhanced Card Container */}
+        <div className="w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden">
+          {/* Card Header with Gradient */}
+          <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-6 text-center">
+            <div className="flex justify-center mb-4">
+              <img src={logo} alt="WellSaid" className="h-12" />
+            </div>
+            <h1 className="text-2xl font-bold text-white mb-2">Capture and Share What Matters</h1>
+          </div>
+
+          {/* Card Body */}
+          <div className="p-6 space-y-6">
+            <div className="space-y-4 text-gray-700">
+              <div className="flex items-start space-x-3">
+                <div className="flex-shrink-0 mt-1">
+                  <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center">
+                    <MessageCircle className="w-3 h-3 text-blue-600" />
+                  </div>
+                </div>
+                <p className="text-base leading-relaxed">
+                  I'll guide you through setting up your profile so we can create meaningful messages together.
+                </p>
+              </div>
+
+              <div className="flex items-start space-x-3">
+                <div className="flex-shrink-0 mt-1">
+                  <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center">
+                    <Mic className="w-3 h-3 text-blue-600" />
+                  </div>
+                </div>
+                <p className="text-base leading-relaxed">
+                  You can type or speak your answers - whatever feels most natural to you.
+                </p>
+              </div>
+            </div>
+
+            <button
+              onClick={startOnboarding}
+              className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 px-6 rounded-xl font-medium text-lg shadow-md hover:shadow-lg transition-all hover:scale-[1.02] active:scale-95"
+            >
+              Get Started <ArrowRight className="w-4 h-4 inline ml-1" />
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="fixed inset-0 bg-gradient-to-br from-blue-50 via-blue-50 to-indigo-50 z-50 overflow-y-auto">
-      <div className="min-h-screen flex flex-col max-w-md mx-auto px-4 py-8">
+    <div className="fixed inset-0 bg-gradient-to-br from-blue-50 to-indigo-50 z-50 overflow-y-auto">
+      <div className="max-w-2xl mx-auto p-4 min-h-screen flex flex-col">
         {/* Header */}
-        <div className="text-center mb-8">
-          <img src={logo} alt="WellSaid" className="h-10 mx-auto mb-3" />
-          <h1 className="text-2xl font-bold text-gray-800">{steps[currentStep - 1].title}</h1>
-          <p className="text-gray-600 mt-2">{steps[currentStep - 1].subtitle}</p>
+        <div className="flex items-center gap-3 mb-6 pt-4">
+          <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full flex items-center justify-center">
+            <img src={logo} alt="WellSaid" className="h-6 w-6" />
+          </div>
+          <div>
+            <h1 className="font-bold text-gray-800">wellsaid.</h1>
+            <p className="text-sm text-gray-500">AI Assistant</p>
+          </div>
         </div>
 
-        {/* Progress Bar */}
-        <div className="w-full bg-gray-200 rounded-full h-2 mb-8">
-          <div
-            className="bg-blue-500 h-2 rounded-full transition-all duration-300"
-            style={{ width: `${(currentStep / steps.length) * 100}%` }}
-          />
+        {/* Messages */}
+        <div className="flex-1 bg-white rounded-2xl shadow-lg p-6 mb-4 overflow-y-auto">
+          <div className="space-y-4">
+            {messages.map((message, index) => (
+              <div key={index} className={`flex ${message.isBot ? 'justify-start' : 'justify-end'}`}>
+                <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-2xl ${
+                  message.isBot
+                    ? 'bg-gray-100 text-gray-800'
+                    : 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white'
+                }`}>
+                  {message.isBot && message.isTyping ? (
+                    <div className="flex space-x-1">
+                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                    </div>
+                  ) : (
+                    message.isBot ? (
+                      <Typewriter
+                        text={message.text}
+                        onComplete={() => {
+                          // Update message to mark typing as complete
+                          setMessages(prev => prev.map((msg, i) =>
+                            i === index ? {...msg, isTyping: false} : msg
+                          ));
+                        }}
+                      />
+                    ) : (
+                      <p className="text-sm">{message.text}</p>
+                    )
+                  )}
+                </div>
+              </div>
+            ))}
+            {isTyping && (
+              <div className="flex justify-start">
+                <div className="bg-gray-100 px-4 py-2 rounded-2xl">
+                  <div className="flex space-x-1">
+                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+          <div ref={messagesEndRef} />
         </div>
 
-        {/* Step Content */}
-        <div className="flex-1">
-          {renderStepContent()}
-        </div>
+        {/* PIN Input */}
+        {showPinInput && currentStep === 'registration' && (
+          <div className="bg-white rounded-2xl shadow-lg p-6 mb-4">
+            <p className="text-center text-gray-600 mb-4">Enter your 4-digit code:</p>
+            <div className="flex justify-center gap-2">
+              {pinDigits.map((digit, index) => (
+                <input
+                  key={index}
+                  id={`pin-${index}`}
+                  type="text"
+                  value={digit}
+                  onChange={(e) => handlePinChange(index, e.target.value)}
+                  className="w-12 h-12 text-center text-xl font-bold border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none"
+                  maxLength={1}
+                />
+              ))}
+            </div>
+          </div>
+        )}
 
-        {/* Navigation */}
-        <div className="flex justify-between mt-8">
-          {currentStep > 1 && (
+        {/* Registration Input */}
+        {currentStep === 'registration' && !showPinInput && (
+          <div className="bg-white rounded-2xl shadow-lg p-4">
+            <div className="flex gap-2">
+              {!userData.name ? (
+                <>
+                  <div className="flex-1 relative">
+                    <User className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
+                    <input
+                      type="text"
+                      placeholder="Enter your name"
+                      className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-blue-500"
+                      onKeyPress={(e) => {
+                        if (e.key === 'Enter' && e.target.value.trim()) {
+                          handleRegistrationSubmit('name', e.target.value.trim());
+                        }
+                      }}
+                    />
+                  </div>
+                  <button
+                    onClick={(e) => {
+                      const input = e.target.parentElement.querySelector('input');
+                      if (input.value.trim()) {
+                        handleRegistrationSubmit('name', input.value.trim());
+                      }
+                    }}
+                    className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white p-3 rounded-xl hover:from-blue-600 hover:to-indigo-600 transition-colors"
+                  >
+                    <ArrowRight className="w-5 h-5" />
+                  </button>
+                </>
+              ) : !userData.email ? (
+                <>
+                  <div className="flex-1 relative">
+                    <Mail className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
+                    <input
+                      type="email"
+                      placeholder="Enter your email"
+                      className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-blue-500"
+                      onKeyPress={(e) => {
+                        if (e.key === 'Enter' && e.target.value.trim()) {
+                          handleRegistrationSubmit('email', e.target.value.trim());
+                        }
+                      }}
+                    />
+                  </div>
+                  <button
+                    onClick={(e) => {
+                      const input = e.target.parentElement.querySelector('input');
+                      if (input.value.trim()) {
+                        handleRegistrationSubmit('email', input.value.trim());
+                      }
+                    }}
+                    className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white p-3 rounded-xl hover:from-blue-600 hover:to-indigo-600 transition-colors"
+                  >
+                    <ArrowRight className="w-5 h-5" />
+                  </button>
+                </>
+              ) : null}
+            </div>
+          </div>
+        )}
+
+        {/* Conversation Input */}
+        {(currentStep === 'conversation' || currentStep === 'people') && (
+          <div className="bg-white rounded-2xl shadow-lg p-4">
+            <div className="flex gap-2 items-end">
+              <div className="flex-1">
+                <textarea
+                  value={currentStep === 'people' && !showPersonForm ? currentPersonInput : currentInput}
+                  onChange={(e) => {
+                    if (currentStep === 'people' && !showPersonForm) {
+                      setCurrentPersonInput(e.target.value);
+                    } else {
+                      setCurrentInput(e.target.value);
+                    }
+                  }}
+                  placeholder="Type your response or tap the mic to speak..."
+                  className="w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:border-blue-500 resize-none"
+                  rows={2}
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      if (currentStep === 'people' && !showPersonForm) {
+                        handlePersonSubmit();
+                      } else {
+                        handleConversationSubmit();
+                      }
+                    }
+                  }}
+                />
+              </div>
+              <button
+                onClick={toggleRecording}
+                className={`p-3 rounded-xl transition-colors ${
+                  isRecording ? 'bg-red-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+              >
+                {isRecording ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
+              </button>
+              <button
+                onClick={currentStep === 'people' && !showPersonForm ? handlePersonSubmit : handleConversationSubmit}
+                className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white p-3 rounded-xl hover:from-blue-600 hover:to-indigo-600 transition-colors"
+              >
+                <Send className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* People Management */}
+        {showPersonForm && currentStep === 'people' && (
+          <div className="bg-white rounded-2xl shadow-lg p-6 mt-4">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="font-semibold text-gray-800">People in your circle</h3>
+              <span className="text-sm text-gray-500">{userData.people.length} added</span>
+            </div>
+
+            {userData.people.map((person, index) => (
+              <div key={person.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg mb-2">
+                <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                  <User className="w-4 h-4 text-blue-600" />
+                </div>
+                <div className="flex-1">
+                  <p className="font-medium text-gray-800">
+                    {person.name || `Person ${index + 1}`}
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    {person.relationship} {person.age && `• ${person.age} years old`}
+                  </p>
+                </div>
+              </div>
+            ))}
+
+            <div className="flex gap-2 mt-4">
+              <button
+                onClick={() => {
+                  setShowPersonForm(false);
+                  setCurrentPersonInput('');
+                  typeMessage("Feel free to add another person, or we can move on to complete your profile!", true, 500);
+                }}
+                className="flex-1 bg-gray-100 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-200 transition-colors flex items-center justify-center gap-2"
+              >
+                <Plus className="w-4 h-4" />
+                Add Another
+              </button>
+              <button
+                onClick={completeOnboarding}
+                className="flex-1 bg-gradient-to-r from-blue-500 to-indigo-500 text-white py-2 px-4 rounded-lg hover:from-blue-600 hover:to-indigo-600 transition-colors"
+              >
+                Complete Profile
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Summary */}
+        {currentStep === 'summary' && (
+          <div className="bg-white rounded-2xl shadow-lg p-6 text-center mb-4">
+            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Check className="w-8 h-8 text-green-600" />
+            </div>
+            <h2 className="text-xl font-bold text-gray-800 mb-4">Welcome to WellSaid!</h2>
+            <p className="text-gray-600 mb-6">
+              Your profile is set up and ready to go. Let's start capturing your insights!
+            </p>
             <button
-              onClick={previousStep}
-              className="py-3 px-6 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors"
+              onClick={onComplete}
+              className="w-full bg-gradient-to-r from-blue-500 to-indigo-500 text-white py-3 px-8 rounded-xl font-medium hover:from-blue-600 hover:to-indigo-600 transition-colors"
             >
-              Back
+              Start Using WellSaid
             </button>
-          )}
-
-          <button
-            onClick={currentStep === steps.length ? onComplete : nextStep}
-            className={`py-3 px-6 rounded-xl transition-colors ml-auto ${
-              currentStep === steps.length
-                ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white hover:from-blue-600 hover:to-indigo-700'
-                : 'bg-blue-500 text-white hover:bg-blue-600'
-            }`}
-          >
-            {currentStep === steps.length ? 'Start Using WellSaid' : 'Continue'}
-          </button>
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );
 };
+
+// ... (keep all your existing components like LandingPage, OnboardingFlow, etc.)
 
 const SplashScreen = ({ onComplete }) => {
   const animationRef = useRef();
@@ -478,7 +608,7 @@ const SplashScreen = ({ onComplete }) => {
   }, []);
 
   if (showOnboarding) {
-    return <OnboardingFlow onComplete={onComplete} />;
+    return <WellSaidOnboarding onComplete={onComplete} />;
   }
 
   if (showLanding) {
@@ -560,7 +690,7 @@ const MilestoneFlow = ({ onClose }) => {
 
   const occasions = [
     { type: 'Birthday', icon: <Cake size={18} /> },
-    { type: 'Wedding', icon: <Rings size={18} /> },
+    { type: 'Wedding', icon: <Orbit size={18} /> },
     { type: 'Graduation', icon: <GraduationCap size={18} /> },
     { type: 'Holiday', icon: <Gift size={18} /> }
   ];
