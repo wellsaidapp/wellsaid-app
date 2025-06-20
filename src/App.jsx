@@ -248,7 +248,7 @@ const WellSaidOnboarding = ({ onComplete }) => {
 
   const WellSaidIconOnboard = ({ size = 24 }) => (
     <div
-      className="rounded-full flex items-center justify-center shadow-sm"
+      className="rounded-full flex items-center justify-center"
       style={{ width: size, height: size }}
     >
       <svg
