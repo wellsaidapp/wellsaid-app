@@ -10,65 +10,100 @@ import {
 import logo from './assets/wellsaid.svg';
 import Lottie from 'lottie-react';
 import animationData from './assets/animations/TypeBounce.json';
+import { motion } from 'framer-motion';
 
 const LandingPage = ({ onGetStarted }) => {
+  const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
+  const [displayedText, setDisplayedText] = useState('');
+  const [showButton, setShowButton] = useState(false);
+  const [isTyping, setIsTyping] = useState(true);
+
+  const messages = [
+    "WellSaid helps you preserve meaningful messages for the people who matter most — before the moment passes.",
+    "Whether it's a milestone or everyday wisdom, our thoughtful prompts help you express what truly matters in your own words or voice.",
+    "Create a living archive of connection, encouragement, and legacy that will last."
+  ];
+
+  useEffect(() => {
+    let typingTimeout;
+    let currentCharIndex = 0;
+    setIsTyping(true);
+
+    const typeWriter = () => {
+      if (currentCharIndex <= messages[currentMessageIndex].length) {
+        setDisplayedText(messages[currentMessageIndex].substring(0, currentCharIndex));
+        currentCharIndex++;
+        typingTimeout = setTimeout(typeWriter, 30);
+      } else {
+        setIsTyping(false);
+        // Move to next message or show button
+        if (currentMessageIndex < messages.length - 1) {
+          setTimeout(() => {
+            setCurrentMessageIndex(prev => prev + 1);
+            setDisplayedText('');
+          }, 1000);
+        } else {
+          setTimeout(() => setShowButton(true), 1000);
+        }
+      }
+    };
+
+    // Start typing after a brief delay
+    const startDelay = setTimeout(() => {
+      typeWriter();
+    }, 300);
+
+    return () => {
+      clearTimeout(typingTimeout);
+      clearTimeout(startDelay);
+    };
+  }, [currentMessageIndex]);
+
   return (
     <div className="fixed inset-0 bg-gradient-to-br from-blue-50 to-indigo-50 z-50 overflow-y-auto flex items-center justify-center p-4">
-      {/* Enhanced Card Container */}
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden">
-        {/* Card Header with Gradient */}
-        <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-6 text-center">
-          <div className="flex justify-center mb-4">
-            <img src={logo} alt="WellSaid" className="h-12" />
+      <div className="w-full max-w-2xl flex flex-col items-center">
+        {/* Logo with fade-in animation */}
+        <motion.img
+          src={logo}
+          alt="WellSaid"
+          className="h-16 mb-8"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        />
+
+        {/* Typewriter Text Container */}
+        <div className="w-full max-w-2xl bg-white/90 backdrop-blur-sm rounded-xl p-8 shadow-lg mb-8 min-h-48 flex items-center justify-center">
+          <div className="text-center">
+            <motion.h1
+              className="text-3xl font-bold text-gray-800 mb-6"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.3, duration: 0.5 }}
+            >
+              Capture and Share What Matters
+            </motion.h1>
+            <div className="text-xl text-gray-700 leading-relaxed min-h-32 flex items-center justify-center">
+              {displayedText}
+              {isTyping && (
+                <span className="ml-1 inline-block h-8 w-2 bg-blue-500 animate-pulse"></span>
+              )}
+            </div>
           </div>
-          <h1 className="text-2xl font-bold text-white mb-2">Capture and Share What Matters</h1>
         </div>
 
-        {/* Card Body */}
-        <div className="p-6 space-y-6">
-          <div className="space-y-4 text-gray-700">
-            <div className="flex items-start space-x-3">
-              <div className="flex-shrink-0 mt-1">
-                <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center">
-                  <MessageCircle className="w-3 h-3 text-blue-600" />
-                </div>
-              </div>
-              <p className="text-base leading-relaxed">
-                WellSaid helps you preserve meaningful messages for the people who matter most — before the moment passes.
-              </p>
-            </div>
-
-            <div className="flex items-start space-x-3">
-              <div className="flex-shrink-0 mt-1">
-                <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center">
-                  <Mic className="w-3 h-3 text-blue-600" />
-                </div>
-              </div>
-              <p className="text-base leading-relaxed">
-                Whether it's a milestone or everyday wisdom, our thoughtful prompts help you express what truly matters in your own words or voice.
-              </p>
-            </div>
-
-            <div className="flex items-start space-x-3">
-              <div className="flex-shrink-0 mt-1">
-                <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center">
-                  <Book className="w-3 h-3 text-blue-600" />
-                </div>
-              </div>
-              <p className="text-base leading-relaxed">
-                Create a living archive of connection, encouragement, and legacy.
-              </p>
-            </div>
-          </div>
-
-          {/* Get Started Button */}
-          <button
+        {/* Get Started Button - appears after last message */}
+        {showButton && (
+          <motion.button
             onClick={onGetStarted}
-            className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 px-6 rounded-xl font-medium text-lg shadow-md hover:shadow-lg transition-all hover:scale-[1.02] active:scale-95"
+            className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-4 px-8 rounded-xl font-bold text-xl shadow-xl hover:shadow-2xl transition-all transform hover:scale-105 active:scale-95"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
           >
-            Let's Get Started
-          </button>
-        </div>
+            Begin Your Journey <ArrowRight className="w-5 h-5 inline ml-2" />
+          </motion.button>
+        )}
       </div>
     </div>
   );
@@ -96,7 +131,8 @@ const Typewriter = ({ text, speed = 20, onComplete }) => {
 };
 
 const WellSaidOnboarding = ({ onComplete }) => {
-  const [currentStep, setCurrentStep] = useState('welcome');
+  // Start directly with registration
+  const [currentStep, setCurrentStep] = useState('registration');
   const [userData, setUserData] = useState({
     name: '',
     email: '',
@@ -124,6 +160,15 @@ const WellSaidOnboarding = ({ onComplete }) => {
     scrollToBottom();
   }, [messages]);
 
+  const hasGreeted = useRef(false);
+
+  useEffect(() => {
+    if (!hasGreeted.current && messages.length === 0) {
+      hasGreeted.current = true;
+      typeMessage("Hi there! I'm your AI assistant and I'm here to help you get familiar with the app. What's your name?", true, 500);
+    }
+  }, []);
+
   const typeMessage = (message, isBot = true, delay = 1000) => {
     setTimeout(() => {
       setIsTyping(true);
@@ -132,16 +177,11 @@ const WellSaidOnboarding = ({ onComplete }) => {
           text: message,
           isBot,
           timestamp: Date.now(),
-          isTyping: false // This will be set to false when Typewriter completes
+          isTyping: false
         }]);
         setIsTyping(false);
       }, 1500);
     }, delay);
-  };
-
-  const startOnboarding = () => {
-    setCurrentStep('registration');
-    typeMessage("Hi there! I'm your AI assistant and I'm here to help you get familiar with the app. What's your name?", true, 500);
   };
 
   const handleRegistrationSubmit = (field, value) => {
@@ -295,57 +335,6 @@ const WellSaidOnboarding = ({ onComplete }) => {
     }
   };
   // ... (keep all your existing helper functions like handlePinChange, handleConversationSubmit, etc.)
-
-  if (currentStep === 'welcome') {
-    return (
-      <div className="fixed inset-0 bg-gradient-to-br from-blue-50 to-indigo-50 z-50 overflow-y-auto flex items-center justify-center p-4">
-        {/* Enhanced Card Container */}
-        <div className="w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden">
-          {/* Card Header with Gradient */}
-          <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-6 text-center">
-            <div className="flex justify-center mb-4">
-              <img src={logo} alt="WellSaid" className="h-12" />
-            </div>
-            <h1 className="text-2xl font-bold text-white mb-2">Capture and Share What Matters</h1>
-          </div>
-
-          {/* Card Body */}
-          <div className="p-6 space-y-6">
-            <div className="space-y-4 text-gray-700">
-              <div className="flex items-start space-x-3">
-                <div className="flex-shrink-0 mt-1">
-                  <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center">
-                    <MessageCircle className="w-3 h-3 text-blue-600" />
-                  </div>
-                </div>
-                <p className="text-base leading-relaxed">
-                  I'll guide you through setting up your profile so we can create meaningful messages together.
-                </p>
-              </div>
-
-              <div className="flex items-start space-x-3">
-                <div className="flex-shrink-0 mt-1">
-                  <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center">
-                    <Mic className="w-3 h-3 text-blue-600" />
-                  </div>
-                </div>
-                <p className="text-base leading-relaxed">
-                  You can type or speak your answers - whatever feels most natural to you.
-                </p>
-              </div>
-            </div>
-
-            <button
-              onClick={startOnboarding}
-              className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 px-6 rounded-xl font-medium text-lg shadow-md hover:shadow-lg transition-all hover:scale-[1.02] active:scale-95"
-            >
-              Get Started <ArrowRight className="w-4 h-4 inline ml-1" />
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="fixed inset-0 bg-gradient-to-br from-blue-50 to-indigo-50 z-50 overflow-y-auto">
@@ -625,7 +614,7 @@ const SplashScreen = ({ onComplete }) => {
   }, []);
 
   if (showOnboarding) {
-    return <WellSaidOnboarding onComplete={onComplete} />;
+    return <WellSaidOnboarding onComplete={onComplete} skipWelcome={true} />;
   }
 
   if (showLanding) {
