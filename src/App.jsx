@@ -13,97 +13,142 @@ import animationData from './assets/animations/TypeBounce.json';
 import { motion } from 'framer-motion';
 
 const LandingPage = ({ onGetStarted }) => {
-  const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
-  const [displayedText, setDisplayedText] = useState('');
+  const [messages, setMessages] = useState([
+    { id: 1, show: false, text: '', typing: false, complete: false, bold: true },
+    { id: 2, show: false, text: '', typing: false, complete: false },
+    { id: 3, show: false, text: '', typing: false, complete: false }
+  ]);
   const [showButton, setShowButton] = useState(false);
-  const [isTyping, setIsTyping] = useState(true);
+  const [showLogo, setShowLogo] = useState(false);
 
-  const messages = [
-    "WellSaid helps you preserve meaningful messages for the people who matter most — before the moment passes.",
-    "Whether it's a milestone or everyday wisdom, our thoughtful prompts help you express what truly matters in your own words or voice.",
-    "Create a living archive of connection, encouragement, and legacy that will last."
-  ];
+  const WellSaidIconLanding = ({ size = 24 }) => (
+    <div
+      className="rounded-full flex items-center justify-center"
+      style={{ width: size, height: size }}
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 831.63 816.56"
+        className="w-full h-full"
+      >
+        <defs>
+          <style>{`.cls-1{fill:#4c89fe}.cls-2{fill:#fff}`}</style>
+        </defs>
+        <path className="cls-1" d="M406.54,84.52c-175.35,0-317.5,142.15-317.5,317.5s142.15,317.5,317.5,317.5h264.86c29.07,0,52.63-23.56,52.63-52.63v-264.86c0-175.35-142.15-317.5-317.5-317.5Z"/>
+        <path className="cls-2" d="M245.15,458.27c-2.1,0-3.93-.52-5.48-1.58-1.55-1.05-2.77-2.72-3.67-5.02l-22.05-58.35c-.8-2-1.05-3.77-.75-5.33.3-1.55,1.07-2.77,2.33-3.67,1.25-.9,2.87-1.35,4.88-1.35,1.8,0,3.27.43,4.42,1.27,1.15.85,2.12,2.48,2.93,4.88l19.65,55.35h-3.6l20.4-55.95c.7-1.9,1.65-3.3,2.85-4.2,1.2-.9,2.75-1.35,4.65-1.35s3.47.45,4.73,1.35c1.25.9,2.17,2.3,2.77,4.2l19.95,55.95h-3.3l19.95-55.65c.8-2.3,1.82-3.85,3.08-4.65,1.25-.8,2.67-1.2,4.27-1.2,2,0,3.52.5,4.57,1.5,1.05,1,1.65,2.28,1.8,3.83.15,1.55-.13,3.22-.83,5.02l-22.05,58.35c-.9,2.2-2.13,3.85-3.68,4.95-1.55,1.1-3.33,1.65-5.32,1.65-2.1,0-3.93-.55-5.48-1.65-1.55-1.1-2.77-2.75-3.67-4.95l-21-56.85h7.5l-20.85,56.85c-.8,2.2-1.98,3.85-3.52,4.95-1.55,1.1-3.38,1.65-5.48,1.65Z"/>
+        <path className="cls-2" d="M400.53,458.57c-8,0-14.88-1.52-20.62-4.57-5.75-3.05-10.2-7.4-13.35-13.05-3.15-5.65-4.73-12.38-4.73-20.17s1.55-14.25,4.65-19.95c3.1-5.7,7.35-10.15,12.75-13.35,5.4-3.2,11.55-4.8,18.45-4.8,5.1,0,9.65.82,13.65,2.47,4,1.65,7.43,4.05,10.28,7.2,2.85,3.15,5,6.97,6.45,11.47,1.45,4.5,2.18,9.55,2.18,15.15,0,1.7-.5,2.98-1.5,3.83-1,.85-2.5,1.27-4.5,1.27h-50.4v-9.3h46.2l-2.55,2.1c0-5-.73-9.25-2.18-12.75-1.45-3.5-3.6-6.17-6.45-8.02-2.85-1.85-6.38-2.78-10.58-2.78-4.7,0-8.68,1.1-11.92,3.3-3.25,2.2-5.73,5.25-7.43,9.15-1.7,3.9-2.55,8.45-2.55,13.65v.9c0,8.8,2.07,15.43,6.23,19.88,4.15,4.45,10.17,6.68,18.07,6.68,3,0,6.17-.4,9.52-1.2,3.35-.8,6.53-2.15,9.53-4.05,1.7-1,3.22-1.45,4.57-1.35,1.35.1,2.45.55,3.3,1.35.85.8,1.37,1.8,1.57,3,.2,1.2,0,2.43-.6,3.67-.6,1.25-1.65,2.38-3.15,3.38-3.4,2.3-7.35,4.03-11.85,5.17s-8.85,1.72-13.05,1.72Z"/>
+        <path className="cls-2" d="M501.32,458.57c-7.8,0-13.68-2.27-17.62-6.82-3.95-4.55-5.93-11.12-5.93-19.73v-73.95c0-2.5.65-4.4,1.95-5.7,1.3-1.3,3.15-1.95,5.55-1.95s4.28.65,5.62,1.95c1.35,1.3,2.03,3.2,2.03,5.7v73.05c0,5,1.02,8.73,3.08,11.18,2.05,2.45,5.02,3.67,8.92,3.67.9,0,1.7-.02,2.4-.08.7-.05,1.4-.12,2.1-.22,1.2-.1,2.05.22,2.55.97.5.75.75,2.28.75,4.58,0,2.1-.45,3.73-1.35,4.88-.9,1.15-2.35,1.88-4.35,2.17-.9.1-1.85.17-2.85.23-1,.05-1.95.07-2.85.07Z"/>
+        <path className="cls-2" d="M583.01,458.57c-7.8,0-13.68-2.27-17.62-6.82-3.95-4.55-5.92-11.12-5.92-19.73v-73.95c0-2.5.65-4.4,1.95-5.7s3.15-1.95,5.55-1.95,4.27.65,5.62,1.95c1.35,1.3,2.02,3.2,2.02,5.7v73.05c0,5,1.02,8.73,3.08,11.17,2.05,2.45,5.03,3.67,8.92,3.67.9,0,1.7-.02,2.4-.08.7-.05,1.4-.12,2.1-.22,1.2-.1,2.05.22,2.55.97.5.75.75,2.28.75,4.58,0,2.1-.45,3.73-1.35,4.88s-2.35,1.88-4.35,2.17c-.9.1-1.85.17-2.85.23-1,.05-1.95.07-2.85.07Z"/>
+      </svg>
+    </div>
+  );
 
-  useEffect(() => {
-    let typingTimeout;
-    let currentCharIndex = 0;
-    setIsTyping(true);
+  // Clean typewriter effect without stuttering
+  const typewriter = async (messageIndex, text, speed = 50) => {
+    return new Promise((resolve) => {
+      let currentText = '';
+      let i = 0;
 
-    const typeWriter = () => {
-      if (currentCharIndex <= messages[currentMessageIndex].length) {
-        setDisplayedText(messages[currentMessageIndex].substring(0, currentCharIndex));
-        currentCharIndex++;
-        typingTimeout = setTimeout(typeWriter, 30);
-      } else {
-        setIsTyping(false);
-        // Move to next message or show button
-        if (currentMessageIndex < messages.length - 1) {
-          setTimeout(() => {
-            setCurrentMessageIndex(prev => prev + 1);
-            setDisplayedText('');
-          }, 1000);
+      const type = () => {
+        if (i < text.length) {
+          currentText += text.charAt(i);
+          setMessages(prev => prev.map((msg, idx) =>
+            idx === messageIndex ? { ...msg, text: currentText } : msg
+          ));
+          i++;
+          setTimeout(type, speed);
         } else {
-          setTimeout(() => setShowButton(true), 1000);
+          resolve();
         }
-      }
+      };
+
+      type();
+    });
+  };
+
+  // Animation sequence
+  useEffect(() => {
+    const startAnimation = async () => {
+      setShowLogo(true);
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      // First message
+      setMessages(prev => prev.map((msg, idx) =>
+        idx === 0 ? { ...msg, show: true } : msg
+      ));
+      await typewriter(0, 'Say what matters, to those that matter.', 70);
+
+      await new Promise(resolve => setTimeout(resolve, 400));
+
+      // Second message
+      setMessages(prev => prev.map((msg, idx) =>
+        idx === 1 ? { ...msg, show: true } : msg
+      ));
+      await typewriter(1, 'Share the lessons, perspectives, and values that have shaped you—so they can shape others.', 40);
+
+      await new Promise(resolve => setTimeout(resolve, 400));
+
+      // Third message
+      setMessages(prev => prev.map((msg, idx) =>
+        idx === 2 ? { ...msg, show: true } : msg
+      ));
+      await typewriter(2, 'One thoughtful prompt at a time, you\'re creating a living archive of insight and connection.', 45);
+
+      await new Promise(resolve => setTimeout(resolve, 800));
+
+      // Show CTA button
+      setShowButton(true);
     };
 
-    // Start typing after a brief delay
-    const startDelay = setTimeout(() => {
-      typeWriter();
-    }, 300);
-
-    return () => {
-      clearTimeout(typingTimeout);
-      clearTimeout(startDelay);
-    };
-  }, [currentMessageIndex]);
+    startAnimation();
+  }, []);
 
   return (
-    <div className="fixed inset-0 bg-gradient-to-br from-blue-50 to-indigo-50 z-50 overflow-y-auto flex items-center justify-center p-4">
-      <div className="w-full max-w-2xl flex flex-col items-center">
-        {/* Logo with fade-in animation */}
-        <motion.img
-          src={logo}
-          alt="WellSaid"
-          className="h-16 mb-8"
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        />
-
-        {/* Typewriter Text Container */}
-        <div className="w-full max-w-2xl bg-white/90 backdrop-blur-sm rounded-xl p-8 shadow-lg mb-8 min-h-48 flex items-center justify-center">
-          <div className="text-center">
-            <motion.h1
-              className="text-3xl font-bold text-gray-800 mb-6"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.3, duration: 0.5 }}
-            >
-              Capture and Share What Matters
-            </motion.h1>
-            <div className="text-xl text-gray-700 leading-relaxed min-h-32 flex items-center justify-center">
-              {displayedText}
-              {isTyping && (
-                <span className="ml-1 inline-block h-8 w-2 bg-blue-500 animate-pulse"></span>
-              )}
+    <div className="fixed inset-0 bg-gradient-to-br from-blue-50 to-indigo-50 z-50 overflow-hidden flex items-center justify-center p-4">
+      <div className="max-w-md w-full">
+        {/* Logo - using your actual WellSaid logo */}
+        <div className={`mb-16 transition-opacity duration-1000 ${showLogo ? 'opacity-100' : 'opacity-0'}`}>
+          <div className="flex items-center justify-center">
+            <WellSaidIconLanding size={60} /> {/* Use your actual logo component */}
+            <div className="ml-3">
+              <img src={logo} alt="WellSaid" className="h-10" /> {/* Use your actual logo image */}
+              <p className="text-sm text-gray-500">AI Assistant</p>
             </div>
           </div>
         </div>
 
-        {/* Get Started Button - appears after last message */}
-        {showButton && (
-          <motion.button
-            onClick={onGetStarted}
-            className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-4 px-8 rounded-xl font-bold text-xl shadow-xl hover:shadow-2xl transition-all transform hover:scale-105 active:scale-95"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            Begin Your Journey <ArrowRight className="w-5 h-5 inline ml-2" />
-          </motion.button>
-        )}
+        {/* Chat container */}
+        <div className="w-full bg-white rounded-3xl p-8 shadow-xl mb-8">
+          <div className="space-y-6">
+            {messages.map((message) => (
+              <div
+                key={message.id}
+                className={`transition-all duration-500 ease-out ${
+                  message.show ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'
+                }`}
+              >
+                {message.text && (
+                  <div className={`text-lg leading-relaxed ${message.bold ? 'font-bold' : 'font-medium'}`}>
+                    {message.text}
+                    {!message.complete && (
+                      <span className="border-r-2 border-blue-500 animate-pulse" />
+                    )}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* CTA Button */}
+        <button
+          onClick={onGetStarted}
+          className={`w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-2xl py-5 px-6 text-lg font-semibold shadow-lg transition-all duration-300 ${
+            showButton ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-5'
+          } hover:scale-105 hover:shadow-xl active:scale-95`}
+        >
+          Begin Your Journey <ArrowRight className="inline ml-2 w-5 h-5 transition-transform group-hover:translate-x-1" />
+        </button>
       </div>
     </div>
   );
@@ -218,14 +263,105 @@ const WellSaidOnboarding = ({ onComplete }) => {
     }
   };
 
+
   const handleConversationSubmit = () => {
+    if (currentStep === 'people' && currentPersonQuestions) {
+      handlePersonQuestionSubmit();
+      return;
+    }
+
+    if (currentStep === 'people') {
+      handlePersonSubmit();
+      return;
+    }
+
+    // Original conversation flow
     if (!currentInput.trim()) return;
 
     const input = currentInput.trim();
     setMessages(prev => [...prev, { text: input, isBot: false, timestamp: Date.now() }]);
     setCurrentInput('');
 
-    // Determine next question based on current conversation state
+    if (!userData.motivation) {
+      setUserData(prev => ({ ...prev, motivation: input }));
+      typeMessage("Thanks for sharing! Let's talk about the topics you want to cover...", true, 1000);
+    } else if (!userData.topics) {
+      setUserData(prev => ({ ...prev, topics: input }));
+      typeMessage("Great! Now how can I help you stay on track?...", true, 1000);
+    } else if (!userData.helpStyle) {
+      setUserData(prev => ({ ...prev, helpStyle: input }));
+      typeMessage("We're on the last step! Your insight is meant to be shared...", true, 1000);
+      setTimeout(() => {
+        typeMessage("Can you tell me about the person you would like to add?", true, 1500);
+      }, 2000);
+      setCurrentStep('people');
+      setShowPersonForm(false);
+    }
+  };
+
+  // Enhanced person parser
+  const parsePerson = (input) => {
+    const person = {
+      id: Date.now().toString(),
+      name: '',
+      relationship: '',
+      age: '',
+      interests: '',
+      questionPreferences: ''
+    };
+
+    // Basic parsing logic - you can enhance this
+    const lowerInput = input.toLowerCase();
+
+    // Extract relationship
+    if (lowerInput.includes('daughter')) person.relationship = 'daughter';
+    else if (lowerInput.includes('son')) person.relationship = 'son';
+    else if (lowerInput.includes('wife')) person.relationship = 'wife';
+    else if (lowerInput.includes('husband')) person.relationship = 'husband';
+    else if (lowerInput.includes('mother')) person.relationship = 'mother';
+    else if (lowerInput.includes('father')) person.relationship = 'father';
+    else if (lowerInput.includes('friend')) person.relationship = 'friend';
+    else person.relationship = 'family member';
+
+    // Extract name
+    const nameMatch = input.match(/(?:my\s+(?:daughter|son|wife|husband|mother|father|friend)?\s*)([A-Za-z]+)/i);
+    if (nameMatch) person.name = nameMatch[1];
+
+    // Extract age
+    const ageMatch = input.match(/age\s+(\d+)|(\d+)\s+years?\s+old/i);
+    if (ageMatch) person.age = ageMatch[1] || ageMatch[2];
+
+    // Extract interests
+    const interestsMatch = input.match(/loves?\s+([^,]+)/i);
+    if (interestsMatch) person.interests = interestsMatch[1];
+
+    return person;
+  };
+
+  // You'll also need to add this state variable to track current person questions
+  const [currentPersonQuestions, setCurrentPersonQuestions] = useState(null);
+
+  // Modified handleConversationSubmit to handle the people step questions
+  const modifiedHandleConversationSubmit = () => {
+    if (!currentInput.trim()) return;
+
+    // If we're in people step and collecting question preferences
+    if (currentStep === 'people' && currentPersonQuestions) {
+      handlePersonQuestionSubmit();
+      return;
+    }
+
+    // If we're in people step but not collecting questions, treat as person input
+    if (currentStep === 'people' && !currentPersonQuestions) {
+      // This would be handled by handlePersonSubmit instead
+      return;
+    }
+
+    // Original conversation flow
+    const input = currentInput.trim();
+    setMessages(prev => [...prev, { text: input, isBot: false, timestamp: Date.now() }]);
+    setCurrentInput('');
+
     if (!userData.motivation) {
       setUserData(prev => ({ ...prev, motivation: input }));
       typeMessage("Thanks for sharing! Let's talk about the topics you want to cover. Can you spend a few moments telling me about the types of questions or topics you'd like to answer, or use your input to guide our future interactions within the app? Questions and topics can evolve over time, but this will give us a starting point. What kinds of insight would you like to capture?", true, 1000);
@@ -234,33 +370,76 @@ const WellSaidOnboarding = ({ onComplete }) => {
       typeMessage("Great! Now how can I help you stay on track? How would you like to use this app? Is it something you'd like to use daily or weekly or something you plan to use when preparing for a special occasion? Would you like me to push notifications to you so you stay committed to your plan? How can I help you make use of this app?", true, 1000);
     } else if (!userData.helpStyle) {
       setUserData(prev => ({ ...prev, helpStyle: input }));
-      typeMessage("We're on the last step! Your insight is meant to be shared with the people you care most about. WellSaid gives you the opportunity to say what matters to the people who matter. You can add people now by using the icons below or visit your profile in the app to add them later. Who would you like to share your insight with?", true, 1000);
+      typeMessage("We're on the last step! Your insight is meant to be shared with the people you care most about. WellSaid gives you the opportunity to say what matters to the people who matter. You can add people now using the interface below.", true, 1000);
+      setTimeout(() => {
+        typeMessage("Can you tell me about the person you would like to add?", true, 1500);
+      }, 2000);
       setCurrentStep('people');
+      setShowPersonForm(true);
     }
   };
 
+  // Enhanced person submission handler
   const handlePersonSubmit = () => {
     if (!currentPersonInput.trim()) return;
 
-    const input = currentPersonInput.trim();
-    setMessages(prev => [...prev, { text: input, isBot: false, timestamp: Date.now() }]);
+    const personInput = currentPersonInput.trim();
+    setMessages(prev => [...prev, { text: personInput, isBot: false, timestamp: Date.now() }]);
     setCurrentPersonInput('');
 
-    // Simple parsing - in a real app, you'd use more sophisticated NLP
-    const person = {
-      id: Date.now(),
-      rawInput: input,
-      name: extractName(input),
-      relationship: extractRelationship(input),
-      age: extractAge(input),
-      topics: extractTopics(input)
-    };
+    // Parse the person input (you can enhance this parsing logic)
+    const person = parsePerson(personInput);
 
-    setUserData(prev => ({ ...prev, people: [...prev.people, person] }));
+    // Add the person to userData
+    setUserData(prev => ({
+      ...prev,
+      people: [...prev.people, person]
+    }));
 
-    typeMessage(`I've added ${person.name || 'this person'} to your profile. Would you like to add anyone else, or shall we complete your setup?`, true, 1000);
-    setShowPersonForm(true);
+    // Provide confirmation and ask for question preferences
+    const confirmationMessage = `I'd like to add ${person.name || 'this person'}, your ${person.relationship}${person.age ? ` who is ${person.age}` : ''}${person.interests ? ` and loves ${person.interests}` : ''}`;
+
+    typeMessage(confirmationMessage, true, 500);
+
+    setTimeout(() => {
+      typeMessage(`What kinds of questions would you like to answer for ${person.name || 'them'}?`, true, 1000);
+    }, 1500);
+
+    // Set flag to collect question preferences for this person
+    setCurrentPersonQuestions(person.id);
   };
+
+  // New handler for person question preferences
+  const handlePersonQuestionSubmit = () => {
+    if (!currentPersonInput.trim()) return;
+
+    const questionInput = currentPersonInput.trim();
+    setMessages(prev => [...prev, { text: questionInput, isBot: false, timestamp: Date.now() }]);
+    setCurrentPersonInput('');
+
+    // Update the person with their question preferences
+    setUserData(prev => ({
+      ...prev,
+      people: prev.people.map(person =>
+        person.id === currentPersonQuestions
+          ? { ...person, questionPreferences: questionInput }
+          : person
+      )
+    }));
+
+    // Find the person we just updated
+    const currentPerson = userData.people.find(p => p.id === currentPersonQuestions);
+
+    // Provide summary and ask what to do next
+    const summaryMessage = `Great, so you'd like to add ${currentPerson?.name || 'this person'}, your ${currentPerson?.relationship}${currentPerson?.age ? ` who is ${currentPerson.age}` : ''}${currentPerson?.interests ? ` and loves ${currentPerson.interests}` : ''}. You'd also like to share insight on ${questionInput.toLowerCase()}. If I have that right, hit the add button or share more about ${currentPerson?.name || 'them'}.`;
+
+    typeMessage(summaryMessage, true, 1000);
+
+    // Clear the current person questions flag
+    setCurrentPersonQuestions(null);
+    setShowPersonForm(false);
+  };
+
 
   const extractName = (text) => {
     const nameMatch = text.match(/(?:my |named |called )([A-Za-z]+)/i);
@@ -483,30 +662,32 @@ const WellSaidOnboarding = ({ onComplete }) => {
         )}
 
         {/* Conversation Input */}
-        {(currentStep === 'conversation' || currentStep === 'people') && (
+        {(currentStep === 'conversation' || (currentStep === 'people' && showPersonForm)) && (
           <div className="bg-white rounded-2xl shadow-lg p-4">
             <div className="flex gap-2 items-end">
               <div className="flex-1">
                 <textarea
-                  value={currentStep === 'people' && !showPersonForm ? currentPersonInput : currentInput}
+                  value={currentStep === 'people' ? currentPersonInput : currentInput}
                   onChange={(e) => {
-                    if (currentStep === 'people' && !showPersonForm) {
+                    if (currentStep === 'people') {
                       setCurrentPersonInput(e.target.value);
                     } else {
                       setCurrentInput(e.target.value);
                     }
                   }}
-                  placeholder="Type your response or tap the mic to speak..."
+                  placeholder={
+                    currentStep === 'people'
+                      ? currentPersonQuestions
+                        ? `What questions for ${userData.people.find(p => p.id === currentPersonQuestions)?.name || 'them'}?`
+                        : "Tell me about this person (e.g., 'My daughter Sarah, age 10')"
+                      : "Type your response..."
+                  }
                   className="w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:border-blue-500 resize-none"
                   rows={2}
                   onKeyPress={(e) => {
                     if (e.key === 'Enter' && !e.shiftKey) {
                       e.preventDefault();
-                      if (currentStep === 'people' && !showPersonForm) {
-                        handlePersonSubmit();
-                      } else {
-                        handleConversationSubmit();
-                      }
+                      handleConversationSubmit();
                     }
                   }}
                 />
@@ -520,8 +701,13 @@ const WellSaidOnboarding = ({ onComplete }) => {
                 {isRecording ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
               </button>
               <button
-                onClick={currentStep === 'people' && !showPersonForm ? handlePersonSubmit : handleConversationSubmit}
-                className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white p-3 rounded-xl hover:from-blue-600 hover:to-indigo-600 transition-colors"
+                onClick={handleConversationSubmit}
+                disabled={currentStep === 'people' ? !currentPersonInput.trim() : !currentInput.trim()}
+                className={`p-3 rounded-xl transition-colors ${
+                  (currentStep === 'people' ? currentPersonInput.trim() : currentInput.trim())
+                    ? 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600'
+                    : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                }`}
               >
                 <Send className="w-5 h-5" />
               </button>
@@ -530,49 +716,95 @@ const WellSaidOnboarding = ({ onComplete }) => {
         )}
 
         {/* People Management */}
-        {showPersonForm && currentStep === 'people' && (
-          <div className="bg-white rounded-2xl shadow-lg p-6 mt-4">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="font-semibold text-gray-800">People in your circle</h3>
-              <span className="text-sm text-gray-500">{userData.people.length} added</span>
-            </div>
-
-            {userData.people.map((person, index) => (
-              <div key={person.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg mb-2">
-                <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                  <User className="w-4 h-4 text-blue-600" />
-                </div>
-                <div className="flex-1">
-                  <p className="font-medium text-gray-800">
-                    {person.name || `Person ${index + 1}`}
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    {person.relationship} {person.age && `• ${person.age} years old`}
-                  </p>
-                </div>
+        {currentStep === 'people' && (
+          <>
+            {/* People List */}
+            <div className="bg-white rounded-2xl shadow-lg p-6 mt-4">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="font-semibold text-gray-800">People in your circle</h3>
+                <span className="text-sm text-gray-500">{userData.people.length} added</span>
               </div>
-            ))}
 
-            <div className="flex gap-2 mt-4">
-              <button
-                onClick={() => {
-                  setShowPersonForm(false);
-                  setCurrentPersonInput('');
-                  typeMessage("Feel free to add another person, or we can move on to complete your profile!", true, 500);
-                }}
-                className="flex-1 bg-gray-100 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-200 transition-colors flex items-center justify-center gap-2"
-              >
-                <Plus className="w-4 h-4" />
-                Add Another
-              </button>
-              <button
-                onClick={completeOnboarding}
-                className="flex-1 bg-gradient-to-r from-blue-500 to-indigo-500 text-white py-2 px-4 rounded-lg hover:from-blue-600 hover:to-indigo-600 transition-colors"
-              >
-                Complete Profile
-              </button>
+              {userData.people.length > 0 ? (
+                userData.people.map((person, index) => (
+                  <div key={person.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg mb-2">
+                    <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                      <User className="w-4 h-4 text-blue-600" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-medium text-gray-800">
+                        {person.name || `Person ${index + 1}`}
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        {person.relationship} {person.age && `• ${person.age} years old`}
+                      </p>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-4 text-gray-500">
+                  No people added yet
+                </div>
+              )}
+
+              <div className="flex gap-2 mt-4">
+                <button
+                  onClick={() => {
+                    setShowPersonForm(true);
+                    setCurrentPersonInput('');
+                    typeMessage("Please enter the name and relationship of the person you'd like to add (e.g., 'My daughter Sarah, age 10')", true, 500);
+                  }}
+                  className="flex-1 bg-gray-100 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-200 transition-colors flex items-center justify-center gap-2"
+                >
+                  <Plus className="w-4 h-4" />
+                  {userData.people.length > 0 ? "Add Another" : "Add Person"}
+                </button>
+                {userData.people.length > 0 && (
+                  <button
+                    onClick={completeOnboarding}
+                    className="flex-1 bg-gradient-to-r from-blue-500 to-indigo-500 text-white py-2 px-4 rounded-lg hover:from-blue-600 hover:to-indigo-600 transition-colors"
+                  >
+                    Complete Profile
+                  </button>
+                )}
+              </div>
             </div>
-          </div>
+
+            {/* Person Input Form */}
+            {showPersonForm && (
+              <div className="bg-white rounded-2xl shadow-lg p-6 mt-4">
+                <div className="mb-4">
+                  <label htmlFor="personInput" className="block text-sm font-medium text-gray-700 mb-1">
+                    Add a person to your circle
+                  </label>
+                  <input
+                    id="personInput"
+                    type="text"
+                    value={currentPersonInput}
+                    onChange={(e) => setCurrentPersonInput(e.target.value)}
+                    placeholder="E.g., 'My daughter Sarah, age 10'"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter' && currentPersonInput.trim()) {
+                        handlePersonSubmit();
+                      }
+                    }}
+                  />
+                </div>
+                <button
+                  onClick={handlePersonSubmit}
+                  disabled={!currentPersonInput.trim()}
+                  className={`w-full py-2 px-4 rounded-lg transition-colors ${
+                    currentPersonInput.trim()
+                      ? 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600'
+                      : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                  }`}
+                >
+                  Add Person
+                </button>
+              </div>
+            )}
+          </>
         )}
 
         {/* Summary */}
