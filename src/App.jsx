@@ -74,7 +74,6 @@ const LandingPage = ({ onGetStarted }) => {
   );
 };
 
-// New Typewriter Component for AI messages
 const Typewriter = ({ text, speed = 20, onComplete }) => {
   const [displayedText, setDisplayedText] = useState('');
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -173,8 +172,7 @@ const WellSaidOnboarding = ({ onComplete }) => {
         setUserData(prev => ({ ...prev, pin: fullPin }));
         setTimeout(() => {
           setCurrentStep('conversation');
-          typeMessage("Great! Now let's get to work. Over the next few minutes, I'd like to hear more about you and how you would like to use this app. This will help me help you! You can speak or type your answers using the area below.", true, 1000);
-          typeMessage("What brings you to this app?", true, 3000);
+          typeMessage("Great! Now let's get to work. Over the next few minutes, I'd like to hear more about you and how you would like to use this app. This will help me help you! You can speak or type your answers using the area below. What brings you to this app?", true, 1000);
         }, 500);
       }
     }
@@ -190,16 +188,13 @@ const WellSaidOnboarding = ({ onComplete }) => {
     // Determine next question based on current conversation state
     if (!userData.motivation) {
       setUserData(prev => ({ ...prev, motivation: input }));
-      typeMessage("Thanks for sharing! Let's talk about the topics you want to cover. Can you spend a few moments telling me about the types of questions or topics you'd like to answer, or use your input to guide our future interactions within the app? Questions and topics can evolve over time, but this will give us a starting point.", true, 1000);
-      typeMessage("What kinds of insight would you like to capture?", true, 2500);
+      typeMessage("Thanks for sharing! Let's talk about the topics you want to cover. Can you spend a few moments telling me about the types of questions or topics you'd like to answer, or use your input to guide our future interactions within the app? Questions and topics can evolve over time, but this will give us a starting point. What kinds of insight would you like to capture?", true, 1000);
     } else if (!userData.topics) {
       setUserData(prev => ({ ...prev, topics: input }));
-      typeMessage("Great! Now how can I help you stay on track? How would you like to use this app? Is it something you'd like to use daily or weekly or something you plan to use when preparing for a special occasion? Would you like me to push notifications to you so you stay committed to your plan?", true, 1000);
-      typeMessage("How can I help you make use of this app?", true, 2500);
+      typeMessage("Great! Now how can I help you stay on track? How would you like to use this app? Is it something you'd like to use daily or weekly or something you plan to use when preparing for a special occasion? Would you like me to push notifications to you so you stay committed to your plan? How can I help you make use of this app?", true, 1000);
     } else if (!userData.helpStyle) {
       setUserData(prev => ({ ...prev, helpStyle: input }));
-      typeMessage("We're on the last step! Your insight is meant to be shared with the people you care most about. WellSaid gives you the opportunity to say what matters to the people who matter. You can add people now by using the icons below or visit your profile in the app to add them later.", true, 1000);
-      typeMessage("Who would you like to share your insight with?", true, 2500);
+      typeMessage("We're on the last step! Your insight is meant to be shared with the people you care most about. WellSaid gives you the opportunity to say what matters to the people who matter. You can add people now by using the icons below or visit your profile in the app to add them later. Who would you like to share your insight with?", true, 1000);
       setCurrentStep('people');
     }
   };
