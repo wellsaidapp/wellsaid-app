@@ -107,11 +107,11 @@ const LandingPage = ({ onGetStarted }) => {
     <div className="fixed inset-0 bg-gradient-to-br from-blue-50 to-indigo-50 z-50 overflow-hidden flex items-center justify-center p-4">
       <div className="max-w-md w-full">
         {/* Logo - using your actual WellSaid logo */}
-        <div className={`mb-16 transition-opacity duration-1000 ${showLogo ? 'opacity-100' : 'opacity-0'}`}>
+        <div className={`mb-4 transition-opacity duration-1000 ${showLogo ? 'opacity-100' : 'opacity-0'}`}>
           <div className="flex items-center justify-center">
-            <WellSaidIconLanding size={60} /> {/* Use your actual logo component */}
+            <WellSaidIconLanding size={100} /> {/* Use your actual logo component */}
             <div className="ml-3">
-              <img src={logo} alt="WellSaid" className="h-10" /> {/* Use your actual logo image */}
+              <img src={logo} alt="WellSaid" className="h-12" /> {/* Use your actual logo image */}
               <p className="text-sm text-gray-500">AI Assistant</p>
             </div>
           </div>
