@@ -202,6 +202,25 @@ const WellSaidOnboarding = ({ onComplete }) => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
+  const getPlaceholderText = () => {
+    if (currentStep === 'registration') {
+      if (!userData.name) return "Enter your name";
+      if (!userData.email) return "Enter your email";
+    }
+    else if (currentStep === 'conversation') {
+      if (!userData.motivation) return "What brings you to this app?";
+      if (!userData.topics) return "What topics do you want to cover?";
+      if (!userData.helpStyle) return "How can I help you stay on track?";
+    }
+    else if (currentStep === 'people') {
+      if (currentPersonQuestions) {
+        return `What questions for ${currentPerson?.name || 'them'}?`;
+      }
+      return "Tell me about this person (e.g., 'My daughter Sarah, age 10')";
+    }
+    return "Type your response...";
+  };
+
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
@@ -666,11 +685,7 @@ const WellSaidOnboarding = ({ onComplete }) => {
                 <textarea
                   value={currentInput}
                   onChange={(e) => setCurrentInput(e.target.value)}
-                  placeholder={
-                    currentPersonQuestions
-                      ? `What kinds of questions for ${currentPerson?.name || 'them'}?`
-                      : "Tell me about this person (e.g., 'My daughter Sarah, age 10')"
-                  }
+                  placeholder={getPlaceholderText()}
                   className="w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:border-blue-500 resize-none"
                   rows={2}
                   onKeyPress={(e) => {
