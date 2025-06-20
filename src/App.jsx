@@ -194,9 +194,10 @@ const WellSaidOnboarding = ({ onComplete }) => {
   const [showPinInput, setShowPinInput] = useState(false);
   const [pinDigits, setPinDigits] = useState(['', '', '', '']);
   const [currentPersonInput, setCurrentPersonInput] = useState('');
+  const [currentPerson, setCurrentPerson] = useState(null);
   const [showPersonForm, setShowPersonForm] = useState(false);
   const messagesEndRef = useRef(null);
-
+  const [showChatInput, setShowChatInput] = useState(true);
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
@@ -265,19 +266,18 @@ const WellSaidOnboarding = ({ onComplete }) => {
 
 
   const handleConversationSubmit = () => {
-    if (currentStep === 'people' && currentPersonQuestions) {
-      handlePersonQuestionSubmit();
-      return;
-    }
+    if (!currentInput.trim()) return;
 
     if (currentStep === 'people') {
-      handlePersonSubmit();
+      if (currentPersonQuestions) {
+        handlePersonQuestionSubmit();
+      } else {
+        handlePersonSubmit();
+      }
       return;
     }
 
     // Original conversation flow
-    if (!currentInput.trim()) return;
-
     const input = currentInput.trim();
     setMessages(prev => [...prev, { text: input, isBot: false, timestamp: Date.now() }]);
     setCurrentInput('');
@@ -292,10 +292,10 @@ const WellSaidOnboarding = ({ onComplete }) => {
       setUserData(prev => ({ ...prev, helpStyle: input }));
       typeMessage("We're on the last step! Your insight is meant to be shared...", true, 1000);
       setTimeout(() => {
-        typeMessage("Can you tell me about the person you would like to add?", true, 1500);
+        typeMessage("Would you like to add someone to your circle now?...", true, 1500);
       }, 2000);
       setCurrentStep('people');
-      setShowPersonForm(false);
+      setShowChatInput(false); // Hide input initially
     }
   };
 
@@ -381,65 +381,62 @@ const WellSaidOnboarding = ({ onComplete }) => {
 
   // Enhanced person submission handler
   const handlePersonSubmit = () => {
-    if (!currentPersonInput.trim()) return;
+    if (!currentInput.trim()) return;
 
-    const personInput = currentPersonInput.trim();
+    const personInput = currentInput.trim();
     setMessages(prev => [...prev, { text: personInput, isBot: false, timestamp: Date.now() }]);
-    setCurrentPersonInput('');
+    setCurrentInput('');
 
-    // Parse the person input (you can enhance this parsing logic)
+    // Parse the person input
     const person = parsePerson(personInput);
 
-    // Add the person to userData
-    setUserData(prev => ({
-      ...prev,
-      people: [...prev.people, person]
-    }));
+    // Store the person temporarily (don't add to userData yet)
+    setCurrentPerson(person);
 
-    // Provide confirmation and ask for question preferences
-    const confirmationMessage = `I'd like to add ${person.name || 'this person'}, your ${person.relationship}${person.age ? ` who is ${person.age}` : ''}${person.interests ? ` and loves ${person.interests}` : ''}`;
+    // Ask about question preferences
+    typeMessage(`Thanks! What kinds of questions would you like to answer for ${person.name || 'them'}?`, true, 500);
 
-    typeMessage(confirmationMessage, true, 500);
-
-    setTimeout(() => {
-      typeMessage(`What kinds of questions would you like to answer for ${person.name || 'them'}?`, true, 1000);
-    }, 1500);
-
-    // Set flag to collect question preferences for this person
-    setCurrentPersonQuestions(person.id);
+    // Set flag to collect question preferences
+    setCurrentPersonQuestions(true);
   };
 
   // New handler for person question preferences
   const handlePersonQuestionSubmit = () => {
-    if (!currentPersonInput.trim()) return;
+    if (!currentInput.trim()) return;
 
-    const questionInput = currentPersonInput.trim();
+    const questionInput = currentInput.trim();
     setMessages(prev => [...prev, { text: questionInput, isBot: false, timestamp: Date.now() }]);
-    setCurrentPersonInput('');
+    setCurrentInput('');
 
-    // Update the person with their question preferences
+    // Create the complete person object
+    const completePerson = {
+      ...currentPerson,
+      questionPreferences: questionInput
+    };
+
+    // Show confirmation message
+    const confirmationMessage = `Got it! I'll add ${completePerson.name || 'this person'}, your ${completePerson.relationship}${
+      completePerson.age ? ` (age ${completePerson.age})` : ''
+    }${
+      completePerson.interests ? ` who loves ${completePerson.interests}` : ''
+    }. They'll receive insights about: ${questionInput}.`;
+
+    typeMessage(confirmationMessage, true, 500);
+    setShowChatInput(false);
+    setTimeout(() => {
+      typeMessage("Would you like to add another person?", true, 1000);
+    }, 1500);
+
+    // Add the person to userData
     setUserData(prev => ({
       ...prev,
-      people: prev.people.map(person =>
-        person.id === currentPersonQuestions
-          ? { ...person, questionPreferences: questionInput }
-          : person
-      )
+      people: [...prev.people, completePerson]
     }));
 
-    // Find the person we just updated
-    const currentPerson = userData.people.find(p => p.id === currentPersonQuestions);
-
-    // Provide summary and ask what to do next
-    const summaryMessage = `Great, so you'd like to add ${currentPerson?.name || 'this person'}, your ${currentPerson?.relationship}${currentPerson?.age ? ` who is ${currentPerson.age}` : ''}${currentPerson?.interests ? ` and loves ${currentPerson.interests}` : ''}. You'd also like to share insight on ${questionInput.toLowerCase()}. If I have that right, hit the add button or share more about ${currentPerson?.name || 'them'}.`;
-
-    typeMessage(summaryMessage, true, 1000);
-
-    // Clear the current person questions flag
-    setCurrentPersonQuestions(null);
-    setShowPersonForm(false);
+    // Reset the current person state
+    setCurrentPerson(null);
+    setCurrentPersonQuestions(false);
   };
-
 
   const extractName = (text) => {
     const nameMatch = text.match(/(?:my |named |called )([A-Za-z]+)/i);
@@ -661,26 +658,18 @@ const WellSaidOnboarding = ({ onComplete }) => {
           </div>
         )}
 
-        {/* Conversation Input */}
-        {(currentStep === 'conversation' || (currentStep === 'people' && showPersonForm)) && (
+        {/* Conversation Input - Always show when in conversation or people steps */}
+        {(currentStep === 'conversation' || (currentStep === 'people' && showChatInput)) && (
           <div className="bg-white rounded-2xl shadow-lg p-4">
             <div className="flex gap-2 items-end">
               <div className="flex-1">
                 <textarea
-                  value={currentStep === 'people' ? currentPersonInput : currentInput}
-                  onChange={(e) => {
-                    if (currentStep === 'people') {
-                      setCurrentPersonInput(e.target.value);
-                    } else {
-                      setCurrentInput(e.target.value);
-                    }
-                  }}
+                  value={currentInput}
+                  onChange={(e) => setCurrentInput(e.target.value)}
                   placeholder={
-                    currentStep === 'people'
-                      ? currentPersonQuestions
-                        ? `What questions for ${userData.people.find(p => p.id === currentPersonQuestions)?.name || 'them'}?`
-                        : "Tell me about this person (e.g., 'My daughter Sarah, age 10')"
-                      : "Type your response..."
+                    currentPersonQuestions
+                      ? `What kinds of questions for ${currentPerson?.name || 'them'}?`
+                      : "Tell me about this person (e.g., 'My daughter Sarah, age 10')"
                   }
                   className="w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:border-blue-500 resize-none"
                   rows={2}
@@ -702,9 +691,9 @@ const WellSaidOnboarding = ({ onComplete }) => {
               </button>
               <button
                 onClick={handleConversationSubmit}
-                disabled={currentStep === 'people' ? !currentPersonInput.trim() : !currentInput.trim()}
+                disabled={!currentInput.trim()}
                 className={`p-3 rounded-xl transition-colors ${
-                  (currentStep === 'people' ? currentPersonInput.trim() : currentInput.trim())
+                  currentInput.trim()
                     ? 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600'
                     : 'bg-gray-200 text-gray-400 cursor-not-allowed'
                 }`}
@@ -717,94 +706,55 @@ const WellSaidOnboarding = ({ onComplete }) => {
 
         {/* People Management */}
         {currentStep === 'people' && (
-          <>
-            {/* People List */}
-            <div className="bg-white rounded-2xl shadow-lg p-6 mt-4">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="font-semibold text-gray-800">People in your circle</h3>
-                <span className="text-sm text-gray-500">{userData.people.length} added</span>
-              </div>
-
-              {userData.people.length > 0 ? (
-                userData.people.map((person, index) => (
-                  <div key={person.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg mb-2">
-                    <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                      <User className="w-4 h-4 text-blue-600" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="font-medium text-gray-800">
-                        {person.name || `Person ${index + 1}`}
-                      </p>
-                      <p className="text-sm text-gray-500">
-                        {person.relationship} {person.age && `• ${person.age} years old`}
-                      </p>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className="text-center py-4 text-gray-500">
-                  No people added yet
-                </div>
-              )}
-
-              <div className="flex gap-2 mt-4">
-                <button
-                  onClick={() => {
-                    setShowPersonForm(true);
-                    setCurrentPersonInput('');
-                    typeMessage("Please enter the name and relationship of the person you'd like to add (e.g., 'My daughter Sarah, age 10')", true, 500);
-                  }}
-                  className="flex-1 bg-gray-100 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-200 transition-colors flex items-center justify-center gap-2"
-                >
-                  <Plus className="w-4 h-4" />
-                  {userData.people.length > 0 ? "Add Another" : "Add Person"}
-                </button>
-                {userData.people.length > 0 && (
-                  <button
-                    onClick={completeOnboarding}
-                    className="flex-1 bg-gradient-to-r from-blue-500 to-indigo-500 text-white py-2 px-4 rounded-lg hover:from-blue-600 hover:to-indigo-600 transition-colors"
-                  >
-                    Complete Profile
-                  </button>
-                )}
-              </div>
+          <div className="bg-white rounded-2xl shadow-lg p-6 mt-4">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="font-semibold text-gray-800">People in your circle</h3>
+              <span className="text-sm text-gray-500">{userData.people.length} added</span>
             </div>
 
-            {/* Person Input Form */}
-            {showPersonForm && (
-              <div className="bg-white rounded-2xl shadow-lg p-6 mt-4">
-                <div className="mb-4">
-                  <label htmlFor="personInput" className="block text-sm font-medium text-gray-700 mb-1">
-                    Add a person to your circle
-                  </label>
-                  <input
-                    id="personInput"
-                    type="text"
-                    value={currentPersonInput}
-                    onChange={(e) => setCurrentPersonInput(e.target.value)}
-                    placeholder="E.g., 'My daughter Sarah, age 10'"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                    onKeyPress={(e) => {
-                      if (e.key === 'Enter' && currentPersonInput.trim()) {
-                        handlePersonSubmit();
-                      }
-                    }}
-                  />
+            {userData.people.length > 0 ? (
+              userData.people.map((person, index) => (
+                <div key={person.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg mb-2">
+                  <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                    <User className="w-4 h-4 text-blue-600" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-medium text-gray-800">
+                      {person.name || `Person ${index + 1}`}
+                    </p>
+                    <p className="text-sm text-gray-500">
+                      {person.relationship} {person.age && `• ${person.age} years old`}
+                    </p>
+                  </div>
                 </div>
-                <button
-                  onClick={handlePersonSubmit}
-                  disabled={!currentPersonInput.trim()}
-                  className={`w-full py-2 px-4 rounded-lg transition-colors ${
-                    currentPersonInput.trim()
-                      ? 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600'
-                      : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                  }`}
-                >
-                  Add Person
-                </button>
+              ))
+            ) : (
+              <div className="text-center py-4 text-gray-500">
+                No people added yet
               </div>
             )}
-          </>
+
+            <div className="flex gap-2 mt-4">
+              <button
+                onClick={() => {
+                  setShowChatInput(true); // Show input
+                  setCurrentInput('');
+                  typeMessage("Great! Please tell me about the person...", true, 500);
+                  setCurrentPersonQuestions(false);
+                }}
+                className="flex-1 bg-gray-100 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-200 transition-colors flex items-center justify-center gap-2"
+              >
+                <Plus className="w-4 h-4" />
+                {userData.people.length > 0 ? "Add Another" : "Add Person"}
+              </button>
+              <button
+                onClick={completeOnboarding}
+                className="flex-1 bg-gradient-to-r from-blue-500 to-indigo-500 text-white py-2 px-4 rounded-lg hover:from-blue-600 hover:to-indigo-600 transition-colors"
+              >
+                Complete Profile
+              </button>
+            </div>
+          </div>
         )}
 
         {/* Summary */}
