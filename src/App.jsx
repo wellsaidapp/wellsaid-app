@@ -5,7 +5,7 @@ import {
   Sparkles, Printer, ShoppingCart, ChevronDown, ChevronUp, Home,
   MessageSquare, Book, FolderOpen, Search, Tag, Clock, ChevronRight,
   Star, Bell, Settings, Users, Edit3, Calendar, Target, Trophy, Zap,
-  Heart, ArrowLeft, Cake, Orbit, GraduationCap, Gift, Shuffle
+  Heart, ArrowLeft, Cake, Orbit, GraduationCap, Gift, Shuffle, PlusCircle, Library
 } from 'lucide-react';
 import logo from './assets/wellsaid.svg';
 import Lottie from 'lottie-react';
@@ -1673,444 +1673,266 @@ const WellSaidApp = () => {
     );
   };
 
-  const CaptureView = ({ captureMode, setCurrentView, resetForm }) => {
-    // State management
-    const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const CaptureView = ({ captureMode, setCurrentView }) => {
+    // Chat state
+    const [messages, setMessages] = useState([]);
+    const [currentInput, setCurrentInput] = useState('');
+    const [isTyping, setIsTyping] = useState(false);
+    const [isRecording, setIsRecording] = useState(false);
+    const [conversationState, setConversationState] = useState('init');
+    const [autoTags, setAutoTags] = useState({ topics: [], people: [] });
+    const messagesEndRef = useRef(null);
 
-    // Existing state from your original code
-    const [currentQuestion, setCurrentQuestion] = useState('');
-    const [newInsight, setNewInsight] = useState('');
-    const [selectedRecipients, setSelectedRecipients] = useState([]);
-    const [selectedTopics, setSelectedTopics] = useState([]);
-    const [insights, setInsights] = useState([]);
-
-    // Sample data for occasions and questions
-    const occasions = [
-      { id: 'wedding', name: 'Wedding', icon: '💒', color: 'bg-gradient-to-br from-purple-500 to-pink-500' },
-      { id: 'first-child', name: 'First Child', icon: '👶', color: 'bg-gradient-to-br from-blue-400 to-teal-400' },
-      { id: 'graduation', name: 'Graduation', icon: '🎓', color: 'bg-gradient-to-br from-indigo-500 to-blue-500' },
-      { id: 'milestone-birthday', name: 'Milestone Birthday', icon: '🎂', color: 'bg-gradient-to-br from-amber-500 to-pink-500' },
+    // Sample data
+    const people = [
+      { id: '1', name: 'Sarah', relationship: 'daughter', interests: 'soccer, art' },
+      { id: '2', name: 'Michael', relationship: 'son', interests: 'science, basketball' }
     ];
 
-    const occasionQuestions = {
-      wedding: [
-        "What's the most important lesson about love you've learned?",
-        "What advice would you give about building a strong partnership?",
-        "What moment made you realize they were 'the one'?"
-      ],
-      'first-child': [
-        "What hopes do you have for your child's future?",
-        "What value is most important to pass down?",
-        "How has becoming a parent changed your perspective?"
-      ],
-      graduation: [
-        "What's the most valuable lesson from this chapter?",
-        "How have you grown during this time?",
-        "What advice would you give to someone starting this journey?"
-      ],
-      'milestone-birthday': [
-        "What hopes do you have for your child's future?",
-        "What value is most important to pass down?",
-        "How has becoming a parent changed your perspective?"
-      ]
-    };
+    const topics = ['Life Lessons', 'Love', 'Career', 'Parenting', 'Personal Growth'];
 
-    // Initialize based on captureMode
+    const hasInitialized = useRef(false);
+
     useEffect(() => {
-      if (captureMode === 'quick') {
-        setCurrentQuestion(prompts[Math.floor(Math.random() * prompts.length)]);
+      if (!hasInitialized.current && messages.length === 0) {
+        hasInitialized.current = true;
+
+        if (captureMode === 'quick') {
+          startQuickCapture();
+        } else if (captureMode === 'milestone') {
+          startMilestoneSelection();
+        } else {
+          startOpenCapture();
+        }
       }
-      // For 'milestone' mode, we'll wait for occasion selection
-    }, [captureMode]);
+    }, []);
 
-    const initMultiMode = (occasion) => {
-      setSelectedOccasion(occasion);
-      const questions = occasionQuestions[occasion.id] || [];
-      setQuestionSet(questions);
-      setCurrentQuestion(questions[0] || '');
-      setCurrentQuestionIndex(0);
-      resetForm();
+    const typeMessage = (text, isBot = true, delay = 1000) => {
+      setIsTyping(true);
+      setTimeout(() => {
+        setMessages(prev => [...prev, { text, isBot, timestamp: Date.now() }]);
+        setIsTyping(false);
+        scrollToBottom();
+      }, delay);
     };
 
-    useEffect(() => {
-      console.log("📦 selectedOccasion updated:", selectedOccasion);
-    }, [selectedOccasion]);
-
-    const generateQuestion = () => {
-      setCurrentQuestion(prompts[Math.floor(Math.random() * prompts.length)]);
+    const scrollToBottom = () => {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     };
 
-    const [isEditingQuestion, setIsEditingQuestion] = useState(false);
-    const [customQuestion, setCustomQuestion] = useState('');
-    const [isRecording, setIsRecording] = useState(false);
-    const [polishedAnswer, setPolishedAnswer] = useState('');
-    const [showPolish, setShowPolish] = useState(false);
-
-    const handleEditQuestion = () => {
-      setCustomQuestion(currentQuestion);
-      setIsEditingQuestion(true);
+    const startQuickCapture = () => {
+      setConversationState('capturing');
+      typeMessage("Let's capture some quick wisdom!", true);
+      typeMessage("What insight would you like to share today?", true, 1500);
     };
 
-    const saveCustomQuestion = () => {
-      setCurrentQuestion(customQuestion);
-      setIsEditingQuestion(false);
-      setCustomQuestion('');
+    const startMilestoneSelection = () => {
+      setConversationState('selecting_occasion');
+      typeMessage("Let's create a milestone capture!", true);
+      typeMessage("What are we celebrating? (e.g., graduation, birthday, wedding)", true, 1500);
+    };
+
+    const startOpenCapture = () => {
+      setConversationState('capturing');
+      typeMessage("What would you like to talk about today?", true);
+      typeMessage("You can share any wisdom, lesson, or meaningful thought.", true, 1500);
+    };
+
+    const analyzeContent = (text) => {
+      // Simple content analysis - in a real app you'd use more sophisticated NLP
+      const detectedTopics = topics.filter(topic =>
+        text.toLowerCase().includes(topic.toLowerCase())
+      );
+
+      const detectedPeople = people.filter(person =>
+        text.toLowerCase().includes(person.name.toLowerCase()) ||
+        text.toLowerCase().includes(person.relationship)
+      );
+
+      return {
+        topics: detectedTopics.length > 0 ? detectedTopics : ['General Wisdom'],
+        people: detectedPeople
+      };
+    };
+
+    const handleInputSubmit = () => {
+      if (!currentInput.trim()) return;
+
+      const input = currentInput.trim();
+      setMessages(prev => [...prev, { text: input, isBot: false }]);
+      setCurrentInput('');
+      scrollToBottom();
+
+      if (conversationState === 'selecting_occasion') {
+        handleOccasionSelection(input);
+      } else if (conversationState === 'capturing') {
+        handleWisdomCapture(input);
+      } else if (conversationState === 'confirming') {
+        handleConfirmation(input);
+      }
+    };
+
+    const handleOccasionSelection = (input) => {
+      const occasion = input.toLowerCase();
+      typeMessage(`Capturing wisdom for ${occasion}!`, true);
+      typeMessage("What would you like to share about this occasion?", true, 1500);
+      setConversationState('capturing');
+    };
+
+    const handleWisdomCapture = (input) => {
+      // Analyze the content for auto-tagging
+      const tags = analyzeContent(input);
+      setAutoTags(tags);
+
+      // Build confirmation message
+      let confirmation = "I'll save this wisdom about: ";
+      confirmation += tags.topics.join(', ');
+
+      if (tags.people.length > 0) {
+        confirmation += ` for ${tags.people.map(p => p.name).join(', ')}`;
+      }
+
+      typeMessage("Thank you for sharing that meaningful insight!", true);
+      typeMessage(confirmation, true, 1500);
+      typeMessage("Does this look correct? (yes/no)", true, 2000);
+      setConversationState('confirming');
+    };
+
+    const handleConfirmation = (input) => {
+      if (input.toLowerCase().startsWith('y')) {
+        typeMessage("Wonderful! I've saved this for you.", true);
+        setTimeout(() => setCurrentView('home'), 2000);
+      } else {
+        typeMessage("Let me try again. What would you like to change?", true);
+        setConversationState('capturing');
+      }
     };
 
     const toggleRecording = () => {
       setIsRecording(!isRecording);
       if (!isRecording) {
-        // Simulate voice recording
         setTimeout(() => {
-          setNewInsight("This is a simulated voice-to-text response that would capture your spoken answer.");
+          setCurrentInput("This would be transcribed speech...");
           setIsRecording(false);
         }, 3000);
       }
     };
 
-    const polishAnswer = () => {
-      // Simulate AI polishing
-      const polished = newInsight
-        .replace(/um|uh|like,/gi, '')
-        .replace(/\s+/g, ' ')
-        .trim()
-        .split('. ')
-        .map(sentence => sentence.charAt(0).toUpperCase() + sentence.slice(1))
-        .join('. ');
-
-      setPolishedAnswer(polished + (polished.endsWith('.') ? '' : '.'));
-      setShowPolish(true);
-    };
-
-    const handleSubmit = () => {
-      if (newInsight.trim() && selectedRecipients.length > 0) {
-        const newInsightObj = {
-          id: insights.length + 1,
-          text: newInsight,
-          recipients: selectedRecipients,
-          date: new Date().toISOString().split('T')[0],
-          topics: selectedTopics,
-          question: currentQuestion,
-          shared: true,
-          occasion: captureMode === 'milestone' ? selectedOccasion?.name : 'Daily Reflection'
-        };
-
-        setInsights([newInsightObj, ...insights]);
-        resetForm();
-
-        if (captureMode === 'milestone' && currentQuestionIndex < questionSet.length - 1) {
-          // Move to next question
-          const nextIndex = currentQuestionIndex + 1;
-          setCurrentQuestionIndex(nextIndex);
-          setCurrentQuestion(questionSet[nextIndex]);
-        } else if (captureMode === 'milestone') {
-          // Completed all questions
-          setCurrentView('home');
-        } else {
-          // Return to home after single submission
-          setCurrentView('home');
-        }
-      }
-    };
-
-    // Occasion Selection Screen (only for milestone mode)
-    if (captureMode === 'milestone' && !selectedOccasion) {
-      console.log('Milestone mode active. No occasion selected yet.');
-      console.log('Available occasions:', occasions);
-
-      return (
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-blue-50 to-indigo-50 pb-20">
-          <Header />
-
-          <div className="p-4 max-w-md mx-auto pt-4">
-            <button
-              onClick={() => {
-                console.log('Returning to Home');
-                setCurrentView('home');
-              }}
-              className="flex items-center text-gray-600 mb-6 hover:text-gray-800"
-            >
-              <ArrowLeft className="w-5 h-5 mr-2" />
-              Back
-            </button>
-
-            <h2 className="text-2xl font-bold text-gray-800 mb-6">Select Occasion</h2>
-
-            <div className="grid grid-cols-2 gap-3">
-              {occasions.map(occasion => (
-                <button
-                  key={occasion.id}
-                  onClick={() => {
-                    console.log('Selected occasion:', occasion);
-                    initMultiMode(occasion);
-                  }}
-                  className={`${occasion.color} text-white rounded-2xl p-4 shadow-sm hover:shadow-md transition-all text-center`}
-                >
-                  <div className="text-2xl mb-2">{occasion.icon}</div>
-                  <h3 className="font-medium text-white">{occasion.name}</h3>
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      );
-    }
-
-    // Completion Screen (if we want to keep it)
-    if (captureMode === 'milestone' && currentQuestionIndex >= questionSet.length - 1 && newInsight.trim() && selectedRecipients.length > 0) {
-      return (
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-blue-50 to-indigo-50 pb-20">
-          <Header />
-
-          <div className="p-4 max-w-md mx-auto pt-16 text-center">
-            <div className="text-6xl mb-6">🎉</div>
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">Occasion Complete!</h2>
-            <p className="text-gray-600 mb-8">
-              You've captured {questionSet.length} insights for your {selectedOccasion?.name}.
-            </p>
-            <button
-              onClick={() => setCurrentView('home')}
-              className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-8 py-3 rounded-2xl font-medium shadow-lg"
-            >
-              Return Home
-            </button>
-          </div>
-        </div>
-      );
-    }
-
-    // Main Capture Screen (shared by both modes)
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-blue-50 to-indigo-50 pb-20">
-        <Header />
-
-        <div className="p-4">
-          {/* Progress indicator for milestone mode */}
-          {captureMode === 'milestone' && (
-            <div className="mb-6">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center">
-                  <span className="text-2xl mr-2">{selectedOccasion?.icon}</span>
-                  <span className="font-medium text-gray-700">{selectedOccasion?.name}</span>
-                </div>
-                <div className="text-sm text-gray-600">
-                  {currentQuestionIndex + 1} of {questionSet.length}
-                </div>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div
-                  className="bg-blue-500 h-2 rounded-full transition-all duration-300"
-                  style={{ width: `${((currentQuestionIndex + 1) / questionSet.length) * 100}%` }}
-                ></div>
+      <div className="fixed inset-0 bg-gradient-to-br from-blue-50 to-indigo-50 overflow-y-auto">
+        {/* Main content area */}
+        <div className="max-w-2xl mx-auto min-h-screen flex flex-col">
+          {/* Header */}
+          <div className="p-4 pt-6">
+            <div className="flex items-center gap-3">
+              <WellSaidIcon size={50} />
+              <div>
+                <h1 className="text-xl font-bold">Capture Wisdom</h1>
+                <p className="text-sm text-gray-500">
+                  {captureMode === 'quick'
+                    ? 'Quick Capture'
+                    : captureMode === 'milestone'
+                    ? 'Milestone'
+                    : 'Open Conversation'}
+                </p>
               </div>
             </div>
-          )}
+          </div>
 
-          {/* Enhanced Question Prompt Section */}
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 mb-6 shadow-sm border border-white/50">
-            <div className="flex items-start gap-3 mb-4">
-              <div className="flex-1">
-                {isEditingQuestion ? (
-                  <div>
-                    <textarea
-                      value={customQuestion}
-                      onChange={(e) => setCustomQuestion(e.target.value)}
-                      className="w-full p-3 border rounded-lg resize-none focus:ring-2 focus:ring-blue-500"
-                      rows="3"
-                      placeholder="Write your own question..."
-                    />
-                    <div className="flex gap-2 mt-2">
-                      <button
-                        onClick={saveCustomQuestion}
-                        className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm flex items-center"
-                      >
-                        <Check className="w-4 h-4 mr-1" />
-                        Save
-                      </button>
-                      <button
-                        onClick={() => setIsEditingQuestion(false)}
-                        className="bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded-lg text-sm flex items-center"
-                      >
-                        <X className="w-4 h-4 mr-1" />
-                        Cancel
-                      </button>
+          {/* Messages */}
+          <div className="flex-1 px-4 overflow-y-auto pb-60"> {/* Leave space for input + nav */}
+            <div className="bg-white rounded-2xl shadow-lg p-6 mb-4">
+              <div className="space-y-4">
+                {messages.map((message, index) => (
+                  <div key={index} className={`flex ${message.isBot ? 'justify-start' : 'justify-end'}`}>
+                    <div
+                      className={`max-w-xs lg:max-w-md px-4 py-2 rounded-2xl ${
+                        message.isBot
+                          ? 'bg-gray-100 text-gray-800'
+                          : 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white'
+                      }`}
+                    >
+                      {message.text}
                     </div>
                   </div>
-                ) : (
-                  <>
-                    <div className="flex justify-between items-start">
-                      <h3 className="text-lg font-semibold text-gray-800">
-                        {captureMode === 'milestone' ? 'Question' : 'Question'}
-                      </h3>
-                      {captureMode === 'quick' && (
-                        <div className="flex gap-2">
-                          <button
-                            onClick={generateQuestion}
-                            className="text-blue-500 text-sm font-medium hover:text-blue-600 transition-colors px-3 py-1 bg-blue-50 rounded-full flex items-center"
-                          >
-                            <Shuffle className="w-4 h-4 mr-1" />
-                            Shuffle
-                          </button>
-                          <button
-                            onClick={handleEditQuestion}
-                            className="text-blue-500 text-sm font-medium hover:text-blue-600 transition-colors px-3 py-1 bg-blue-50 rounded-full flex items-center"
-                          >
-                            <Edit3 className="w-4 h-4 mr-1" />
-                            Edit
-                          </button>
-                        </div>
-                      )}
+                ))}
+                {isTyping && (
+                  <div className="flex justify-start">
+                    <div className="bg-gray-100 px-4 py-2 rounded-2xl">
+                      <div className="flex space-x-1">
+                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" />
+                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-100" />
+                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-200" />
+                      </div>
                     </div>
-                    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-xl border border-blue-100 mt-3">
-                      <p className="text-gray-700">
-                        {currentQuestion || "What's the most important lesson you've learned recently?"}
-                      </p>
-                    </div>
-                  </>
+                  </div>
                 )}
+                <div ref={messagesEndRef} />
               </div>
             </div>
           </div>
+        </div>
 
-          {/* Enhanced Answer Section with Voice Recording */}
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 mb-6 shadow-sm border border-white/50">
-            <div className="mb-4">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-lg font-semibold text-gray-800">
-                  Answer
-                </h3>
-                <button
-                  onClick={toggleRecording}
-                  className={`flex items-center px-3 py-2 rounded-lg text-sm transition-all ${
-                    isRecording
-                      ? 'bg-red-500 text-white'
-                      : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
-                  }`}
-                >
-                  {isRecording ? <MicOff className="w-4 h-4 mr-1" /> : <Mic className="w-4 h-4 mr-1" />}
-                  {isRecording ? 'Stop' : 'Voice'}
-                </button>
-              </div>
-
-              <textarea
-                value={newInsight}
-                onChange={(e) => setNewInsight(e.target.value)}
-                className="w-full p-4 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent h-32 bg-white/50 backdrop-blur-sm resize-none"
-                placeholder="Share your wisdom, experience, or advice..."
-                maxLength={280}
-                disabled={isRecording}
-              />
-
-              {isRecording && (
-                <div className="mt-2 flex items-center text-red-500 text-sm">
-                  <div className="animate-pulse w-2 h-2 bg-red-500 rounded-full mr-2"></div>
-                  Recording...
-                </div>
-              )}
-            </div>
-
-            <div className="flex items-center justify-between mt-4">
-              <span className="text-sm text-gray-500">{newInsight.length}/280</span>
-              {newInsight && !showPolish && (
-                <button
-                  onClick={polishAnswer}
-                  className="flex items-center text-blue-600 hover:text-blue-800 font-medium text-sm"
-                >
-                  <Wand2 className="w-4 h-4 mr-2" />
-                  Polish with AI
-                </button>
-              )}
-            </div>
-
-            {showPolish && (
-              <div className="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-gray-700">AI Polished Version</span>
-                  <button
-                    onClick={() => setShowPolish(false)}
-                    className="text-gray-500 hover:text-gray-700"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-                <p className="text-gray-800">{polishedAnswer}</p>
-              </div>
-            )}
-          </div>
-
-          {/* AI Assistant (unchanged) */}
-          <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl border border-blue-100">
-            <div className="flex items-center">
-              <WellSaidIcon size={32} />
-              <div className="ml-3">
-                <p className="font-medium text-blue-800">AI Assistant</p>
-                <p className="text-sm text-blue-600">Ask me to help craft your message</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Select Recipients (unchanged) */}
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 mb-6 shadow-sm border border-white/50">
-            <h3 className="font-semibold text-gray-800 mb-4">Who is this for?</h3>
-            <div className="grid grid-cols-2 gap-3">
-              {individuals.map(person => (
-                <label key={person.id} className="flex items-center p-3 border border-gray-200 rounded-xl cursor-pointer hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 hover:border-blue-200 transition-all">
-                  <input
-                    type="checkbox"
-                    className="mr-3 rounded text-blue-500 focus:ring-blue-500"
-                    checked={selectedRecipients.includes(person.id)}
-                    onChange={(e) => {
-                      if (e.target.checked) {
-                        setSelectedRecipients([...selectedRecipients, person.id]);
-                      } else {
-                        setSelectedRecipients(selectedRecipients.filter(id => id !== person.id));
+        {/* Input Area - Fixed positioning */}
+        <div className="fixed bottom-[72px] left-0 right-0 px-4 z-20"> {/* Exactly height of bottom nav */}
+          <div className="max-w-2xl mx-auto">
+            <div className="bg-white rounded-xl shadow-md p-3">
+              <div className="flex gap-2 items-end">
+                <div className="flex-1">
+                  <textarea
+                    value={currentInput}
+                    onChange={(e) => setCurrentInput(e.target.value)}
+                    placeholder="Type your response..."
+                    className="w-full p-2 border border-gray-200 rounded-xl focus:outline-none focus:border-blue-500 resize-none"
+                    rows={2}
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        handleInputSubmit();
                       }
                     }}
                   />
-                  <div className={`w-6 h-6 rounded-full ${person.color} flex items-center justify-center mr-2`}>
-                    <span className="text-white text-xs font-bold">{person.avatar}</span>
-                  </div>
-                  <span className="font-medium text-gray-800">{person.name}</span>
-                </label>
-              ))}
-            </div>
-          </div>
-
-          {/* Select Topics (unchanged) */}
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 mb-6 shadow-sm border border-white/50">
-            <h3 className="font-semibold text-gray-800 mb-4">Topics</h3>
-            <div className="flex flex-wrap gap-2">
-              {availableTopics.map(topic => (
+                </div>
                 <button
-                  key={topic}
-                  onClick={() => {
-                    if (selectedTopics.includes(topic)) {
-                      setSelectedTopics(selectedTopics.filter(t => t !== topic));
-                    } else {
-                      setSelectedTopics([...selectedTopics, topic]);
-                    }
-                  }}
-                  className={`px-3 py-2 rounded-full text-sm font-medium transition-all ${
-                    selectedTopics.includes(topic)
-                      ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gradient-to-r hover:from-blue-100 hover:to-indigo-100 hover:text-blue-700'
+                  onClick={toggleRecording}
+                  className={`p-3 rounded-xl transition-colors ${
+                    isRecording ? 'bg-red-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                   }`}
                 >
-                  {topic}
+                  {isRecording ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
                 </button>
-              ))}
+                <button
+                  onClick={handleInputSubmit}
+                  disabled={!currentInput.trim()}
+                  className={`p-3 rounded-xl transition-colors ${
+                    currentInput.trim()
+                      ? 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600'
+                      : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                  }`}
+                >
+                  <Send className="w-5 h-5" />
+                </button>
+              </div>
             </div>
           </div>
+        </div>
 
-          {/* Submit Button */}
-          <button
-            onClick={handleSubmit}
-            disabled={!newInsight.trim() || selectedRecipients.length === 0}
-            className="w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-2xl p-4 font-semibold text-lg shadow-lg hover:shadow-xl transition-all hover:scale-105 disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:shadow-lg"
-          >
-            <Send size={20} className="inline mr-2" />
-            {captureMode === 'milestone' && currentQuestionIndex < questionSet.length - 1 ? 'Next Question' : 'Share This Wisdom'}
-          </button>
+        {/* Bottom navigation - fixed position */}
+        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow z-10 h-[56px]">
+          <div className="max-w-2xl mx-auto flex justify-around items-center h-full">
+            <button onClick={() => setCurrentView('home')} className="text-gray-600 hover:text-blue-500 flex flex-col items-center">
+              <Home className="w-6 h-6" />
+              <span className="text-xs mt-1">Home</span>
+            </button>
+            <button onClick={() => setCurrentView('capture')} className="text-blue-500 flex flex-col items-center">
+              <PlusCircle className="w-6 h-6" />
+              <span className="text-xs mt-1">Capture</span>
+            </button>
+            <button onClick={() => setCurrentView('library')} className="text-gray-600 hover:text-blue-500 flex flex-col items-center">
+              <Library className="w-6 h-6" />
+              <span className="text-xs mt-1">Library</span>
+            </button>
+          </div>
         </div>
       </div>
     );
