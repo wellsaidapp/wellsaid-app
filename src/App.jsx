@@ -5,7 +5,7 @@ import {
   Sparkles, Printer, ShoppingCart, ChevronDown, ChevronUp, Home,
   MessageSquare, Book, FolderOpen, Search, Tag, Clock, ChevronRight,
   Star, Bell, Settings, Users, Edit3, Calendar, Target, Trophy, Zap,
-  Heart, ArrowLeft, Cake, Orbit, GraduationCap, Gift, Shuffle, PlusCircle, Library, Lightbulb, Pencil
+  Heart, ArrowLeft, Cake, Orbit, GraduationCap, Gift, Shuffle, PlusCircle, Library, Lightbulb, Pencil, Lock
 } from 'lucide-react';
 import logo from './assets/wellsaid.svg';
 import Lottie from 'lottie-react';
@@ -3646,87 +3646,214 @@ const OrganizeView = () => {
       );
   };
 
-  const ProfileView = () => (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-blue-50 to-indigo-50 pb-20">
-      <Header />
+  const ProfileView = () => {
+    const [expandedDisclosure, setExpandedDisclosure] = useState(null);
 
-      <div className="p-4">
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 mb-6 shadow-sm border border-white/50 text-center">
-          <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-3">
-            <span className="text-white text-xl font-bold">{user.name.charAt(0)}</span>
+    const disclosures = [
+      {
+        id: 'terms',
+        title: 'Terms of Use',
+        icon: <BookOpen size={18} />,
+        content: `
+          <p class="mb-4"><strong>Effective Date:</strong> 1/1/2025<br>
+          <strong>Last Updated:</strong> 1/1/2025</p>
+
+          <p class="mb-4">Welcome to WellSaid. By using this app, you agree to the following Terms of Use. If you do not agree, please do not use the app.</p>
+
+          <h4 class="font-semibold mt-4 mb-2">1. Purpose of the App</h4>
+          <p class="mb-4">WellSaid helps users capture and reflect on meaningful life experiences and personal insights, using an AI assistant to support journaling and memory preservation.</p>
+
+          <h4 class="font-semibold mt-4 mb-2">2. User Content</h4>
+          <p class="mb-4">You retain ownership of all content you create. By using the app, you grant us a limited license to securely store and process your content to support app functionality. You are solely responsible for the accuracy and appropriateness of the content you enter.</p>
+
+          <h4 class="font-semibold mt-4 mb-2">3. Personal Data and Contact Information</h4>
+          <p class="mb-4">You may choose to share names, relationships, or personal information about yourself or others. You are responsible for obtaining consent where applicable. Content shared about others, especially children, should be thoughtful and respectful of their privacy.</p>
+
+          <h4 class="font-semibold mt-4 mb-2">4. Account & Access</h4>
+          <p class="mb-4">You may be required to create an account. You are responsible for maintaining the confidentiality of your login information. If you believe your account has been compromised, please notify us immediately.</p>
+
+          <h4 class="font-semibold mt-4 mb-2">5. Termination</h4>
+          <p class="mb-4">We reserve the right to suspend or terminate access for misuse or breach of these Terms.</p>
+
+          <h4 class="font-semibold mt-4 mb-2">6. Governing Law</h4>
+          <p class="mb-4">These terms are governed by the laws of the State of Texas, USA.</p>
+        `
+      },
+      {
+        id: 'privacy',
+        title: 'Privacy Policy',
+        icon: <Lock size={18} />,
+        content: `
+          <p class="mb-4"><strong>Effective Date:</strong> 1/1/2025</p>
+
+          <h4 class="font-semibold mt-4 mb-2">1. What We Collect</h4>
+          <p class="mb-4">We collect:</p>
+          <ul class="list-disc pl-5 mb-4">
+            <li>Information you provide (e.g. name, email, relationships)</li>
+            <li>AI-assisted entries and transcripts</li>
+            <li>Metadata (e.g. usage history)</li>
+          </ul>
+          <p class="mb-4">We do not collect biometric data, financial information, or device-level identifiers beyond what is required for functionality.</p>
+
+          <h4 class="font-semibold mt-4 mb-2">2. Children's Data</h4>
+          <p class="mb-4">This app is not directed at children under 13. However, adult users may reference children in their journal entries. These entries are stored securely and are not visible to others unless explicitly shared by the user. Users are responsible for using discretion when inputting identifying details about minors.</p>
+          <p class="mb-4">We do not knowingly collect data directly from children. If we become aware that such data has been submitted in violation of our policies, we will delete it upon request.</p>
+
+          <h4 class="font-semibold mt-4 mb-2">3. How We Use Your Data</h4>
+          <ul class="list-disc pl-5 mb-4">
+            <li>To provide personalized AI-assisted reflections</li>
+            <li>To improve the user experience</li>
+            <li>For security and support</li>
+          </ul>
+          <p class="mb-4">We do not sell or share your personal data with third parties. All data is encrypted in transit and at rest.</p>
+
+          <h4 class="font-semibold mt-4 mb-2">4. User Rights</h4>
+          <p class="mb-4">You may request to delete your data or account by contacting us at [insert email]. We will respond within 30 days.</p>
+        `
+      },
+      {
+        id: 'ai-disclosure',
+        title: 'AI Disclosure',
+        icon: <Wand2 size={18} />,
+        content: `
+          <h4 class="font-semibold mt-4 mb-2">1. AI-Powered Content</h4>
+          <p class="mb-4">WellSaid uses artificial intelligence to assist with journaling, prompts, and summaries. These outputs are automatically generated and may not always be accurate or complete. They are intended to support personal reflection, not replace professional advice or factual verification.</p>
+
+          <h4 class="font-semibold mt-4 mb-2">2. Control of Inputs</h4>
+          <p class="mb-4">Only the data you provide is used. The app does not access your device's microphone or contacts without explicit permission. The AI system does not make independent decisions or predictions — it only responds to your inputs.</p>
+
+          <h4 class="font-semibold mt-4 mb-2">3. Accountability</h4>
+          <p class="mb-4">You are responsible for the content you provide to the AI assistant, including any personally identifiable information about others. You are encouraged to use caution and good judgment when sharing sensitive or emotional content.</p>
+
+          <div class="mt-6 p-3 bg-blue-50 rounded-lg border border-blue-100">
+            <p class="text-sm"><strong>NOTICE:</strong><br>
+            This app uses artificial intelligence (AI) to support journaling and memory collection. AI-generated responses are private and based only on the content you choose to share. All data is encrypted. You control what is captured and may request deletion at any time.</p>
           </div>
-          <div className="font-semibold text-gray-800">{user.name}</div>
-          <div className="text-sm text-gray-500">Member since June 2025</div>
+        `
+      }
+    ];
 
-          <div className="flex justify-around mt-4 pt-4 border-t border-gray-100">
-            <div className="text-center">
-              <div className="font-bold text-gray-800">{insights.filter(i => i.shared).length}</div>
-              <div className="text-xs text-gray-500">Insights</div>
-            </div>
-            <div className="text-center">
-              <div className="font-bold text-gray-800">{individuals.length}</div>
-              <div className="text-xs text-gray-500">People</div>
-            </div>
-            <div className="text-center">
-              <div className="font-bold text-gray-800">{collections.length}</div>
-              <div className="text-xs text-gray-500">Books</div>
-            </div>
-          </div>
-        </div>
+    const toggleDisclosure = (id) => {
+      setExpandedDisclosure(expandedDisclosure === id ? null : id);
+    };
 
-        <div className="space-y-3">
-          <button className="w-full bg-white/80 backdrop-blur-sm rounded-xl p-4 flex items-center justify-between border border-white/50 shadow-sm hover:bg-gray-50 transition-colors">
-            <div className="flex items-center">
-              <Settings size={20} className="text-gray-600 mr-3" />
-              <span className="text-gray-800">Account Settings</span>
-            </div>
-            <ChevronRight size={20} className="text-gray-400" />
-          </button>
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-blue-50 to-indigo-50 pb-20">
+        <Header />
 
-          <button className="w-full bg-white/80 backdrop-blur-sm rounded-xl p-4 flex items-center justify-between border border-white/50 shadow-sm hover:bg-gray-50 transition-colors">
-            <div className="flex items-center">
-              <Bell size={20} className="text-gray-600 mr-3" />
-              <span className="text-gray-800">Notification Preferences</span>
+        <div className="p-4">
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 mb-6 shadow-sm border border-white/50 text-center">
+            <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-3">
+              <span className="text-white text-xl font-bold">{user.name.charAt(0)}</span>
             </div>
-            <ChevronRight size={20} className="text-gray-400" />
-          </button>
+            <div className="font-semibold text-gray-800">{user.name}</div>
+            <div className="text-sm text-gray-500">Member since June 2025</div>
 
-          <button className="w-full bg-white/80 backdrop-blur-sm rounded-xl p-4 flex items-center justify-between border border-white/50 shadow-sm hover:bg-gray-50 transition-colors">
-            <div className="flex items-center">
-              <Users size={20} className="text-gray-600 mr-3" />
-              <span className="text-gray-800">Help & Support</span>
-            </div>
-            <ChevronRight size={20} className="text-gray-400" />
-          </button>
-
-          <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-white/50 shadow-sm">
-            <div className="flex items-center mb-3">
-              <Users size={20} className="text-gray-600 mr-3" />
-              <span className="text-gray-800 font-medium">Family Members</span>
-            </div>
-            {individuals.map(person => (
-              <div key={person.id} className="flex items-center justify-between py-2">
-                <div className="flex items-center">
-                  <div className={`w-8 h-8 rounded-full ${person.color} flex items-center justify-center mr-3`}>
-                    <span className="text-white text-sm font-bold">{person.avatar}</span>
-                  </div>
-                  <span className="text-gray-800">{person.name}</span>
-                </div>
-                <button className="text-blue-600 text-sm">Edit</button>
+            <div className="flex justify-around mt-4 pt-4 border-t border-gray-100">
+              <div className="text-center">
+                <div className="font-bold text-gray-800">{insights.filter(i => i.shared).length}</div>
+                <div className="text-xs text-gray-500">Insights</div>
               </div>
-            ))}
-            <button className="w-full mt-3 py-2 border border-gray-200 rounded-lg text-gray-600 text-sm">
-              + Add Family Member
+              <div className="text-center">
+                <div className="font-bold text-gray-800">{individuals.length}</div>
+                <div className="text-xs text-gray-500">People</div>
+              </div>
+              <div className="text-center">
+                <div className="font-bold text-gray-800">{collections.length}</div>
+                <div className="text-xs text-gray-500">Books</div>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <button className="w-full bg-white/80 backdrop-blur-sm rounded-xl p-4 flex items-center justify-between border border-white/50 shadow-sm hover:bg-gray-50 transition-colors">
+              <div className="flex items-center">
+                <Settings size={20} className="text-gray-600 mr-3" />
+                <span className="text-gray-800">Account Settings</span>
+              </div>
+              <ChevronRight size={20} className="text-gray-400" />
+            </button>
+
+            <button className="w-full bg-white/80 backdrop-blur-sm rounded-xl p-4 flex items-center justify-between border border-white/50 shadow-sm hover:bg-gray-50 transition-colors">
+              <div className="flex items-center">
+                <Bell size={20} className="text-gray-600 mr-3" />
+                <span className="text-gray-800">Notification Preferences</span>
+              </div>
+              <ChevronRight size={20} className="text-gray-400" />
+            </button>
+
+            <button className="w-full bg-white/80 backdrop-blur-sm rounded-xl p-4 flex items-center justify-between border border-white/50 shadow-sm hover:bg-gray-50 transition-colors">
+              <div className="flex items-center">
+                <Users size={20} className="text-gray-600 mr-3" />
+                <span className="text-gray-800">Help & Support</span>
+              </div>
+              <ChevronRight size={20} className="text-gray-400" />
+            </button>
+
+            <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-white/50 shadow-sm">
+              <div className="flex items-center mb-3">
+                <Users size={20} className="text-gray-600 mr-3" />
+                <span className="text-gray-800 font-medium">People</span>
+              </div>
+              {individuals.map(person => (
+                <div key={person.id} className="flex items-center justify-between py-2">
+                  <div className="flex items-center">
+                    <div className={`w-8 h-8 rounded-full ${person.color} flex items-center justify-center mr-3`}>
+                      <span className="text-white text-sm font-bold">{person.avatar}</span>
+                    </div>
+                    <span className="text-gray-800">{person.name}</span>
+                  </div>
+                  <button className="text-blue-600 text-sm">Edit</button>
+                </div>
+              ))}
+              <button className="w-full mt-3 py-2 border border-gray-200 rounded-lg text-gray-600 text-sm">
+                + Add Person
+              </button>
+            </div>
+
+            {/* Legal Disclosures Accordion */}
+            <div className="bg-white/80 backdrop-blur-sm rounded-xl border border-white/50 shadow-sm overflow-hidden">
+              <h3 className="p-4 text-gray-800 font-medium border-b border-gray-100">
+                Legal Disclosures
+              </h3>
+
+              {disclosures.map((disclosure) => (
+                <div key={disclosure.id} className="border-b border-gray-100 last:border-b-0">
+                  <button
+                    onClick={() => toggleDisclosure(disclosure.id)}
+                    className="w-full p-4 flex items-center justify-between text-left hover:bg-gray-50 transition-colors"
+                  >
+                    <div className="flex items-center">
+                      <span className="mr-3">{disclosure.icon}</span>
+                      <span>{disclosure.title}</span>
+                    </div>
+                    <ChevronDown
+                      className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${
+                        expandedDisclosure === disclosure.id ? 'transform rotate-180' : ''
+                      }`}
+                    />
+                  </button>
+
+                  {expandedDisclosure === disclosure.id && (
+                    <div className="px-4 pb-4">
+                      <div
+                        className="prose prose-sm text-gray-600"
+                        dangerouslySetInnerHTML={{ __html: disclosure.content }}
+                      />
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            <button className="w-full bg-white/80 backdrop-blur-sm rounded-xl p-4 text-red-600 text-center border border-white/50 shadow-sm hover:bg-gray-50 transition-colors">
+              Sign Out
             </button>
           </div>
-
-          <button className="w-full bg-white/80 backdrop-blur-sm rounded-xl p-4 text-red-600 text-center border border-white/50 shadow-sm hover:bg-gray-50 transition-colors">
-            Sign Out
-          </button>
         </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   const renderView = () => {
     switch (currentView) {
