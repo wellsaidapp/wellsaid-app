@@ -5,7 +5,7 @@ import {
   Sparkles, Printer, ShoppingCart, ChevronDown, ChevronUp, Home,
   MessageSquare, Book, FolderOpen, Search, Tag, Clock, ChevronRight,
   Star, Bell, Settings, Users, Edit3, Calendar, Target, Trophy, Zap,
-  Heart, ArrowLeft, Cake, Orbit, GraduationCap, Gift, Shuffle, PlusCircle, Library
+  Heart, ArrowLeft, Cake, Orbit, GraduationCap, Gift, Shuffle, PlusCircle, Library, Lightbulb, Pencil
 } from 'lucide-react';
 import logo from './assets/wellsaid.svg';
 import Lottie from 'lottie-react';
@@ -1369,7 +1369,37 @@ const WellSaidApp = () => {
           <p className="text-gray-600 text-center mb-8">Choose the experience that fits</p>
 
           <div className="space-y-4">
-            {/* Daily Rhythm Option */}
+            {/* Insight Builder Option */}
+            <button
+              onClick={() => {
+                setCaptureMode('insight');
+                setShowCaptureOptions(false);
+                setCurrentView('capture');
+              }}
+              className="w-full bg-gradient-to-br from-green-500 to-teal-500 text-white rounded-2xl p-6 text-left hover:shadow-lg transition-all hover:scale-[1.02]"
+            >
+              <div className="flex items-start justify-between mb-3">
+                <div className="flex items-center">
+                  <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center mr-4">
+                    <Lightbulb size={20} className="text-white" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-lg">Insight Builder</h3>
+                    <p className="text-green-100 text-sm">Start with an idea</p>
+                  </div>
+                </div>
+                <ArrowRight size={20} className="text-white/70" />
+              </div>
+              <p className="text-green-100 text-sm leading-relaxed mb-2">
+                Begin with your raw thoughts and let the AI help shape them into meaningful takeaways
+              </p>
+              <div className="flex items-center text-green-100 text-xs">
+                <Pencil size={14} className="mr-1" />
+                <span>10-15 minutes</span>
+              </div>
+            </button>
+
+            {/* Quick Capture Option */}
             <button
               onClick={() => {
                 setCaptureMode('quick');
@@ -1381,24 +1411,25 @@ const WellSaidApp = () => {
               <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center">
                   <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center mr-4">
-                    <Clock size={20} className="text-white" />
+                    <Zap size={20} className="text-white" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-lg">Daily Reflection</h3>
-                    <p className="text-blue-100 text-sm">Quick & meaningful</p>
+                    <h3 className="font-semibold text-lg">Quick Capture</h3>
+                    <p className="text-blue-100 text-sm">Thoughtful prompts</p>
                   </div>
                 </div>
                 <ArrowRight size={20} className="text-white/70" />
               </div>
               <p className="text-blue-100 text-sm leading-relaxed mb-2">
-                Answer 1-2 thoughtful questions to maintain your daily wisdom practice
+                Answer 1-2 thoughtful questions to quickly capture what's on your mind
               </p>
               <div className="flex items-center text-blue-100 text-xs">
-                <Target size={14} className="mr-1" />
+                <Clock size={14} className="mr-1" />
                 <span>5-10 minutes</span>
               </div>
             </button>
 
+            {/* Special Occasion Option */}
             <button
               onClick={() => {
                 // 🧼 Clear previous occasion-related state
