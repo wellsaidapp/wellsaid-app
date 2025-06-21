@@ -1022,7 +1022,6 @@ const WellSaidApp = () => {
     { id: 'graduation', name: 'Graduation', icon: '🎓', color: 'bg-gradient-to-br from-indigo-500 to-blue-500' },
     { id: 'milestone-birthday', name: 'Milestone Birthday', icon: '🎂', color: 'bg-gradient-to-br from-amber-500 to-pink-500' },
   ];
-
   const occasionQuestions = {
     wedding: [
       "What's the most important lesson about love you've learned?",
@@ -1329,7 +1328,14 @@ const WellSaidApp = () => {
               id: 'capture',
               icon: Edit3,
               label: 'Capture',
-              onClick: () => setShowCaptureOptions(true) // Special handler for capture button
+              onClick: () => {
+                // Always show capture options when clicking the capture button
+                setShowCaptureOptions(true);
+                // Also set current view to home if not already there
+                if (currentView !== 'home') {
+                  setCurrentView('home');
+                }
+              }
             },
             { id: 'organize', icon: FolderOpen, label: 'Organize' },
             { id: 'library', icon: Book, label: 'Library' },
@@ -1337,7 +1343,7 @@ const WellSaidApp = () => {
           ].map(item => (
             <button
               key={item.id}
-              onClick={item.onClick || (() => setCurrentView(item.id))} // Use onClick if provided, otherwise default to setCurrentView
+              onClick={item.onClick || (() => setCurrentView(item.id))}
               className={`flex-1 p-3 flex flex-col items-center transition-colors ${
                 currentView === item.id ? 'text-blue-500' : 'text-gray-400 hover:text-gray-600'
               }`}
@@ -3160,6 +3166,8 @@ const OrganizeView = () => {
     switch (currentView) {
       case 'home':
         return <HomeView
+          showCaptureOptions={showCaptureOptions}
+          setShowCaptureOptions={setShowCaptureOptions}
           setCurrentView={setCurrentView}
           setCaptureMode={setCaptureMode}
         />;
