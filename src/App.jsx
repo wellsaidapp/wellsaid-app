@@ -1711,56 +1711,261 @@ const WellSaidApp = () => {
   };
 
   const CaptureView = ({ captureMode, setCurrentView }) => {
-    // Chat state
-    const [messages, setMessages] = useState([]);
-    const [currentInput, setCurrentInput] = useState('');
-    const [isTyping, setIsTyping] = useState(false);
-    const [isRecording, setIsRecording] = useState(false);
-    const [conversationState, setConversationState] = useState('init');
-    const [autoTags, setAutoTags] = useState({ topics: [], people: [] });
-    const messagesEndRef = useRef(null);
+      // Chat state
+      const [messages, setMessages] = useState([]);
+      const [currentInput, setCurrentInput] = useState('');
+      const [isTyping, setIsTyping] = useState(false);
+      const [isRecording, setIsRecording] = useState(false);
+      const [conversationState, setConversationState] = useState('init');
+      const [autoTags, setAutoTags] = useState({ topics: [], people: [] });
+      const [currentInsight, setCurrentInsight] = useState(null);
+      const messagesEndRef = useRef(null);
+      const [currentTopic, setCurrentTopic] = useState(null); // Add this line
+      // User profile data with topics
+      const userProfile = {
+          topics: [
+              {
+                  name: 'Relationships',
+                  prompt: "What's one moment that challenged how you show love—and what did it teach you about staying connected?",
+                  tags: ['Love', 'Connection', 'Growth']
+              },
+              {
+                  name: 'Health',
+                  prompt: "When did you realize your approach to health needed to change—and what's stuck with you since?",
+                  tags: ['Wellness', 'Habits', 'Self-care']
+              },
+              {
+                  name: 'Money',
+                  prompt: "What's a financial decision you struggled with—but now see as a turning point in how you manage money?",
+                  tags: ['Finance', 'Lessons', 'Decision-making']
+              }
+          ],
+          people: [
+              { id: '1', name: 'Sarah', relationship: 'daughter' },
+              { id: '2', name: 'Michael', relationship: 'son' }
+          ]
+      };
 
-    // Sample data
-    const people = [
-      { id: '1', name: 'Sarah', relationship: 'daughter', interests: 'soccer, art' },
-      { id: '2', name: 'Michael', relationship: 'son', interests: 'science, basketball' }
-    ];
+      // Sample data
+      const people = [
+        { id: '1', name: 'Sarah', relationship: 'daughter', interests: 'soccer, art' },
+        { id: '2', name: 'Michael', relationship: 'son', interests: 'science, basketball' }
+      ];
 
-    const topics = ['Life Lessons', 'Love', 'Career', 'Parenting', 'Personal Growth'];
+      const topics = ['Life Lessons', 'Love', 'Career', 'Parenting', 'Personal Growth', 'Health', 'Routines', 'Sleep Habits'];
 
-    const hasInitialized = useRef(false);
+      const hasInitialized = useRef(false);
 
-    useEffect(() => {
-      if (!hasInitialized.current && messages.length === 0) {
-        hasInitialized.current = true;
+      useEffect(() => {
+        if (!hasInitialized.current && messages.length === 0) {
+          hasInitialized.current = true;
 
-        if (captureMode === 'quick') {
-          startQuickCapture();
-        } else if (captureMode === 'milestone') {
-          startMilestoneSelection();
-        } else {
-          startOpenCapture();
+          if (captureMode === 'quick') {
+            startQuickCapture();
+          } else if (captureMode === 'milestone') {
+            startMilestoneSelection();
+          } else if (captureMode === 'insight') {
+            startInsightBuilder();
+          } else {
+            startOpenCapture();
+          }
         }
-      }
-    }, []);
+      }, []);
 
-    const typeMessage = (text, isBot = true, delay = 1000) => {
-      setIsTyping(true);
-      setTimeout(() => {
-        setMessages(prev => [...prev, { text, isBot, timestamp: Date.now() }]);
-        setIsTyping(false);
+      const typeMessage = (text, isBot = true, delay = 1000) => {
+        setIsTyping(true);
+        setTimeout(() => {
+          setMessages(prev => [...prev, { text, isBot, timestamp: Date.now() }]);
+          setIsTyping(false);
+          scrollToBottom();
+        }, delay);
+      };
+
+      const scrollToBottom = () => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+      };
+
+      // NEW: Insight Builder specific functions
+      const startInsightBuilder = () => {
+        setConversationState('init_insight');
+        typeMessage("Let's shape your idea into a meaningful insight.", true);
+        typeMessage("What's something you've been thinking about lately—an experience, a lesson, or a question worth unpacking?", true, 1500);
+      };
+
+      const handleInsightInit = (input) => {
+        setCurrentInsight({ rawIdea: input });
+        setConversationState('clarify_question');
+        typeMessage(`"${input}" - sounds interesting!`, true);
+        typeMessage("Would you say the core question is something like... [suggested question]? Or would you phrase it differently?", true, 1500);
+      };
+
+      const handleQuestionClarification = (input) => {
+        if (input.toLowerCase().includes('differently') || input.toLowerCase().includes('no')) {
+          setConversationState('user_question');
+          typeMessage("How would you phrase the core question?", true);
+        } else {
+          setCurrentInsight(prev => ({
+            ...prev,
+            question: "What's a habit I've changed that improved my sleep?"
+          }));
+          setConversationState('elaborate_insight');
+          typeMessage("Great—go ahead and share your response.", true);
+          typeMessage("What habit did you change, and what impact did it have?", true, 1500);
+        }
+      };
+
+      const handleUserQuestion = (input) => {
+        setCurrentInsight(prev => ({
+          ...prev,
+          question: input
+        }));
+        setConversationState('elaborate_insight');
+        typeMessage("Thanks for clarifying. Now please share your response to that question.", true);
+      };
+
+      const handleInsightElaboration = (input) => {
+        setCurrentInsight(prev => ({
+          ...prev,
+          answer: input
+        }));
+        setConversationState('confirm_insight');
+
+        // Analyze content for tags
+        const tags = analyzeContent(input);
+        setAutoTags(tags);
+
+        // Create summary
+        const summary = `Here's what I'm hearing: ${input}. It's a small change that led to better rest and a calmer end to your day. Would you say that captures it?`;
+        typeMessage(summary, true);
+      };
+
+      const handleInsightConfirmation = (input) => {
+        if (input.toLowerCase().startsWith('y') || input.toLowerCase().includes('yes')) {
+          const tagsList = autoTags.topics.join(', ');
+          typeMessage(`Perfect! We'll tag this insight with ${tagsList} so it's easy to revisit later.`, true);
+          typeMessage("All set!", true);
+
+          // In a real app, you would save the insight here
+          setTimeout(() => setCurrentView('home'), 2000);
+        } else {
+          setConversationState('revise_insight');
+          typeMessage("How would you like to adjust it?", true);
+        }
+      };
+
+      const handleInsightRevision = (input) => {
+        setCurrentInsight(prev => ({
+          ...prev,
+          answer: input
+        }));
+        setConversationState('confirm_insight');
+        typeMessage("Got it. Here's the revised version:", true);
+        typeMessage(input, true);
+        typeMessage("Does this look correct now?", true, 1500);
+      };
+
+      // Modified handleInputSubmit to include insight builder flow
+      const handleInputSubmit = () => {
+        if (!currentInput.trim()) return;
+
+        const input = currentInput.trim();
+        setMessages(prev => [...prev, { text: input, isBot: false }]);
+        setCurrentInput('');
         scrollToBottom();
-      }, delay);
-    };
 
-    const scrollToBottom = () => {
-      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    };
+        // Quick Capture states
+        if (conversationState === 'quick_capture_response') {
+            handleQuickCaptureResponse(input);
+        } else if (conversationState === 'quick_capture_followup') {
+            handleQuickCaptureFollowup(input);
+        } else if (conversationState === 'quick_capture_confirm') {
+            handleQuickCaptureConfirmation(input);
+        }
+        // Insight Builder specific states
+        else if (conversationState === 'init_insight') {
+            handleInsightInit(input);
+        } else if (conversationState === 'clarify_question') {
+          handleQuestionClarification(input);
+        } else if (conversationState === 'user_question') {
+          handleUserQuestion(input);
+        } else if (conversationState === 'elaborate_insight') {
+          handleInsightElaboration(input);
+        } else if (conversationState === 'confirm_insight') {
+          handleInsightConfirmation(input);
+        } else if (conversationState === 'revise_insight') {
+          handleInsightRevision(input);
+        }
+        // Existing states
+        else if (conversationState === 'selecting_occasion') {
+          handleOccasionSelection(input);
+        } else if (conversationState === 'capturing') {
+          handleWisdomCapture(input);
+        } else if (conversationState === 'confirming') {
+          handleConfirmation(input);
+        }
+      };
 
     const startQuickCapture = () => {
-      setConversationState('capturing');
-      typeMessage("Let's capture some quick wisdom!", true);
-      typeMessage("What insight would you like to share today?", true, 1500);
+        // Select a random topic from user's profile
+        const randomTopic = userProfile.topics[Math.floor(Math.random() * userProfile.topics.length)];
+        setCurrentTopic(randomTopic);
+        setConversationState('quick_capture_response');
+
+        typeMessage("Let's capture a quick insight!", true);
+        typeMessage(randomTopic.prompt, true, 1500);
+    };
+
+    const handleQuickCaptureResponse = (input) => {
+        setConversationState('quick_capture_followup');
+
+        // Analyze response for potential tags
+        const detectedTags = analyzeContent(input).topics;
+        const combinedTags = [...new Set([...currentTopic.tags, ...detectedTags])];
+
+        typeMessage("That's a powerful shift.", true);
+        typeMessage(`It sounds like you discovered ${input.includes('small') ? 'a small but meaningful' : 'an important'} change that improved your ${currentTopic.name.toLowerCase()}.`, true, 1000);
+
+        // Generate follow-up question based on topic
+        const followUpQuestion = currentTopic.name === 'Health'
+            ? "Would you say the core lesson is about pacing your intake—or tuning into your body's feedback?"
+            : currentTopic.name === 'Relationships'
+            ? "Would you say this was more about communication, boundaries, or something else?"
+            : "Would you say this was more about planning, discipline, or perspective?";
+
+        typeMessage(followUpQuestion, true, 1500);
+    };
+
+    const handleQuickCaptureFollowup = (input) => {
+        setConversationState('quick_capture_confirm');
+
+        // Generate summary based on responses
+        const summary = `Got it. You noticed ${input.includes('pattern') ? 'a pattern' : 'something'} in how ${
+            currentTopic.name === 'Health' ? 'your body reacted' :
+            currentTopic.name === 'Relationships' ? 'your relationships work' :
+            'you manage resources'
+        } and made ${input.includes('simple') ? 'a simple adjustment' : 'a change'} that helped you ${
+            currentTopic.name === 'Health' ? 'feel better' :
+            currentTopic.name === 'Relationships' ? 'connect better' :
+            'manage better'
+        }.`;
+
+        typeMessage(summary, true);
+
+        // Show tags
+        const detectedTags = analyzeContent(input).topics;
+        const combinedTags = [...new Set([...currentTopic.tags, ...detectedTags])];
+        typeMessage(`I'd tag this as: ${combinedTags.map(t => `'${t}'`).join(', ')}.`, true, 1000);
+        typeMessage("Does that feel accurate?", true, 1500);
+    };
+
+    const handleQuickCaptureConfirmation = (input) => {
+        if (input.toLowerCase().startsWith('y') || input.toLowerCase().includes('yes')) {
+            typeMessage("Great! I've saved this insight for you.", true);
+            setTimeout(() => setCurrentView('home'), 2000);
+        } else {
+            setConversationState('quick_capture_revise');
+            typeMessage("How would you like to adjust it?", true);
+        }
     };
 
     const startMilestoneSelection = () => {
@@ -1790,23 +1995,6 @@ const WellSaidApp = () => {
         topics: detectedTopics.length > 0 ? detectedTopics : ['General Wisdom'],
         people: detectedPeople
       };
-    };
-
-    const handleInputSubmit = () => {
-      if (!currentInput.trim()) return;
-
-      const input = currentInput.trim();
-      setMessages(prev => [...prev, { text: input, isBot: false }]);
-      setCurrentInput('');
-      scrollToBottom();
-
-      if (conversationState === 'selecting_occasion') {
-        handleOccasionSelection(input);
-      } else if (conversationState === 'capturing') {
-        handleWisdomCapture(input);
-      } else if (conversationState === 'confirming') {
-        handleConfirmation(input);
-      }
     };
 
     const handleOccasionSelection = (input) => {
@@ -1855,6 +2043,45 @@ const WellSaidApp = () => {
       }
     };
 
+    const getPlaceholderText = () => {
+      switch (conversationState) {
+        // Quick Capture states
+        case 'quick_capture_response':
+          return `Share your thoughts about ${currentTopic?.name.toLowerCase()}...`;
+        case 'quick_capture_followup':
+          return "Add any additional reflections...";
+        case 'quick_capture_confirm':
+          return "Does this capture it correctly? (yes/no)";
+        case 'quick_capture_revise':
+          return "How would you like to adjust it?";
+
+        // Insight Builder states
+        case 'init_insight':
+          return "What's something you've been thinking about?";
+        case 'clarify_question':
+          return "Does this question work or would you phrase it differently?";
+        case 'user_question':
+          return "How would you phrase the core question?";
+        case 'elaborate_insight':
+          return "Share your thoughts in detail...";
+        case 'confirm_insight':
+          return "Does this capture it correctly? (yes/no)";
+        case 'revise_insight':
+          return "How would you like to adjust it?";
+
+        // Other states
+        case 'selecting_occasion':
+          return "What are we celebrating?";
+        case 'capturing':
+          return "Share your thoughts...";
+        case 'confirming':
+          return "Does this look correct? (yes/no)";
+
+        default:
+          return "Type your response...";
+      }
+    };
+
     return (
       <div className="fixed inset-0 bg-gradient-to-br from-blue-50 to-indigo-50 overflow-y-auto">
         {/* Main content area */}
@@ -1870,6 +2097,8 @@ const WellSaidApp = () => {
                     ? 'Quick Capture'
                     : captureMode === 'milestone'
                     ? 'Milestone'
+                    : captureMode === 'insight'
+                    ? 'Insight Builder'
                     : 'Open Conversation'}
                 </p>
               </div>
@@ -1877,7 +2106,7 @@ const WellSaidApp = () => {
           </div>
 
           {/* Messages */}
-          <div className="flex-1 px-4 overflow-y-auto pb-60"> {/* Leave space for input + nav */}
+          <div className="flex-1 px-4 overflow-y-auto pb-60">
             <div className="bg-white rounded-2xl shadow-lg p-6 mb-4">
               <div className="space-y-4">
                 {messages.map((message, index) => (
@@ -1911,7 +2140,7 @@ const WellSaidApp = () => {
         </div>
 
         {/* Input Area - Fixed positioning */}
-        <div className="fixed bottom-[72px] left-0 right-0 px-4 z-20"> {/* Exactly height of bottom nav */}
+        <div className="fixed bottom-[72px] left-0 right-0 px-4 z-20">
           <div className="max-w-2xl mx-auto">
             <div className="bg-white rounded-xl shadow-md p-3">
               <div className="flex gap-2 items-end">
@@ -1919,7 +2148,7 @@ const WellSaidApp = () => {
                   <textarea
                     value={currentInput}
                     onChange={(e) => setCurrentInput(e.target.value)}
-                    placeholder="Type your response..."
+                    placeholder={getPlaceholderText()}
                     className="w-full p-2 border border-gray-200 rounded-xl focus:outline-none focus:border-blue-500 resize-none"
                     rows={2}
                     onKeyPress={(e) => {
