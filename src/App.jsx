@@ -5,14 +5,14 @@ import {
   Sparkles, Printer, ShoppingCart, ChevronDown, ChevronUp, Home,
   MessageSquare, Book, FolderOpen, Search, Tag, Clock, ChevronRight,
   Star, Bell, Settings, Users, Edit3, Calendar, Target, Trophy, Zap,
-  Heart, ArrowLeft, Cake, Orbit, GraduationCap, Gift, Shuffle, PlusCircle, Library, Lightbulb, Pencil, Lock
+  Heart, ArrowLeft, Cake, Orbit, GraduationCap, Gift, Shuffle, PlusCircle, Library, Lightbulb, Pencil, Lock, Key
 } from 'lucide-react';
 import logo from './assets/wellsaid.svg';
 import Lottie from 'lottie-react';
 import animationData from './assets/animations/TypeBounce.json';
 import { motion } from 'framer-motion';
 
-const LandingPage = ({ onGetStarted }) => {
+const LandingPage = ({ onGetStarted, onShowLogin }) => {
   const [messages, setMessages] = useState([
     { id: 1, show: false, text: '', typing: false, complete: false, bold: true },
     { id: 2, show: false, text: '', typing: false, complete: false },
@@ -148,6 +148,12 @@ const LandingPage = ({ onGetStarted }) => {
           } hover:scale-105 hover:shadow-xl active:scale-95`}
         >
           Begin Your Journey <ArrowRight className="inline ml-2 w-5 h-5 transition-transform group-hover:translate-x-1" />
+        </button>
+        <button
+          onClick={onShowLogin}
+          className="w-full text-blue-600 text-sm font-medium"
+        >
+          Already have an account? Log in
         </button>
       </div>
     </div>
@@ -801,7 +807,9 @@ const SplashScreen = ({ onComplete }) => {
   const animationRef = useRef();
   const [showLanding, setShowLanding] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
-
+  const [showLogin, setShowLogin] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   useEffect(() => {
     const timer = setTimeout(() => {
       setShowLanding(true);
@@ -810,16 +818,100 @@ const SplashScreen = ({ onComplete }) => {
     return () => clearTimeout(timer);
   }, []);
 
+  const WellSaidLogo = () => (
+    <img
+      src={logo}
+      alt="WellSaid"
+      className="h-10 w-auto"
+    />
+  );
+
+  const handleDevLogin = () => {
+    // Simulate a logged in state
+    localStorage.setItem('wellsaid-auth-state', 'loggedIn');
+    onComplete();
+  };
+
+  if (showLogin) {
+    return (
+      <div className="fixed inset-0 flex items-center justify-center bg-gradient-to-br from-blue-500 to-indigo-600 p-4">
+        <div className="bg-white rounded-2xl shadow-lg p-6 w-full max-w-md">
+          <div className="text-center mb-6">
+            <WellSaidLogo />
+            <h2 className="text-2xl font-bold text-gray-800 mt-4">Welcome Back</h2>
+            <p className="text-gray-600 mt-2">Sign in to continue your journey</p>
+          </div>
+
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                placeholder="your@email.com"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                placeholder="••••••••"
+              />
+            </div>
+
+            <button
+              onClick={() => {
+                // In a real app, this would verify with Cognito
+                localStorage.setItem('wellsaid-auth-state', 'loggedIn');
+                onComplete();
+              }}
+              className="w-full bg-gradient-to-r from-blue-500 to-indigo-500 text-white py-3 rounded-lg font-medium hover:from-blue-600 hover:to-indigo-600 transition-colors"
+            >
+              Log In
+            </button>
+
+            <button
+              onClick={() => setShowLogin(false)}
+              className="w-full text-blue-600 text-sm font-medium mt-2"
+            >
+              Back to welcome
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (showOnboarding) {
     return <WellSaidOnboarding onComplete={onComplete} skipWelcome={true} />;
   }
 
   if (showLanding) {
-    return <LandingPage onGetStarted={() => setShowOnboarding(true)} />;
+    return (
+      <LandingPage
+        onGetStarted={() => setShowOnboarding(true)}
+        onShowLogin={() => setShowLogin(true)}
+      />
+    );
   }
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-white z-50 overflow-hidden">
+      {/* Developer bypass button */}
+      <button
+        onClick={handleDevLogin}
+        className="absolute bottom-4 right-4 p-2 bg-gray-800 text-white rounded-full z-50"
+        title="Developer Login Bypass"
+      >
+        <Key className="w-5 h-5" />
+      </button>
+
       <div className="w-full max-w-[90vw] aspect-[16/9]">
         <Lottie
           lottieRef={animationRef}
@@ -948,6 +1040,18 @@ const MilestoneFlow = ({ onClose }) => {
 };
 
 const WellSaidApp = () => {
+  const [authState, setAuthState] = useState('checking'); // 'checking', 'new', 'returning', 'loggedIn'
+  const [showLogin, setShowLogin] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+
+  // Simulate checking auth status - in a real app this would check Cognito
+  useEffect(() => {
+    // For demo purposes, we'll use localStorage to simulate auth states
+    const simulatedAuthState = localStorage.getItem('wellsaid-auth-state') || 'new';
+    setAuthState(simulatedAuthState);
+  }, []);
+
   const [showCaptureOptions, setShowCaptureOptions] = useState(false);
   const [currentView, setCurrentView] = useState('home');
   const [showSplash, setShowSplash] = useState(true);
@@ -1087,6 +1191,86 @@ const WellSaidApp = () => {
       daysAway: 103
     }
   ];
+
+  if (showSplash) {
+    return <SplashScreen onComplete={() => setShowSplash(false)} />;
+  }
+
+  const renderView = () => {
+    switch (currentView) {
+      case 'home':
+        return <HomeView
+          showCaptureOptions={showCaptureOptions}
+          setShowCaptureOptions={setShowCaptureOptions}
+          setCurrentView={setCurrentView}
+          setCaptureMode={setCaptureMode}
+        />;
+      case 'capture':
+        return <CaptureView
+          captureMode={captureMode}
+          setCurrentView={setCurrentView}
+          resetForm={resetForm}
+        />;
+      case 'organize':
+        return <OrganizeView />;
+      case 'library':
+        return <LibraryView resetForm={resetForm} />;
+      case 'profile':
+        return <ProfileView />;
+      default:
+        return <HomeView />;
+    }
+  };
+
+  // Determine which component to render
+  const renderContent = () => {
+    if (showSplash) {
+      return <SplashScreen onComplete={() => setShowSplash(false)} />;
+    }
+
+    switch (authState) {
+      case 'checking':
+        return (
+          <div className="fixed inset-0 flex items-center justify-center bg-white">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+          </div>
+        );
+
+      case 'new':
+        return (
+          <WellSaidOnboarding
+            onComplete={() => {
+              localStorage.setItem('wellsaid-auth-state', 'loggedIn');
+              setShowSplash(false);
+            }}
+          />
+        );
+
+      case 'returning':
+        return (
+          <div className="fixed inset-0 flex items-center justify-center bg-gradient-to-br from-blue-500 to-indigo-600 p-4">
+            <div className="bg-white rounded-2xl shadow-lg p-6 w-full max-w-md">
+              {/* Login form content */}
+            </div>
+          </div>
+        );
+
+      case 'loggedIn':
+      default:
+        return (
+          <div className="relative">
+            {renderView()}
+            <BottomNav
+              currentView={currentView}
+              setCurrentView={setCurrentView}
+              setShowCaptureOptions={setShowCaptureOptions}
+            />
+          </div>
+        );
+    }
+  };
+
+
 
   const BookPreviewModal = ({ book, onClose }) => {
     const [currentPage, setCurrentPage] = useState(0);
@@ -3855,31 +4039,8 @@ const OrganizeView = () => {
     );
   };
 
-  const renderView = () => {
-    switch (currentView) {
-      case 'home':
-        return <HomeView
-          showCaptureOptions={showCaptureOptions}
-          setShowCaptureOptions={setShowCaptureOptions}
-          setCurrentView={setCurrentView}
-          setCaptureMode={setCaptureMode}
-        />;
-      case 'capture':
-        return <CaptureView
-          captureMode={captureMode}
-          setCurrentView={setCurrentView}
-          resetForm={resetForm}
-        />;
-      case 'organize':
-        return <OrganizeView />;
-      case 'library':
-        return <LibraryView resetForm={resetForm} />;
-      case 'profile':
-        return <ProfileView />;
-      default:
-        return <HomeView />;
-    }
-  };
+  // Single return statement
+  return renderContent();
 
   return (
     <div className="relative">
