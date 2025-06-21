@@ -1752,6 +1752,48 @@ const WellSaidApp = () => {
         { id: '2', name: 'Michael', relationship: 'son', interests: 'science, basketball' }
       ];
 
+      // NEW: Special Occasion state
+      const [occasion, setOccasion] = useState({
+          type: '',
+          date: '',
+          person: {
+              name: '',
+              relationship: ''
+          },
+          reflections: [],
+          currentQuestionIndex: 0,  // Add this line
+          questions: [],           // Add this line
+          finalMessage: ''
+      });
+
+      // Occasion types with suggested questions
+      const occasionTypes = {
+          wedding: {
+              name: "Wedding",
+              questions: [
+                  "What's one childhood memory with them that feels especially meaningful now?",
+                  "What quality do you most admire in their partnership?",
+                  "What advice would you give about maintaining a strong relationship?"
+              ]
+          },
+          birthday: {
+              name: "Milestone Birthday",
+              questions: [
+                  "What's something you appreciate about them at this stage of life?",
+                  "How have you seen them grow in the past decade?",
+                  "What hope do you have for their next chapter?"
+              ]
+          },
+          graduation: {
+              name: "Graduation",
+              questions: [
+                  "What's been their most impressive accomplishment during this time?",
+                  "How have you seen them overcome challenges?",
+                  "What advice would you give as they start this new phase?"
+              ]
+          }
+      };
+
       const topics = ['Life Lessons', 'Love', 'Career', 'Parenting', 'Personal Growth', 'Health', 'Routines', 'Sleep Habits'];
 
       const hasInitialized = useRef(false);
@@ -1771,6 +1813,28 @@ const WellSaidApp = () => {
           }
         }
       }, []);
+
+      const extractThemes = (reflections) => {
+          // Simple theme extraction from responses
+          const commonThemes = [
+              'love', 'growth', 'support', 'memory',
+              'pride', 'advice', 'family', 'change',
+              'celebration', 'achievement', 'future'
+          ];
+
+          // Combine all reflection answers
+          const allText = reflections.map(r => r.answer.toLowerCase()).join(' ');
+
+          // Find matching themes
+          const foundThemes = commonThemes.filter(theme =>
+              allText.includes(theme)
+          );
+
+          // Fallback themes if none detected
+          return foundThemes.length > 0
+              ? foundThemes.slice(0, 3)
+              : ['meaningful occasion'];
+      };
 
       const typeMessage = (text, isBot = true, delay = 1000) => {
         setIsTyping(true);
@@ -1864,6 +1928,231 @@ const WellSaidApp = () => {
         typeMessage("Does this look correct now?", true, 1500);
       };
 
+      // NEW: Special Occasion Flow Functions
+      const startMilestoneSelection = () => {
+          setConversationState('milestone_init');
+          typeMessage("Hey there 👋 Let's get started shaping something meaningful.", true);
+          typeMessage("Is there a special occasion coming up that you'd like to reflect on or capture something for?", true, 1500);
+      };
+
+      const handleMilestoneInit = (input) => {
+          // Simple occasion type detection
+          const detectedType =
+              input.includes('wedding') ? 'wedding' :
+              input.includes('birthday') ? 'birthday' :
+              input.includes('graduation') ? 'graduation' : 'custom';
+
+          setOccasion(prev => ({
+              ...prev,
+              type: detectedType
+          }));
+
+          setConversationState('milestone_confirm');
+          typeMessage(`That sounds wonderful! Just to confirm — the occasion is ${detectedType === 'custom' ? 'this special event' : `a ${occasionTypes[detectedType].name.toLowerCase()}`}`, true);
+          typeMessage("Can you tell me who this is for and when it's happening? (e.g., 'Emily's wedding in October')", true, 1500);
+      };
+
+      const handleMilestoneConfirm = (input) => {
+          // Extract date and name from input
+          const dateMatch = input.match(/(January|February|March|April|May|June|July|August|September|October|November|December)/i);
+          const nameMatch = input.match(/(\b[A-Z][a-z]*'s\b|\bmy\s[A-Z][a-z]*\b)/i);
+
+          const date = dateMatch ? dateMatch[0] : '';
+          const name = nameMatch ? nameMatch[0].replace("'s", "").replace("my ", "") : '';
+
+          setOccasion(prev => ({
+              ...prev,
+              date,
+              person: {
+                  ...prev.person,
+                  name: name || ''
+              }
+          }));
+
+          setConversationState('milestone_relationship');
+          typeMessage("Got it. What's your relationship with them?", true);
+          typeMessage("(e.g., 'older sibling', 'parent', 'close friend')", true, 1000);
+      };
+
+      const handleMilestoneRelationship = (input) => {
+          setOccasion(prev => ({
+              ...prev,
+              person: {
+                  ...prev.person,
+                  relationship: input
+              }
+          }));
+
+          setConversationState('milestone_theme');
+          typeMessage("Beautiful. Would you like help reflecting on something specific?", true);
+          typeMessage("Like a memory, advice, or how you've seen them grow? Or should I guide you with questions?", true, 1500);
+      };
+
+      const handleMilestoneTheme = (input) => {
+          if (input.includes('guide') || input.includes('questions')) {
+              setConversationState('milestone_guided');
+              beginGuidedReflection();
+          } else {
+              setConversationState('milestone_freeform');
+              typeMessage("What would you like to share about this occasion?", true);
+          }
+      };
+
+      const handleMilestoneComplete = (input) => {
+          const normalizedInput = input.toLowerCase().trim();
+
+          if (normalizedInput.includes('save') || normalizedInput.includes('keep')) {
+              // In a real app, you would save to database here
+              typeMessage("Your reflection has been saved to your library!", true);
+              typeMessage("You can find it in your Milestones collection.", true, 1000);
+              setTimeout(() => setCurrentView('home'), 2000);
+          }
+          else if (normalizedInput.includes('share')) {
+              // In a real app, you would implement sharing logic here
+              typeMessage("Ready to share this meaningful reflection!", true);
+              typeMessage("Would you like to send it via message, email, or create a shareable link?", true, 1500);
+              setConversationState('milestone_sharing');
+          }
+          else if (normalizedInput.includes('edit')) {
+              setConversationState('milestone_editing');
+              typeMessage("Let's edit your reflection. What would you like to change?", true);
+              typeMessage("You can edit: 1) Occasion details 2) Reflections 3) Final message", true, 1500);
+          }
+          else {
+              typeMessage("I didn't quite catch that. Please choose 'save', 'share', or 'edit'.", true);
+          }
+      };
+
+      const handleMilestoneSharing = (input) => {
+          // Handle sharing method selection
+          typeMessage(`Great! Preparing your reflection for ${input}.`, true);
+          typeMessage("Your shareable content is ready. We'll return you to the home screen.", true, 1500);
+          setTimeout(() => setCurrentView('home'), 3000);
+      };
+
+      const handleMilestoneEditing = (input) => {
+          // Handle editing flow
+          if (input.includes('1') || input.includes('details')) {
+              setConversationState('milestone_confirm');
+              typeMessage("Let's update the occasion details. What should we change?", true);
+          }
+          else if (input.includes('2') || input.includes('reflect')) {
+              setConversationState('milestone_editing_reflections');
+              showReflectionsForEditing();
+          }
+          else if (input.includes('3') || input.includes('message')) {
+              setConversationState('milestone_editing_message');
+              typeMessage("What would you like your final message to say instead?", true);
+          }
+      };
+
+      const handleMilestoneFreeform = (input) => {
+          setOccasion(prev => ({
+              ...prev,
+              reflections: [
+                  ...prev.reflections,
+                  {
+                      question: "Freeform reflection",
+                      answer: input
+                  }
+              ]
+          }));
+
+          setConversationState('milestone_summary');
+          generateSummary();
+      };
+
+      // Add this helper function for editing
+      const showReflectionsForEditing = () => {
+          typeMessage("Here are your reflections:", true);
+          occasion.reflections.forEach((reflection, index) => {
+              typeMessage(`${index + 1}. ${reflection.question}`, true, 500);
+              typeMessage(`   "${reflection.answer}"`, true, 500);
+          });
+          typeMessage("Which number would you like to edit? Or say 'back' to return.", true, 1000);
+      };
+
+      const beginGuidedReflection = () => {
+          const questions = occasionTypes[occasion.type]?.questions || [
+              "What makes this occasion special?",
+              "What's your favorite memory with this person?",
+              "What hopes do you have for them in this next chapter?"
+          ];
+
+          setOccasion(prev => ({
+              ...prev,
+              currentQuestionIndex: 0,
+              questions
+          }));
+
+          typeMessage("Of course. Let's start here:", true);
+          typeMessage(questions[0], true, 1000);
+      };
+
+      const handleGuidedReflectionResponse = (input) => {
+          const { currentQuestionIndex, questions } = occasion;
+
+          // Save reflection
+          setOccasion(prev => ({
+              ...prev,
+              reflections: [
+                  ...prev.reflections,
+                  {
+                      question: questions[currentQuestionIndex],
+                      answer: input
+                  }
+              ]
+          }));
+
+          // Check if we have more questions
+          if (currentQuestionIndex < questions.length - 1) {
+              setOccasion(prev => ({
+                  ...prev,
+                  currentQuestionIndex: currentQuestionIndex + 1
+              }));
+              typeMessage(questions[currentQuestionIndex + 1], true, 1500);
+          } else {
+              setConversationState('milestone_summary');
+              generateSummary();
+          }
+      };
+
+      const generateSummary = () => {
+          const { person, reflections } = occasion;
+          const themes = extractThemes(reflections);
+
+          setConversationState('milestone_summary');
+
+          typeMessage("Here's what we've gathered so far:", true);
+          typeMessage(`• Occasion: ${person.name}'s ${occasionTypes[occasion.type]?.name || 'Special Event'}`, true, 500);
+          typeMessage(`• Relationship: ${person.relationship}`, true, 500);
+          typeMessage(`• Themes: ${themes.join(', ')}`, true, 500);
+
+          // Show one example reflection
+          if (reflections.length > 0) {
+              typeMessage(`• Reflection: "${reflections[0].answer.substring(0, 50)}${reflections[0].answer.length > 50 ? '...' : ''}"`, true, 500);
+          }
+
+          typeMessage("Would you like to add a final message or wrap up?", true, 1000);
+      };
+
+      // Add this new state handler for the summary phase
+      const handleMilestoneSummary = (input) => {
+          if (input.toLowerCase().includes('done') || input.toLowerCase().includes('wrap')) {
+              typeMessage("Your milestone reflection is complete!", true);
+              typeMessage("Would you like to save this, share it, or keep editing?", true, 1500);
+              setConversationState('milestone_complete');
+          } else {
+              // Treat as final message
+              setOccasion(prev => ({
+                  ...prev,
+                  finalMessage: input
+              }));
+              typeMessage("Beautiful message. I've added that as the closing thought.", true);
+              generateSummary(); // Show updated summary
+          }
+      };
+
       // Modified handleInputSubmit to include insight builder flow
       const handleInputSubmit = () => {
         if (!currentInput.trim()) return;
@@ -1873,8 +2162,35 @@ const WellSaidApp = () => {
         setCurrentInput('');
         scrollToBottom();
 
+        // Milestone states
+        if (conversationState === 'milestone_complete') {
+            handleMilestoneComplete(input);
+        }
+        else if (conversationState === 'milestone_sharing') {
+            handleMilestoneSharing(input);
+        }
+        else if (conversationState === 'milestone_editing') {
+            handleMilestoneEditing(input);
+        }
+        else if (conversationState === 'milestone_summary') {
+            handleMilestoneSummary(input);
+        }
+        else if (conversationState === 'milestone_freeform') {
+            handleMilestoneFreeform(input);
+        }
+        else if (conversationState === 'milestone_init') {
+            handleMilestoneInit(input);
+        } else if (conversationState === 'milestone_confirm') {
+            handleMilestoneConfirm(input);
+        } else if (conversationState === 'milestone_relationship') {
+            handleMilestoneRelationship(input);
+        } else if (conversationState === 'milestone_theme') {
+            handleMilestoneTheme(input);
+        } else if (conversationState === 'milestone_guided') {
+            handleGuidedReflectionResponse(input);
+        }
         // Quick Capture states
-        if (conversationState === 'quick_capture_response') {
+        else if (conversationState === 'quick_capture_response') {
             handleQuickCaptureResponse(input);
         } else if (conversationState === 'quick_capture_followup') {
             handleQuickCaptureFollowup(input);
@@ -1966,12 +2282,6 @@ const WellSaidApp = () => {
             setConversationState('quick_capture_revise');
             typeMessage("How would you like to adjust it?", true);
         }
-    };
-
-    const startMilestoneSelection = () => {
-      setConversationState('selecting_occasion');
-      typeMessage("Let's create a milestone capture!", true);
-      typeMessage("What are we celebrating? (e.g., graduation, birthday, wedding)", true, 1500);
     };
 
     const startOpenCapture = () => {
@@ -2069,6 +2379,33 @@ const WellSaidApp = () => {
         case 'revise_insight':
           return "How would you like to adjust it?";
 
+        // Milestone states
+        case 'milestone_summary':
+            return "Add final message or say 'done'";
+        case 'milestone_complete':
+            return "Choose 'save', 'share', or 'edit'";
+        case 'milestone_init':
+            return "e.g., 'My sister's wedding', 'Dad's retirement'";
+        case 'milestone_confirm':
+            return "Tell me who and when (e.g., 'Emily's wedding in October')";
+        case 'milestone_relationship':
+            return "Describe your relationship...";
+        case 'milestone_theme':
+            return "Choose 'specific memory' or 'guide me'";
+        case 'milestone_guided':
+            return "Share your thoughts...";
+        case 'milestone_summary':
+            return "Add final message or say 'done'";
+        case 'milestone_complete':
+            return "Choose 'save', 'share', or 'edit'";
+        case 'milestone_sharing':
+            return "Select sharing method (message/email/link)";
+        case 'milestone_editing':
+            return "What would you like to edit? (1/2/3)";
+        case 'milestone_editing_reflections':
+            return "Enter number to edit or 'back'";
+        case 'milestone_editing_message':
+            return "Enter your revised final message";
         // Other states
         case 'selecting_occasion':
           return "What are we celebrating?";
