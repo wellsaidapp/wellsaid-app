@@ -229,7 +229,7 @@ const WellSaidOnboarding = ({ onComplete }) => {
       if (currentPersonQuestions) {
         return `What questions for ${currentPerson?.name || 'them'}?`;
       }
-      return "Describe them (ex., 'My daughter Sage, age 15')";
+      return "Describe them to me";
     }
     return "Type your response...";
   };
@@ -616,7 +616,9 @@ const WellSaidOnboarding = ({ onComplete }) => {
                 <input
                   key={index}
                   id={`pin-${index}`}
-                  type="text"
+                  type="tel"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
                   value={digit}
                   onChange={(e) => handlePinChange(index, e.target.value)}
                   className="w-12 h-12 text-center text-xl font-bold border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none"
@@ -767,7 +769,7 @@ const WellSaidOnboarding = ({ onComplete }) => {
                 onClick={() => {
                   setShowChatInput(true); // Show input
                   setCurrentInput('');
-                  typeMessage("Great! Please tell me about the person...", true, 500);
+                  typeMessage("Great! Please tell me about the person. Their name, their age, your relationship to them...anything that will be useful for me to know as I build their profile.", true, 500);
                   setCurrentPersonQuestions(false);
                 }}
                 className="flex-1 bg-gray-100 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-200 transition-colors flex items-center justify-center gap-2"
