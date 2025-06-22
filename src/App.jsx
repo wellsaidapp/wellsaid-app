@@ -20,7 +20,8 @@ const LandingPage = ({ onGetStarted, onShowLogin }) => {
   ]);
   const [showButton, setShowButton] = useState(false);
   const [showLogo, setShowLogo] = useState(false);
-
+  const cancelAnimationRef = useRef(false);
+  const delay = (ms) => new Promise((res) => setTimeout(res, ms));
   const WellSaidIconLanding = ({ size = 24 }) => (
     <div
       className="rounded-full flex items-center justify-center"
@@ -70,33 +71,34 @@ const LandingPage = ({ onGetStarted, onShowLogin }) => {
   useEffect(() => {
     const startAnimation = async () => {
       setShowLogo(true);
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await delay(1000);
+      if (cancelAnimationRef.current) return;
 
-      // First message
       setMessages(prev => prev.map((msg, idx) =>
         idx === 0 ? { ...msg, show: true } : msg
       ));
-      await typewriter(0, 'Say what matters, to those that matter.', 70);
+      await typewriter(0, 'Say what matters, to those that matter.', 10);
+      if (cancelAnimationRef.current) return;
 
-      await new Promise(resolve => setTimeout(resolve, 400));
+      await delay(400);
 
-      // Second message
       setMessages(prev => prev.map((msg, idx) =>
         idx === 1 ? { ...msg, show: true } : msg
       ));
-      await typewriter(1, 'Share the lessons, perspectives, and values that have shaped you—so they can shape others.', 40);
+      await typewriter(1, 'Share the lessons, perspectives, and values that have shaped you—so they can shape others.', 10);
+      if (cancelAnimationRef.current) return;
 
-      await new Promise(resolve => setTimeout(resolve, 400));
+      await delay(400);
 
-      // Third message
       setMessages(prev => prev.map((msg, idx) =>
         idx === 2 ? { ...msg, show: true } : msg
       ));
-      await typewriter(2, 'One thoughtful prompt at a time, you\'re creating a living archive of insight and connection.', 45);
+      await typewriter(2, 'One thoughtful prompt at a time, you\'re creating a living archive of insight and connection.', 10);
+      if (cancelAnimationRef.current) return;
 
-      await new Promise(resolve => setTimeout(resolve, 800));
+      await delay(800);
+      if (cancelAnimationRef.current) return;
 
-      // Show CTA button
       setShowButton(true);
     };
 
@@ -149,12 +151,17 @@ const LandingPage = ({ onGetStarted, onShowLogin }) => {
         >
           Begin Your Journey <ArrowRight className="inline ml-2 w-5 h-5 transition-transform group-hover:translate-x-1" />
         </button>
-        <button
-          onClick={onShowLogin}
-          className="w-full text-blue-600 text-sm font-medium"
-        >
-          Already have an account? Log in
-        </button>
+        {showButton && (
+          <button
+            onClick={() => {
+              cancelAnimationRef.current = true;
+              onShowLogin();
+            }}
+            className="w-full text-blue-600 text-sm font-medium mt-2"
+          >
+            Already have an account? Log in
+          </button>
+        )}
       </div>
     </div>
   );
@@ -826,8 +833,8 @@ const SplashScreen = ({ onComplete }) => {
     />
   );
 
-  const handleDevLogin = () => {
-    // Simulate a logged in state
+  const handleDevLogin = (e) => {
+    e.preventDefault(); // Prevent form reload
     localStorage.setItem('wellsaid-auth-state', 'loggedIn');
     onComplete();
   };
@@ -842,7 +849,8 @@ const SplashScreen = ({ onComplete }) => {
             <p className="text-gray-600 mt-2">Sign in to continue your journey</p>
           </div>
 
-          <div className="space-y-4">
+          {/* ✅ Wrap inputs in a <form> */}
+          <form onSubmit={handleDevLogin} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
               <input
@@ -851,6 +859,8 @@ const SplashScreen = ({ onComplete }) => {
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
                 placeholder="your@email.com"
+                autoComplete="username"
+                required
               />
             </div>
 
@@ -862,27 +872,25 @@ const SplashScreen = ({ onComplete }) => {
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
                 placeholder="••••••••"
+                autoComplete="current-password"
+                required
               />
             </div>
 
             <button
-              onClick={() => {
-                // In a real app, this would verify with Cognito
-                localStorage.setItem('wellsaid-auth-state', 'loggedIn');
-                onComplete();
-              }}
+              type="submit"
               className="w-full bg-gradient-to-r from-blue-500 to-indigo-500 text-white py-3 rounded-lg font-medium hover:from-blue-600 hover:to-indigo-600 transition-colors"
             >
               Log In
             </button>
+          </form>
 
-            <button
-              onClick={() => setShowLogin(false)}
-              className="w-full text-blue-600 text-sm font-medium mt-2"
-            >
-              Back to welcome
-            </button>
-          </div>
+          <button
+            onClick={() => setShowLogin(false)}
+            className="w-full text-blue-600 text-sm font-medium mt-4"
+          >
+            Back to welcome
+          </button>
         </div>
       </div>
     );
