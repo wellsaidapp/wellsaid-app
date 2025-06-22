@@ -229,7 +229,7 @@ const WellSaidOnboarding = ({ onComplete }) => {
       if (currentPersonQuestions) {
         return `What questions for ${currentPerson?.name || 'them'}?`;
       }
-      return "Tell me about this person (e.g., 'My daughter Sarah, age 10')";
+      return "Describe them (ex., 'My daughter Sage, age 15')";
     }
     return "Type your response...";
   };
@@ -844,7 +844,9 @@ const SplashScreen = ({ onComplete }) => {
       <div className="fixed inset-0 flex items-center justify-center bg-gradient-to-br from-blue-500 to-indigo-600 p-4">
         <div className="bg-white rounded-2xl shadow-lg p-6 w-full max-w-md">
           <div className="text-center mb-6">
-            <WellSaidLogo />
+            <div className="flex justify-center mb-2">
+              <WellSaidLogo />
+            </div>
             <h2 className="text-2xl font-bold text-gray-800 mt-4">Welcome Back</h2>
             <p className="text-gray-600 mt-2">Sign in to continue your journey</p>
           </div>
@@ -2123,7 +2125,7 @@ const WellSaidApp = () => {
       // NEW: Special Occasion Flow Functions
       const startMilestoneSelection = () => {
           setConversationState('milestone_init');
-          typeMessage("Hey there 👋 Let's get started shaping something meaningful.", true);
+          typeMessage("Hey there! Let's get started shaping something meaningful.", true);
           typeMessage("Is there a special occasion coming up that you'd like to reflect on or capture something for?", true, 1500);
       };
 
