@@ -5,7 +5,7 @@ import {
   Sparkles, Printer, ShoppingCart, ChevronDown, ChevronUp, Home,
   MessageSquare, Book, FolderOpen, Search, Tag, Clock, ChevronRight,
   Star, Bell, Settings, Users, Edit3, Calendar, Target, Trophy, Zap,
-  Heart, ArrowLeft, Cake, Orbit, GraduationCap, Gift, Shuffle, PlusCircle, Library, Lightbulb, Pencil, Lock, Key
+  Heart, ArrowLeft, Cake, Orbit, GraduationCap, Gift, Shuffle, PlusCircle, Library, Lightbulb, Pencil, Lock, Key, KeyRound
 } from 'lucide-react';
 import logo from './assets/wellsaid.svg';
 import Lottie from 'lottie-react';
@@ -916,10 +916,10 @@ const SplashScreen = ({ onComplete }) => {
       {/* Developer bypass button */}
       <button
         onClick={handleDevLogin}
-        className="absolute bottom-4 right-4 p-2 bg-gray-800 text-white rounded-full z-50"
+        className="absolute bottom-4 right-4 p-2 bg-gray-800/60 text-white rounded-full z-50"
         title="Developer Login Bypass"
       >
-        <Key className="w-5 h-5" />
+        <KeyRound className="w-5 h-5" />
       </button>
 
       <div className="w-full max-w-[90vw] aspect-[16/9]">
