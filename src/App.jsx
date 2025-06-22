@@ -191,6 +191,7 @@ const Typewriter = ({ text, speed = 20, onComplete }) => {
 const WellSaidOnboarding = ({ onComplete }) => {
   // Start directly with registration
   const [currentStep, setCurrentStep] = useState('registration');
+  const [isShowingSummary, setIsShowingSummary] = useState(false);
   const [userData, setUserData] = useState({
     name: '',
     email: '',
@@ -295,7 +296,6 @@ const WellSaidOnboarding = ({ onComplete }) => {
       }
     }
   };
-
 
   const handleConversationSubmit = () => {
     if (!currentInput.trim()) return;
@@ -516,20 +516,33 @@ const WellSaidOnboarding = ({ onComplete }) => {
     </div>
   );
 
+  // Modify the completeOnboarding function
   const completeOnboarding = () => {
-    setCurrentStep('summary');
-    typeMessage("Here's what I've learned about you so far:", true, 500);
+    // Clear the messages and set loading state
+    setMessages([]);
+    setIsTyping(true);
+    setCurrentStep("summary");
+    // After a brief delay, start typing the summary
+    setTimeout(() => {
+      setIsTyping(false);
 
-    let summary = `You're ${userData.name}, and you're here because ${userData.motivation.toLowerCase()}. `;
-    summary += `You're interested in ${userData.topics.toLowerCase()}, and you'd like me to ${userData.helpStyle.toLowerCase()}. `;
+      let summary = `You're ${userData.name}, and you're here because ${userData.motivation.toLowerCase()}. `;
+      summary += `You're interested in ${userData.topics.toLowerCase()}, and you'd like me to ${userData.helpStyle.toLowerCase()}. `;
 
-    if (userData.people.length > 0) {
-      summary += `You want to share insights with ${userData.people.length} special ${userData.people.length === 1 ? 'person' : 'people'} in your life. `;
-    }
+      if (userData.people.length > 0) {
+        summary += `You want to share insights with ${userData.people.length} special ${userData.people.length === 1 ? 'person' : 'people'} in your life. `;
+      }
 
-    summary += "I'm excited to help you on this journey!";
+      summary += "I'm excited to help you on this journey!";
 
-    typeMessage(summary, true, 2000);
+      // Type the summary message
+      typeMessage(summary, true, 0);
+
+      // After the summary is displayed, show the welcome card
+      setTimeout(() => {
+        setIsShowingSummary(true);
+      }, 2000 + summary.length * 30); // Adjust timing based on typewriter speed
+    }, 500);
   };
 
   const toggleRecording = () => {
@@ -787,8 +800,7 @@ const WellSaidOnboarding = ({ onComplete }) => {
           </div>
         )}
 
-        {/* Summary */}
-        {currentStep === 'summary' && (
+        {currentStep === 'summary' && isShowingSummary && (
           <div className="bg-white rounded-2xl shadow-lg p-6 text-center mb-4">
             <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <Check className="w-8 h-8 text-green-600" />
@@ -818,7 +830,10 @@ const SplashScreen = ({ onComplete }) => {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  // Remove password state since we're not using it anymore
+  const [pin, setPin] = useState(''); // New state for PIN
+  const [loginStep, setLoginStep] = useState('email'); // 'email' or 'pin'
+
   useEffect(() => {
     const timer = setTimeout(() => {
       setShowLanding(true);
@@ -841,7 +856,74 @@ const SplashScreen = ({ onComplete }) => {
     onComplete();
   };
 
+  const handleEmailSubmit = (e) => {
+    e.preventDefault();
+    // Here you would typically send the email to your backend to generate/send the PIN
+    setLoginStep('pin');
+  };
+
+  const handlePinSubmit = (e) => {
+    e.preventDefault();
+    // Here you would validate the PIN with your backend
+    handleDevLogin(e); // Or your actual login logic
+  };
+
   if (showLogin) {
+    if (loginStep === 'pin') {
+      return (
+        <div className="fixed inset-0 flex items-center justify-center bg-gradient-to-br from-blue-500 to-indigo-600 p-4">
+          <div className="bg-white rounded-2xl shadow-lg p-6 w-full max-w-md">
+            <div className="text-center mb-6">
+              <div className="flex justify-center mb-2">
+                <WellSaidLogo />
+              </div>
+              <h2 className="text-2xl font-bold text-gray-800 mt-4">Enter your PIN</h2>
+              <p className="text-gray-600 mt-2">We've sent a 4-digit code to {email}</p>
+            </div>
+
+            <form onSubmit={handlePinSubmit} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">4-digit PIN</label>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]{4}"
+                  maxLength={4}
+                  value={pin}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/\D/g, ''); // Only allow numbers
+                    setPin(value);
+                  }}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-center text-2xl tracking-widest"
+                  placeholder="••••"
+                  autoComplete="one-time-code"
+                  autoFocus
+                  required
+                />
+              </div>
+
+              <button
+                type="submit"
+                className="w-full bg-gradient-to-r from-blue-500 to-indigo-500 text-white py-3 rounded-lg font-medium hover:from-blue-600 hover:to-indigo-600 transition-colors"
+              >
+                Verify PIN
+              </button>
+            </form>
+
+            <div className="mt-4 text-center">
+              <button
+                onClick={() => setLoginStep('email')}
+                className="text-blue-600 text-sm font-medium"
+              >
+                Back to email entry
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Default email entry step
     return (
       <div className="fixed inset-0 flex items-center justify-center bg-gradient-to-br from-blue-500 to-indigo-600 p-4">
         <div className="bg-white rounded-2xl shadow-lg p-6 w-full max-w-md">
@@ -853,8 +935,7 @@ const SplashScreen = ({ onComplete }) => {
             <p className="text-gray-600 mt-2">Sign in to continue your journey</p>
           </div>
 
-          {/* ✅ Wrap inputs in a <form> */}
-          <form onSubmit={handleDevLogin} className="space-y-4">
+          <form onSubmit={handleEmailSubmit} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
               <input
@@ -864,19 +945,7 @@ const SplashScreen = ({ onComplete }) => {
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
                 placeholder="your@email.com"
                 autoComplete="username"
-                required
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                placeholder="••••••••"
-                autoComplete="current-password"
+                autoFocus
                 required
               />
             </div>
@@ -885,7 +954,7 @@ const SplashScreen = ({ onComplete }) => {
               type="submit"
               className="w-full bg-gradient-to-r from-blue-500 to-indigo-500 text-white py-3 rounded-lg font-medium hover:from-blue-600 hover:to-indigo-600 transition-colors"
             >
-              Log In
+              Continue
             </button>
           </form>
 
