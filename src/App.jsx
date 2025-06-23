@@ -276,6 +276,9 @@ const WellSaidOnboarding = ({ onComplete }) => {
     }
   };
 
+
+  const [isVerifyingPin, setIsVerifyingPin] = useState(false);
+
   const handlePinChange = (index, value) => {
     if (value.length <= 1 && /^\d*$/.test(value)) {
       const newPin = [...pinDigits];
@@ -289,10 +292,19 @@ const WellSaidOnboarding = ({ onComplete }) => {
       if (newPin.every(digit => digit !== '')) {
         const fullPin = newPin.join('');
         setUserData(prev => ({ ...prev, pin: fullPin }));
+        setIsVerifyingPin(true);
+        setShowPinInput(false);
+
+        typeMessage("Verifying your code...", true, 0);
+
         setTimeout(() => {
-          setCurrentStep('conversation');
-          typeMessage("Great! Now let's get to work. Over the next few minutes, I'd like to hear more about you and how you would like to use this app. This will help me help you! You can speak or type your answers using the area below. What brings you to this app?", true, 1000);
-        }, 500);
+          typeMessage("✓ Verified successfully!", true, 1000);
+          setIsVerifyingPin(false);
+          setTimeout(() => {
+            setCurrentStep('conversation');
+            typeMessage("Great! Now let's get to work. Over the next few minutes, I'd like to hear more about you and how you would like to use this app. This will help me help you! You can speak or type your answers using the area below. What brings you to this app?", true, 500);
+          }, 1500);
+        }, 1000);
       }
     }
   };
