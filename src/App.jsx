@@ -687,7 +687,7 @@ const WellSaidOnboarding = ({ onComplete }) => {
                       type="email" // Proper email type for better mobile keyboards and validation
                       inputMode="email" // Additional hint for mobile devices
                       autoComplete="email" // Helps with autofill
-                      placeholder="Enter your email"
+                      placeholder="your@email.com"
                       className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-blue-500"
                       onKeyPress={(e) => {
                         if (e.key === 'Enter' && e.target.value.trim()) {
