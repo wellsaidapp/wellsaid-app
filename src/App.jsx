@@ -2011,7 +2011,7 @@ const WellSaidApp = () => {
           <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-sm border border-white/50 mb-6">
               <h3 className="text-lg font-semibold text-gray-800 mb-4">Your Shared Books</h3>
               <p className="text-sm text-gray-600 mb-4">
-                  Collections you've prepared for special occasions and milestones.
+                  Books you've prepared for special occasions and milestones.
               </p>
 
               <div className="space-y-4">
@@ -5144,7 +5144,15 @@ const WellSaidApp = () => {
               ))}
             </div>
 
-            <button className="w-full bg-white/80 backdrop-blur-sm rounded-xl p-4 text-red-600 text-center border border-white/50 shadow-sm hover:bg-gray-50 transition-colors">
+            <button
+              onClick={() => {
+                // Clear auth state
+                localStorage.removeItem('wellsaid-auth-state');
+                // Navigate to login
+                window.location.reload(); // This will restart the app flow at SplashScreen
+              }}
+              className="w-full bg-white/80 backdrop-blur-sm rounded-xl p-4 text-red-600 text-center border border-white/50 shadow-sm hover:bg-gray-50 transition-colors"
+            >
               Sign Out
             </button>
           </div>
