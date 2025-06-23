@@ -3179,7 +3179,7 @@ const WellSaidApp = () => {
     const [selectedEntry, setSelectedEntry] = useState(null);
     const [expandedCollection, setExpandedCollection] = useState(null);
     const [viewMode, setViewMode] = useState('collections'); // 'collections' or 'books'
-
+    const [showInactiveCollections, setShowInactiveCollections] = useState(false);
     // Search-related state (migrated from LibraryView)
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState([]);
@@ -3190,7 +3190,7 @@ const WellSaidApp = () => {
       entryTypes: []
     });
     const [showFilters, setShowFilters] = useState(false);
-
+    const [currentCollection, setCurrentCollection] = useState(null);
     // Book preview state (migrated from LibraryView)
     const [selectedBook, setSelectedBook] = useState(null);
     const [currentPage, setCurrentPage] = useState(0);
@@ -3640,6 +3640,81 @@ const WellSaidApp = () => {
       return true;
     });
 
+    const CollectionItem = ({
+      collection,
+      entries,
+      isActive,
+      expanded,
+      onToggle,
+      showRecipient = false,
+      onAddToCollection
+    }) => (
+      <div className={`mb-4 ${!isActive ? 'opacity-70' : ''}`}>
+        <div
+          onClick={isActive ? onToggle : undefined}
+          className={`bg-white rounded-lg p-4 ${isActive ? 'cursor-pointer hover:bg-gray-50' : ''} transition-colors border ${
+            isActive ? 'border-gray-200' : 'border-gray-100'
+          }`}
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              <div className={`w-10 h-10 rounded-lg ${
+                isActive ? collection.color : 'bg-gray-300'
+              } flex items-center justify-center mr-3`}>
+                {collection.type === 'occasion' ? (
+                  <Calendar className={`w-5 h-5 ${isActive ? 'text-white' : 'text-gray-500'}`} />
+                ) : (
+                  <FolderOpen className={`w-5 h-5 ${isActive ? 'text-white' : 'text-gray-500'}`} />
+                )}
+              </div>
+              <div>
+                <div className={`font-medium ${isActive ? 'text-gray-800' : 'text-gray-600'}`}>
+                  {collection.name}
+                </div>
+                <div className="text-sm text-gray-500">
+                  {entries.length || 0} insights
+                  {showRecipient && collection.recipient && ` • For ${collection.recipient}`}
+                </div>
+              </div>
+            </div>
+
+            {/* Updated button/chevron area */}
+            <div className="flex items-center gap-2">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onAddToCollection?.(collection.id);
+                }}
+                className={`flex items-center gap-1 px-3 py-1 rounded-full text-sm transition-colors ${
+                  isActive
+                    ? 'bg-blue-50 text-blue-600 hover:bg-blue-100'
+                    : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                }`}
+                aria-label={`Add to ${collection.name}`}
+              >
+                <Plus className="w-4 h-4" />
+                <span>New</span>
+              </button>
+              {isActive && (
+                <ChevronDown
+                  className={`w-5 h-5 text-gray-400 transition-transform ${
+                    expanded ? 'transform rotate-180' : ''
+                  }`}
+                />
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Expanded content */}
+        {isActive && expanded && entries.length > 0 && (
+          <div className="mt-3 pl-4 border-l-2 border-gray-200 ml-5">
+            {entries.map(entry => renderEntryCard(entry))}
+          </div>
+        )}
+      </div>
+    );
+
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-blue-50 to-indigo-50 pb-20">
         <Header />
@@ -3790,90 +3865,87 @@ const WellSaidApp = () => {
           {/* Collections View */}
           {viewMode === 'collections' && (
             <>
-            <div className="mb-6">
-              <h3 className="text-md font-semibold text-gray-700 mb-3">General Collections</h3>
-              <div className="space-y-4">
-                {SYSTEM_COLLECTIONS.filter(collection => {
-                  // Only show collections that have entries
-                  return groupedEntries[collection.id]?.length > 0;
-                }).map(collection => (
-                  <div key={collection.id} className="mb-4">
-                    <div
-                      onClick={() => toggleCollection(collection.id)}
-                      className="bg-white rounded-lg p-4 cursor-pointer hover:bg-gray-50 transition-colors"
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center">
-                          <div className={`w-10 h-10 rounded-lg ${collection.color} flex items-center justify-center mr-3`}>
-                            <FolderOpen className="w-5 h-5 text-white" />
-                          </div>
-                          <div>
-                            <div className="font-medium text-gray-800">{collection.name}</div>
-                            <div className="text-sm text-gray-500">
-                              {groupedEntries[collection.id]?.length || 0} insights
-                            </div>
-                          </div>
-                        </div>
-                        <ChevronDown
-                          className={`w-5 h-5 text-gray-400 transition-transform ${expandedCollection === collection.id ? 'transform rotate-180' : ''}`}
-                        />
-                      </div>
-                    </div>
-
-                    {/* Expanded content for this collection */}
-                    {expandedCollection === collection.id && groupedEntries[collection.id] && (
-                      <div className="mt-3 pl-4 border-l-2 border-gray-200 ml-5">
-                        {groupedEntries[collection.id].map(entry => renderEntryCard(entry))}
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* User Collections (including special occasions) */}
-            {filteredUserCollections.length > 0 && (
+              {/* Active System Collections */}
               <div className="mb-6">
-                <h3 className="text-md font-semibold text-gray-700 mb-3">Your Collections</h3>
-                {filteredUserCollections.map(collection => (
-                  <div key={collection.id} className="mb-4">
-                    <div
-                      onClick={() => toggleCollection(collection.id)}
-                      className="bg-white rounded-lg p-4 cursor-pointer hover:bg-gray-50 transition-colors"
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center">
-                          <div className={`w-10 h-10 rounded-lg ${collection.color} flex items-center justify-center mr-3`}>
-                            {collection.type === 'occasion' ? (
-                              <Calendar className="w-5 h-5 text-white" />
-                            ) : (
-                              <FolderOpen className="w-5 h-5 text-white" />
-                            )}
-                          </div>
-                          <div>
-                            <div className="font-medium text-gray-800">{collection.name}</div>
-                            <div className="text-sm text-gray-500">
-                              {groupedEntries[collection.id]?.length || 0} insights
-                              {collection.recipient && ` • For ${collection.recipient}`}
-                            </div>
-                          </div>
-                        </div>
-                        <ChevronDown
-                          className={`w-5 h-5 text-gray-400 transition-transform ${expandedCollection === collection.id ? 'transform rotate-180' : ''}`}
-                        />
-                      </div>
-                    </div>
-
-                    {/* Expanded content for this collection */}
-                    {expandedCollection === collection.id && groupedEntries[collection.id] && (
-                      <div className="mt-3 pl-4 border-l-2 border-gray-200 ml-5">
-                        {groupedEntries[collection.id].map(entry => renderEntryCard(entry))}
-                      </div>
-                    )}
-                  </div>
-                ))}
+                <h3 className="text-md font-semibold text-gray-700 mb-3">Active Collections</h3>
+                <div className="space-y-2">
+                  {SYSTEM_COLLECTIONS.filter(collection =>
+                    groupedEntries[collection.id]?.length > 0
+                  ).map(collection => (
+                    <CollectionItem
+                      key={collection.id}
+                      collection={collection}
+                      entries={groupedEntries[collection.id] || []}
+                      isActive={true}
+                      expanded={expandedCollection === collection.id}
+                      onToggle={() => toggleCollection(collection.id)}
+                      onAddToCollection={(collectionId) => {
+                        setCurrentCollection(collectionId);
+                        setCurrentView('capture');
+                      }}
+                    />
+                  ))}
+                </div>
               </div>
-            )}
+
+              {/* User Collections */}
+              {filteredUserCollections.length > 0 && (
+                <div className="mb-6">
+                  <h3 className="text-md font-semibold text-gray-700 mb-3">Your Collections</h3>
+                  <div className="space-y-2">
+                    {filteredUserCollections.map(collection => (
+                      <CollectionItem
+                        key={collection.id}
+                        collection={collection}
+                        entries={groupedEntries[collection.id] || []}
+                        isActive={true}
+                        expanded={expandedCollection === collection.id}
+                        onToggle={() => toggleCollection(collection.id)}
+                        showRecipient={true}
+                        onAddToCollection={(collectionId) => {
+                          setCurrentCollection(collectionId);
+                          setCurrentView('capture');
+                        }}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Inactive Collections */}
+              <div className="mb-6">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-md font-semibold text-gray-700">Inactive Collections</h3>
+                  <button
+                    onClick={() => setShowInactiveCollections(!showInactiveCollections)}
+                    className="text-sm text-blue-600 hover:text-blue-800"
+                  >
+                    {showInactiveCollections ? 'Hide' : 'Show All'}
+                  </button>
+                </div>
+
+                {showInactiveCollections && (
+                  <div className="space-y-2">
+                    {SYSTEM_COLLECTIONS.filter(collection =>
+                      !groupedEntries[collection.id]?.length
+                    ).map(collection => (
+                      <CollectionItem
+                        key={collection.id}
+                        collection={collection}
+                        entries={[]}
+                        isActive={false}
+                        expanded={false}
+                        onToggle={() => {}}
+                        onAddToCollection={(collectionId) => {
+                          // Set the collection context and navigate to capture
+                          setCurrentCollection(collectionId);
+                          setCurrentView('capture');
+                        }}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
             </>
           )}
 
