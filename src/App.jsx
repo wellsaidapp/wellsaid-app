@@ -4348,7 +4348,6 @@ const WellSaidApp = () => {
 
   const ProfileView = () => {
     const [expandedDisclosure, setExpandedDisclosure] = useState(null);
-
     const disclosures = [
       {
         id: 'terms',
@@ -4527,8 +4526,6 @@ const WellSaidApp = () => {
 
             <button
               onClick={() => {
-                // Clear auth state
-                localStorage.removeItem('wellsaid-auth-state');
                 // Navigate to login
                 window.location.reload(); // This will restart the app flow at SplashScreen
               }}
