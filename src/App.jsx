@@ -657,7 +657,12 @@ const WellSaidOnboarding = ({ onComplete }) => {
                       onKeyPress={(e) => {
                         if (e.key === 'Enter' && e.target.value.trim()) {
                           handleRegistrationSubmit('name', e.target.value.trim());
+                          e.target.value = ''; // Clear the input after submission
                         }
+                      }}
+                      ref={(input) => {
+                        // Auto-focus the name input when it appears
+                        if (input && !userData.name) input.focus();
                       }}
                     />
                   </div>
@@ -666,6 +671,7 @@ const WellSaidOnboarding = ({ onComplete }) => {
                       const input = e.target.parentElement.querySelector('input');
                       if (input.value.trim()) {
                         handleRegistrationSubmit('name', input.value.trim());
+                        input.value = ''; // Clear the input after submission
                       }
                     }}
                     className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white p-3 rounded-xl hover:from-blue-600 hover:to-indigo-600 transition-colors"
@@ -678,13 +684,19 @@ const WellSaidOnboarding = ({ onComplete }) => {
                   <div className="flex-1 relative">
                     <Mail className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
                     <input
-                      type="email"
+                      type="email" // Proper email type for better mobile keyboards and validation
+                      inputMode="email" // Additional hint for mobile devices
+                      autoComplete="email" // Helps with autofill
                       placeholder="Enter your email"
                       className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-blue-500"
                       onKeyPress={(e) => {
                         if (e.key === 'Enter' && e.target.value.trim()) {
                           handleRegistrationSubmit('email', e.target.value.trim());
                         }
+                      }}
+                      ref={(input) => {
+                        // Auto-focus the email input when it appears
+                        if (input && userData.name && !userData.email) input.focus();
                       }}
                     />
                   </div>
