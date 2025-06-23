@@ -1193,47 +1193,44 @@ const WellSaidApp = () => {
     { id: 3, name: 'Kove', age: 3, relationship: 'Son', avatar: 'K', gender: 'male', color: 'bg-blue-500' }
   ]);
   const [insights, setInsights] = useState([
+    // Entry for Sage's Summer Intensive
     {
       id: 1,
-      text: "Remember that every challenge is an opportunity to grow stronger. Your resilience inspires me every day.",
-      recipients: [1],
-      date: '2025-06-16',
-      topics: ['Resilience', 'Personal Growth'],
-      question: "What lesson about overcoming challenges do you want Sage to remember?",
-      shared: true,
-      collection: null
+      question: "What are you most excited about for your summer intensive?",
+      text: "I'm really looking forward to learning new techniques from professional dancers and pushing myself beyond my current limits.",
+      date: '2025-06-01',
+      collection: 'sage-summer-intensive',
+      topics: ["Dance", "Growth"],
+      recipients: [1] // Assuming ID 1 is Sage
     },
+
+    // Entry for Cohen's Birthday
     {
       id: 2,
-      text: "Your curiosity about the world is one of your greatest strengths. Keep asking questions!",
-      recipients: [2],
-      date: '2025-06-15',
-      topics: ['Education', 'Personal Growth'],
-      question: "What quality do you most admire in Cohen?",
-      shared: false,
-      collection: null
+      question: "What would make your 17th birthday truly special?",
+      text: "I'd love a small gathering with close friends, maybe some video games and pizza. No big party this year.",
+      date: '2025-11-15',
+      collection: 'cohens-birthday',
+      topics: ["Celebration", "Family"],
+      recipients: [2] // Assuming ID 2 is Cohen
     },
+
+    // Unorganized entries (voice note and draft examples)
     {
       id: 3,
-      content: "Draft thought about teaching resilience - not ready to share yet",
-      topic: "Parenting",
-      subtopic: "Draft",
-      date: "2025-06-16",
-      recipients: [],
-      shared: false,
-      collection: null,
-      isDraft: true
+      question: "Any concerns about being away for the summer intensive?",
+      content: "[Voice note about being nervous but excited]",
+      date: '2025-05-28',
+      isVoiceNote: true,
+      topics: ["Dance", "Nerves"]
     },
     {
       id: 4,
-      content: "Voice note about work boundaries and family time",
-      topic: "",
-      subtopic: "",
-      date: "2025-06-15",
-      recipients: [],
-      shared: false,
-      collection: null,
-      isVoiceNote: true
+      question: "Birthday gift ideas for Cohen?",
+      text: "",
+      date: '2025-11-10',
+      isDraft: true,
+      topics: ["Gifts"]
     }
   ]);
   const resetForm = () => {
@@ -1288,8 +1285,18 @@ const WellSaidApp = () => {
     'Life Skills', 'Character', 'Faith', 'Traditions', 'Dreams', 'Challenges'
   ]);
   const [collections, setCollections] = useState([
-    { id: 1, name: "Letters to Sage", count: 12, color: "bg-pink-500" },
-    { id: 2, name: "Money Wisdom", count: 8, color: "bg-green-500" }
+    {
+      id: 'sage-summer-intensive',
+      name: "Sage's Summer Intensive",
+      count: 1,
+      color: "bg-purple-500"
+    },
+    {
+      id: 'cohens-birthday',
+      name: "Cohen's 17th Birthday",
+      count: 1,
+      color: "bg-blue-500"
+    }
   ]);
   const [prompts] = useState([
     "What's the most important lesson you've learned recently?",
