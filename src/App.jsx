@@ -249,18 +249,21 @@ const WellSaidOnboarding = ({ onComplete }) => {
   }, []);
 
   const typeMessage = (message, isBot = true, delay = 1000) => {
-    setTimeout(() => {
-      setIsTyping(true);
+    return new Promise((resolve) => {
       setTimeout(() => {
-        setMessages(prev => [...prev, {
-          text: message,
-          isBot,
-          timestamp: Date.now(),
-          isTyping: false
-        }]);
-        setIsTyping(false);
-      }, 1500);
-    }, delay);
+        setIsTyping(true);
+        setTimeout(() => {
+          setMessages(prev => [...prev, {
+            text: message,
+            isBot,
+            timestamp: Date.now(),
+            isTyping: false
+          }]);
+          setIsTyping(false);
+          resolve(); // ✅ Resolve after message is added
+        }, 1500); // Simulated typing time
+      }, delay); // Initial delay before typing starts
+    });
   };
 
   const handleRegistrationSubmit = (field, value) => {
@@ -295,16 +298,30 @@ const WellSaidOnboarding = ({ onComplete }) => {
         setIsVerifyingPin(true);
         setShowPinInput(false);
 
-        typeMessage("Verifying your code...", true, 0);
+        const runSequence = async () => {
+          // Step 1: show verifying message
+          await typeMessage("Verifying your code...", true, 0);
 
-        setTimeout(() => {
-          typeMessage("✓ Verified successfully!", true, 1000);
+          // Step 2: show success
+          await new Promise(res => setTimeout(res, 1000));
+          await typeMessage("✓ Verified successfully!", true, 0);
+
+          // Step 3: pause and clear before new step
           setIsVerifyingPin(false);
-          setTimeout(() => {
-            setCurrentStep('conversation');
-            typeMessage("Great! Now let's get to work. Over the next few minutes, I'd like to hear more about you and how you would like to use this app. This will help me help you! You can speak or type your answers using the area below. What brings you to this app?", true, 500);
-          }, 1500);
-        }, 1000);
+          await new Promise(res => setTimeout(res, 1500));
+          setMessages([]);
+          setCurrentStep('conversation');
+
+          // Step 4: continue onboarding
+          await new Promise(res => setTimeout(res, 300));
+          await typeMessage(
+            "Great! Now let's get to work. Over the next few minutes, I'd like to hear more about you and how you would like to use this app. This will help me help you! You can speak or type your answers using the area below. What brings you to this app?",
+            true,
+            0
+          );
+        };
+
+        runSequence(); // Start the async onboarding sequence
       }
     }
   };
