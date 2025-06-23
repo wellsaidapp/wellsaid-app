@@ -3729,7 +3729,7 @@ const WellSaidApp = () => {
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search your wisdom..."
+                  placeholder="Search your insight..."
                   className="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                 />
               </div>
@@ -4190,758 +4190,160 @@ const WellSaidApp = () => {
   };
 
   const LibraryView = ({ resetForm }) => {
-      // Search-related state (NEW)
-      const [searchQuery, setSearchQuery] = useState('');
-      const [searchResults, setSearchResults] = useState([]);
-      const [isSearching, setIsSearching] = useState(false);
-      const [selectedFilters, setSelectedFilters] = useState({
-          topics: [],
-          recipients: [],
-          entryTypes: []
-      });
-      const [currentPage, setCurrentPage] = useState(0); // For tracking which page is shown in the modal
-      const [showFilters, setShowFilters] = useState(false);
-      const [isFlipping, setIsFlipping] = useState(false);
-      const flipPage = (direction) => {
-        if (isFlipping) return;
-        setIsFlipping(true);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [isSearching, setIsSearching] = useState(false);
+    const [selectedPerson, setSelectedPerson] = useState(null);
 
-        if (direction === 'next' && currentPage < selectedBook?.pages?.length - 1) {
-          setTimeout(() => setCurrentPage(currentPage + 1), 150);
-        } else if (direction === 'prev' && currentPage > 0) {
-          setTimeout(() => setCurrentPage(currentPage - 1), 150);
-        }
+    const handleSearch = (e) => {
+      e.preventDefault();
+      if (searchQuery.trim()) {
+        setIsSearching(true);
+        // Simulate search delay
+        setTimeout(() => setIsSearching(false), 500);
+      }
+    };
 
-        setTimeout(() => setIsFlipping(false), 300);
-      };
-      // Your existing state (PRESERVED)
-      const [libraryView, setLibraryView] = useState('personal');
-      const sharedBooks = [
-        {
-          id: 1,
-          name: "Letters to Sage",
-          recipient: "Sage",
-          description: "Life lessons and love letters for my daughter",
-          count: 12,
-          color: "bg-pink-500",
-          lastUpdated: "2 days ago",
-          type: "book",
-          pages: [
-            {
-              type: "question",
-              content: "How can I teach you about resilience when life gets difficult?",
-              pageNumber: 1
-            },
-            {
-              type: "answer",
-              content: {
-                text: "Resilience isn't about avoiding falls, but learning how to get up. When you face challenges:",
-                points: [
-                  "Remember that struggles are temporary",
-                  "Ask for help when you need it",
-                  "Know that I'll always be here for you"
-                ]
-              },
-              pageNumber: 2
-            },
-            {
-              type: "question",
-              content: "What do I want you to know about finding true happiness?",
-              pageNumber: 3
-            },
-            {
-              type: "answer",
-              content: {
-                text: "Happiness comes from within and grows when you:",
-                points: [
-                  "Cultivate gratitude daily",
-                  "Build meaningful relationships",
-                  "Pursue purpose, not just pleasure"
-                ]
-              },
-              pageNumber: 4
-            }
-          ]
-        },
-        {
-          id: 2,
-          name: "First Year Lessons",
-          recipient: "Cohen",
-          description: "What I learned in your first year of life",
-          count: 6,
-          color: "bg-blue-500",
-          lastUpdated: "1 week ago",
-          type: "book",
-          pages: [
-            {
-              type: "question",
-              content: "What surprised me most about becoming your parent?",
-              pageNumber: 1
-            },
-            {
-              type: "answer",
-              content: {
-                text: "The depth of love and responsibility I felt immediately:",
-                points: [
-                  "How your smile could brighten my worst day",
-                  "The instinct to protect you at all costs",
-                  "The joy in your smallest discoveries"
-                ]
-              },
-              pageNumber: 2
-            },
-            {
-              type: "question",
-              content: "What advice would I give to new parents?",
-              pageNumber: 3
-            },
-            {
-              type: "answer",
-              content: {
-                text: "The things that matter most:",
-                points: [
-                  "Trust your instincts - you know your child best",
-                  "Don't compare milestones - every child develops differently",
-                  "Take time to just be present together"
-                ]
-              },
-              pageNumber: 4
-            }
-          ]
-        },
-        {
-          id: 3,
-          name: "For When You're Older",
-          recipient: "Both kids",
-          description: "Wisdom for their teenage years and beyond",
-          count: 4,
-          color: "bg-purple-500",
-          lastUpdated: "3 days ago",
-          type: "book",
-          pages: [
-            {
-              type: "question",
-              content: "How should you handle heartbreak when it comes?",
-              pageNumber: 1
-            },
-            {
-              type: "answer",
-              content: {
-                text: "Though painful, heartbreak teaches valuable lessons:",
-                points: [
-                  "It's okay to grieve - don't rush the healing",
-                  "Every ending makes space for new beginnings",
-                  "Your worth isn't defined by any relationship"
-                ]
-              },
-              pageNumber: 2
-            },
-            {
-              type: "question",
-              content: "What financial principles will serve you best?",
-              pageNumber: 3
-            },
-            {
-              type: "answer",
-              content: {
-                text: "Money management fundamentals:",
-                points: [
-                  "Live below your means and save consistently",
-                  "Invest early - time is your greatest asset",
-                  "True wealth is freedom, not possessions"
-                ]
-              },
-              pageNumber: 4
-            },
-            {
-              type: "question",
-              content: "How do I want you to remember me?",
-              pageNumber: 5
-            },
-            {
-              type: "answer",
-              content: {
-                text: "I hope you remember:",
-                points: [
-                  "I loved you unconditionally, always",
-                  "I did my best, even when I made mistakes",
-                  "My greatest legacy is the people you become"
-                ]
-              },
-              pageNumber: 6
-            }
-          ]
-        }
-      ];
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-blue-50 to-indigo-50 pb-20">
+        <Header />
 
-      // Get unique topics and recipients for filters
-      const allTopics = [...new Set(insights.flatMap(entry => entry.topics || []))];
-      const allRecipients = individuals.map(person => person.id);
-
-      // Mock RAG search function
-      const performRAGSearch = async (query) => {
-          setIsSearching(true);
-
-          // Simulate API delay
-          await new Promise(resolve => setTimeout(resolve, 500));
-
-          // Filter logic (replace with actual RAG API call)
-          const results = insights.filter(entry => {
-              const matchesText = entry.text?.toLowerCase().includes(query.toLowerCase()) ||
-                                entry.content?.toLowerCase().includes(query.toLowerCase()) ||
-                                entry.question?.toLowerCase().includes(query.toLowerCase());
-
-              const matchesTopics = selectedFilters.topics.length === 0 ||
-                                  entry.topics?.some(topic => selectedFilters.topics.includes(topic));
-
-              const matchesRecipients = selectedFilters.recipients.length === 0 ||
-                                      entry.recipients?.some(id => selectedFilters.recipients.includes(id));
-
-              const matchesType = selectedFilters.entryTypes.length === 0 ||
-                                (selectedFilters.entryTypes.includes('draft') && entry.isDraft) ||
-                                (selectedFilters.entryTypes.includes('voice') && entry.isVoiceNote) ||
-                                (selectedFilters.entryTypes.includes('insight') && !entry.isDraft && !entry.isVoiceNote);
-
-              return matchesText && matchesTopics && matchesRecipients && matchesType;
-          });
-
-          setSearchResults(results);
-          setIsSearching(false);
-      };
-
-      const handleSearch = (e) => {
-          e.preventDefault();
-          if (searchQuery.trim()) {
-              performRAGSearch(searchQuery);
-          } else {
-              setSearchResults([]);
-          }
-      };
-
-      const toggleFilter = (filterType, value) => {
-          setSelectedFilters(prev => ({
-              ...prev,
-              [filterType]: prev[filterType].includes(value)
-                  ? prev[filterType].filter(item => item !== value)
-                  : [...prev[filterType], value]
-          }));
-      };
-
-      // Determine which entries to display
-      const displayedEntries = searchQuery.trim() ? searchResults : insights;
-
-      return (
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-blue-50 to-indigo-50 pb-20">
-          <Header />
-
-          <div className="p-4">
-            {/* New Search Bar */}
-            <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 mb-6 shadow-sm border border-white/50">
-              {/* Combined search row */}
-              <form onSubmit={handleSearch} className="flex items-center gap-2">
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search your wisdom..."
-                    className="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-                  />
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={isSearching}
-                  className="bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600 transition-colors"
-                >
-                  {isSearching ? (
-                    <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                  ) : (
-                    <Search className="w-4 h-4" />
-                  )}
-                </button>
-
-                <button
-                  onClick={() => setShowFilters(!showFilters)}
-                  className={`p-2 rounded-lg transition-colors ${showFilters ? 'bg-blue-100 text-blue-600' : 'hover:bg-gray-100 text-gray-600'}`}
-                  aria-label={showFilters ? "Hide filters" : "Show filters"}
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+        <div className="p-4">
+          {/* Search Bar */}
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 mb-6 shadow-sm border border-white/50">
+            <form onSubmit={handleSearch} className="flex items-center gap-2">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search your people..."
+                  className="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={isSearching}
+                className="bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600 transition-colors"
+              >
+                {isSearching ? (
+                  <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
-                </button>
-              </form>
-
-              {/* Filters section */}
-              {showFilters && (
-                <div className="mt-3 pt-3 border-t border-gray-100 space-y-3">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-xs font-medium text-gray-500">FILTER BY:</span>
-                    {allTopics.map(topic => (
-                      <button
-                        key={topic}
-                        onClick={() => toggleFilter('topics', topic)}
-                        className={`px-2.5 py-1 rounded-full text-xs ${
-                          selectedFilters.topics.includes(topic)
-                            ? 'bg-blue-600 text-white'
-                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                        }`}
-                      >
-                        {topic}
-                      </button>
-                    ))}
-                  </div>
-
-                  <div className="flex flex-wrap items-center gap-2">
-                    {allRecipients.map(id => {
-                      const person = individuals.find(p => p.id === id);
-                      return (
-                        <button
-                          key={id}
-                          onClick={() => toggleFilter('recipients', id)}
-                          className={`px-2.5 py-1 rounded-full text-xs flex items-center gap-1 ${
-                            selectedFilters.recipients.includes(id)
-                              ? 'bg-blue-600 text-white'
-                              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                          }`}
-                        >
-                          <span className={`w-2 h-2 rounded-full ${person.color}`}></span>
-                          {person.name}
-                        </button>
-                      );
-                    })}
-                  </div>
-
-                  <div className="flex flex-wrap items-center gap-2">
-                    {['insight', 'draft', 'voice'].map(type => (
-                      <button
-                        key={type}
-                        onClick={() => toggleFilter('entryTypes', type)}
-                        className={`px-2.5 py-1 rounded-full text-xs capitalize ${
-                          selectedFilters.entryTypes.includes(type)
-                            ? 'bg-blue-600 text-white'
-                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                        }`}
-                      >
-                        {type}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Search Results Summary */}
-            {searchQuery.trim() && (
-              <div className="mb-4 flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-gray-800">
-                  {searchResults.length} results for "{searchQuery}"
-                </h3>
-                <button
-                  onClick={() => {
-                    setSearchQuery('');
-                    setSearchResults([]);
-                    setSelectedFilters({ topics: [], recipients: [], entryTypes: [] });
-                  }}
-                  className="text-blue-600 text-sm font-medium hover:text-blue-800"
-                >
-                  Clear search
-                </button>
-              </div>
-            )}
-
-            {/* Your Original Tab Navigation */}
-            <div className="flex bg-white rounded-lg p-1 mb-6">
-              <button
-                onClick={() => setLibraryView('personal')}
-                className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
-                  libraryView === 'personal'
-                    ? 'bg-blue-600 text-white'
-                    : 'text-gray-600 hover:text-gray-800'
-                }`}
-              >
-                Personal
+                ) : (
+                  <Search className="w-4 h-4" />
+                )}
               </button>
-              <button
-                onClick={() => setLibraryView('shared')}
-                className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
-                  libraryView === 'shared'
-                    ? 'bg-blue-600 text-white'
-                    : 'text-gray-600 hover:text-gray-800'
-                }`}
-              >
-                Shared
-              </button>
-            </div>
-
-            {/* Personal Library View */}
-            {libraryView === 'personal' && (
-              <div>
-                <div className="mb-6">
-                  <div className="flex items-center justify-between mb-3">
-                    <h2 className="text-lg font-semibold text-gray-800">Your Private Vault</h2>
-                    <span className="text-sm text-gray-500">{displayedEntries.length} items</span>
-                  </div>
-                  <p className="text-sm text-gray-600 mb-4">
-                    Everything you've captured — finished thoughts, drafts, voice notes, and incomplete reflections.
-                  </p>
-
-                  <div className="space-y-4">
-                    {displayedEntries.map(entry => (
-                      <div
-                        key={entry.id}
-                        className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100"
-                      >
-                        {/* Entry Header */}
-                        <div className="flex items-center p-3 border-b border-gray-100 bg-gray-50">
-                          <div className="flex-1 flex items-center space-x-2">
-                            {entry.isDraft && (
-                              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-orange-100 text-orange-800">
-                                Draft
-                              </span>
-                            )}
-                            {entry.isVoiceNote && (
-                              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800">
-                                <Mic className="w-3 h-3 mr-1" /> Voice Note
-                              </span>
-                            )}
-                            {!entry.isDraft && !entry.isVoiceNote && (
-                              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">
-                                <Star className="w-3 h-3 mr-1" /> Insight
-                              </span>
-                            )}
-                            <span className="text-xs text-gray-500">
-                              {new Date(entry.date).toLocaleDateString()}
-                            </span>
-                          </div>
-                          {!entry.shared && !entry.isDraft && (
-                            <button className="text-sm font-medium text-blue-600 hover:text-blue-800">
-                              Share
-                            </button>
-                          )}
-                        </div>
-
-                        {/* Q&A Card */}
-                        <div className="p-4">
-                          {entry.question && (
-                            <div className="mb-4">
-                              <div className="flex items-center mb-1">
-                                <span className="text-xs font-semibold text-blue-600 uppercase tracking-wider">Question</span>
-                              </div>
-                              <div className="bg-blue-50 rounded-lg p-3 text-sm text-gray-800">
-                                {entry.question}
-                              </div>
-                            </div>
-                          )}
-
-                          <div className="">
-                            <div className="flex items-center mb-1">
-                              <span className="text-xs font-semibold text-green-600 uppercase tracking-wider">
-                                {entry.isDraft ? "Draft Content" : "Your Insight"}
-                              </span>
-                            </div>
-                            <div className={`rounded-lg p-3 text-sm ${
-                              entry.isDraft || entry.isVoiceNote
-                                ? "bg-gray-50 italic text-gray-600"
-                                : "bg-green-50 text-gray-800"
-                            }`}>
-                              {entry.text || entry.content || "No content yet"}
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Tags and Recipients */}
-                        <div className="px-4 pb-3 pt-2 border-t border-gray-100">
-                          <div className="flex flex-wrap gap-2 mb-2">
-                            {entry.topics?.map(topic => (
-                              <span key={topic} className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-full">
-                                {topic}
-                              </span>
-                            ))}
-                          </div>
-                          <div className="flex flex-wrap gap-2">
-                            {entry.recipients?.map(id => {
-                              const person = individuals.find(p => p.id === id);
-                              return (
-                                <span key={person.id} className="inline-flex items-center px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full">
-                                  <span className={`w-2 h-2 rounded-full ${person.color} mr-1`}></span>
-                                  {person.name}
-                                </span>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Shared Library View */}
-            {libraryView === 'shared' && (
-              <div>
-                <div className="mb-6">
-                  <div className="flex items-center justify-between mb-3">
-                    <h2 className="text-lg font-semibold text-gray-800">Living Bookshelf</h2>
-                    <span className="text-sm text-gray-500">{sharedBooks.length} books</span>
-                  </div>
-                  <p className="text-sm text-gray-600 mb-4">
-                    Curated collections and books you've created to share with your loved ones.
-                  </p>
-
-                  <div className="space-y-4">
-                    {sharedBooks.map(book => (
-                      <div key={book.id} className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100">
-                        <div className="p-4">
-                          <div className="flex items-start">
-                            <div className={`w-12 h-12 rounded-lg ${book.color} flex items-center justify-center mr-3 flex-shrink-0`}>
-                              <Book className="w-6 h-6 text-white" />
-                            </div>
-                            <div className="flex-1">
-                              <h3 className="font-semibold text-gray-800 mb-1">{book.name}</h3>
-                              <p className="text-sm text-gray-600 mb-2">{book.description}</p>
-                              <div className="flex items-center gap-3 text-xs text-gray-500">
-                                <span>{book.pages.length / 2} chapters</span>
-                                <span>•</span>
-                                <span>For {book.recipient}</span>
-                                <span>•</span>
-                                <span>Updated {book.lastUpdated}</span>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="px-4 pb-3 border-t border-gray-100">
-                          <div className="flex items-center justify-between pt-3">
-                            <div className="flex items-center gap-2">
-                              <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
-                                <span className="text-xs font-medium text-blue-600">
-                                  {book.recipient === 'Sage' ? 'S' : book.recipient === 'Cohen' ? 'B' : 'B'}
-                                </span>
-                              </div>
-                              <span className="text-xs text-gray-600">
-                                {book.recipient === 'Both kids' ? 'Shared with both children' : `Shared with ${book.recipient}`}
-                              </span>
-                            </div>
-                            <button
-                              onClick={() => {
-                                setSelectedBook(book);
-                                setCurrentPage(0); // Reset to first page when opening a book
-                              }}
-                              className="text-xs font-medium text-blue-600 hover:text-blue-800"
-                            >
-                              View Collection
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Create New Book Section */}
-                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-100">
-                  <div className="flex items-center mb-2">
-                    <Heart className="w-5 h-5 text-blue-600 mr-2" />
-                    <span className="font-medium text-gray-800">Create a New Book</span>
-                  </div>
-                  <p className="text-sm text-gray-600 mb-3">
-                    Turn your insights into a meaningful collection for someone special.
-                  </p>
-                  <button
-                    className="w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white py-2 px-4 rounded-lg font-medium flex items-center justify-center gap-2"
-                    onClick={() => setCurrentView('createBook')}
-                  >
-                    <Plus size={16} />
-                    Start New Book
-                  </button>
-                </div>
-              </div>
-            )}
+            </form>
           </div>
 
-          {/* New Capture Modal */}
-          {showCapture && (
-            <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40 flex items-center justify-center p-4">
-              <div className="bg-white rounded-2xl w-full max-w-md overflow-hidden shadow-xl">
-                <div className={`p-6 relative ${captureMode === 'quick' ? 'bg-blue-50' : 'bg-gradient-to-r from-indigo-50 to-purple-50'}`}>
-                  <button
-                    onClick={() => setShowCapture(false)}
-                    className="absolute top-4 right-4 p-1 rounded-full hover:bg-white/50"
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
-                  <h2 className="text-xl font-semibold">
-                    {captureMode === 'quick' ? 'Daily Reflection' : 'Milestone Preparation'}
-                  </h2>
-                  <p className="text-sm mt-1 text-gray-600">
-                    {captureMode === 'quick'
-                      ? "Answer today's question in just 2 minutes"
-                      : "Create lasting memories for this special occasion"}
-                  </p>
-                </div>
-
-                <div className="p-6">
-                  {captureMode === 'quick' ? (
-                    <QuickCaptureFlow
-                      onClose={() => setShowCapture(false)}
-                    />
-                  ) : (
-                    <MilestoneFlow
-                      onClose={() => setShowCapture(false)}
-                    />
-                  )}
-                </div>
-              </div>
+          {/* People Section */}
+          <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-white/50 shadow-sm mb-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-gray-800">Your People</h2>
+              <span className="text-sm text-gray-500">{individuals.length} people</span>
             </div>
-          )}
 
-          {/* Book Preview Modal - MOVED TO ROOT LEVEL */}
-          {selectedBook && (
-            <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
-              <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[95vh] overflow-hidden flex flex-col">
-                {/* Header */}
-                <div className="relative bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-100">
-                  <div className="flex items-center justify-between p-6">
-                    <div className="flex items-center space-x-3">
-                      <div className={`w-10 h-10 ${selectedBook.color} rounded-lg flex items-center justify-center shadow-lg`}>
-                        <BookOpen className="w-5 h-5 text-white" />
-                      </div>
-                      <div>
-                        <h3 className="text-xl font-bold text-blue-800 tracking-wide">
-                          {selectedBook.name}
-                        </h3>
-                        <p className="text-sm text-blue-600 font-medium">
-                          For {selectedBook.recipient}
-                        </p>
+            <div className="space-y-3">
+              {individuals.map(person => (
+                <div
+                  key={person.id}
+                  onClick={() => setSelectedPerson(person)}
+                  className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+                >
+                  <div className="flex items-center">
+                    <div className={`w-10 h-10 rounded-full ${person.color} flex items-center justify-center mr-3`}>
+                      <span className="text-white text-sm font-medium">{person.avatar}</span>
+                    </div>
+                    <div>
+                      <div className="font-medium text-gray-800">{person.name}</div>
+                      <div className="text-xs text-gray-500">
+                        {insights.filter(i => i.recipients?.includes(person.id)).length} insights shared
                       </div>
                     </div>
+                  </div>
+                  <ChevronRight className="text-gray-400" />
+                </div>
+              ))}
 
-                    <button
-                      onClick={() => setSelectedBook(null)}
-                      className="w-10 h-10 rounded-full bg-white bg-opacity-70 hover:bg-opacity-100 flex items-center justify-center text-blue-600 hover:text-blue-800 transition-all duration-200 shadow-lg hover:shadow-xl"
-                    >
-                      <X className="w-5 h-5" />
-                    </button>
+              <button className="w-full mt-2 py-2 border border-dashed border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 transition-colors flex items-center justify-center gap-2">
+                <Plus size={16} />
+                Add New Person
+              </button>
+            </div>
+          </div>
+
+          {/* Person Detail View */}
+          {selectedPerson && (
+            <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-white/50 shadow-sm">
+              <div className="flex items-center justify-between mb-4">
+                <button
+                  onClick={() => setSelectedPerson(null)}
+                  className="text-blue-600 flex items-center gap-1"
+                >
+                  <ChevronLeft size={16} />
+                  Back
+                </button>
+                <h2 className="text-lg font-semibold text-gray-800">{selectedPerson.name}</h2>
+                <div className="w-6"></div> {/* Spacer */}
+              </div>
+
+              <div className="space-y-4">
+                <div className="flex items-center justify-center mb-4">
+                  <div className={`w-20 h-20 rounded-full ${selectedPerson.color} flex items-center justify-center`}>
+                    <span className="text-white text-2xl font-medium">{selectedPerson.avatar}</span>
                   </div>
                 </div>
 
-                {/* Book Content - Fixed size container */}
-                <div className="flex-1 bg-gradient-to-br from-blue-50 to-indigo-50 flex items-center justify-center p-8">
-                  <div className="relative w-full max-w-md h-[500px]">
-                    <div className={`relative bg-white rounded-lg shadow-xl border border-blue-200 h-full overflow-y-auto ${isFlipping ? 'scale-95 opacity-70' : 'scale-100 opacity-100'}`}>
-                      {/* Current Page Content */}
-                      <div className="p-8 h-full flex flex-col">
-                        {selectedBook.pages[currentPage].type === 'question' ? (
-                          <>
-                            <div className="mb-6">
-                              <div className="inline-block px-3 py-1 bg-blue-100 rounded-full">
-                                <span className="text-xs font-semibold text-blue-700 uppercase tracking-wider">
-                                  Question
-                                </span>
-                              </div>
-                            </div>
+                <div className="grid grid-cols-3 gap-2 text-center mb-6">
+                  <div className="bg-blue-50 rounded-lg p-3">
+                    <div className="font-bold text-blue-600">
+                      {insights.filter(i => i.recipients?.includes(selectedPerson.id)).length}
+                    </div>
+                    <div className="text-xs text-gray-600">Insights</div>
+                  </div>
+                  <div className="bg-green-50 rounded-lg p-3">
+                    <div className="font-bold text-green-600">
+                      {collections.filter(c => c.recipient === selectedPerson.name).length}
+                    </div>
+                    <div className="text-xs text-gray-600">Books</div>
+                  </div>
+                  <div className="bg-purple-50 rounded-lg p-3">
+                    <div className="font-bold text-purple-600">
+                      {new Date().toLocaleDateString()}
+                    </div>
+                    <div className="text-xs text-gray-600">Last shared</div>
+                  </div>
+                </div>
 
-                            <div className="flex-1 flex items-center justify-center min-h-[300px]">
-                              <p className="text-lg text-blue-800 text-center italic">
-                                {selectedBook.pages[currentPage].content}
-                              </p>
-                            </div>
-                          </>
-                        ) : (
-                          <>
-                            <div className="mb-6">
-                              <div className="inline-block px-3 py-1 bg-blue-100 rounded-full">
-                                <span className="text-xs font-semibold text-blue-700 uppercase tracking-wider">
-                                  Your Insight
-                                </span>
-                              </div>
-                            </div>
-
-                            <div className="flex-1 min-h-[300px]">
-                              <p className="text-blue-800 mb-4">
-                                {selectedBook.pages[currentPage].content.text}
-                              </p>
-                              <ul className="space-y-2 text-blue-700">
-                                {selectedBook.pages[currentPage].content.points.map((point, i) => (
-                                  <li key={i} className="flex items-start">
-                                    <span className="text-blue-500 mr-2">•</span>
-                                    <span>{point}</span>
-                                  </li>
-                                ))}
-                              </ul>
-                            </div>
-                          </>
+                <h3 className="font-medium text-gray-800">Recent Insights</h3>
+                {insights
+                  .filter(i => i.recipients?.includes(selectedPerson.id))
+                  .slice(0, 3)
+                  .map(insight => (
+                    <div key={insight.id} className="bg-gray-50 rounded-lg p-3">
+                      <div className="text-sm text-gray-800 line-clamp-2">
+                        {insight.question && (
+                          <span className="font-medium">Q: {insight.question}</span>
                         )}
-
-                        <div className="mt-auto pt-4 text-center">
-                          <span className="text-xs text-blue-300 font-medium">
-                            Page {selectedBook.pages[currentPage].pageNumber}
-                          </span>
-                        </div>
+                        {insight.text && <p>{insight.text}</p>}
+                      </div>
+                      <div className="text-xs text-gray-500 mt-1">
+                        {new Date(insight.date).toLocaleDateString()}
                       </div>
                     </div>
-                  </div>
+                  ))}
 
-                  {/* Navigation Arrows */}
-                  {currentPage > 0 && (
-                    <button
-                      onClick={() => flipPage('prev')}
-                      className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-white bg-opacity-80 hover:bg-opacity-100 rounded-full shadow-lg hover:shadow-xl flex items-center justify-center text-blue-600 hover:text-blue-800 transition-all duration-200"
-                    >
-                      <ChevronLeft className="w-5 h-5" />
-                    </button>
-                  )}
-
-                  {currentPage < selectedBook.pages.length - 1 && (
-                    <button
-                      onClick={() => flipPage('next')}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-white bg-opacity-80 hover:bg-opacity-100 rounded-full shadow-lg hover:shadow-xl flex items-center justify-center text-blue-600 hover:text-blue-800 transition-all duration-200"
-                    >
-                      <ChevronRight className="w-5 h-5" />
-                    </button>
-                  )}
-                </div>
-
-                {/* Page Indicators */}
-                <div className="flex justify-center py-3 bg-blue-50 border-t border-blue-100">
-                  <div className="flex space-x-2">
-                    {selectedBook.pages.map((_, idx) => (
-                      <button
-                        key={idx}
-                        onClick={() => !isFlipping && setCurrentPage(idx)}
-                        className={`w-2 h-2 rounded-full transition-all duration-200 ${
-                          idx === currentPage
-                            ? 'bg-blue-600 scale-125'
-                            : 'bg-blue-200 hover:bg-blue-300'
-                        }`}
-                      />
-                    ))}
-                  </div>
-                </div>
-
-                {/* Icon-only Action Buttons */}
-                <div className="flex justify-center gap-4 p-4 bg-blue-50 border-t border-blue-100">
-                  <button className="p-3 rounded-full bg-blue-100 text-blue-600 hover:bg-blue-200 transition-colors" title="Download PDF">
-                    <Download className="w-5 h-5" />
-                  </button>
-                  <button className="p-3 rounded-full bg-blue-100 text-blue-600 hover:bg-blue-200 transition-colors" title="Print">
-                    <Printer className="w-5 h-5" />
-                  </button>
-                  <button className="p-3 rounded-full bg-blue-100 text-blue-600 hover:bg-blue-200 transition-colors" title="Order">
-                    <ShoppingCart className="w-5 h-5" />
-                  </button>
-                </div>
+                <button className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg font-medium hover:bg-blue-700 transition-colors">
+                  Share New Insight
+                </button>
               </div>
             </div>
           )}
         </div>
-      );
+      </div>
+    );
   };
 
   const ProfileView = () => {
@@ -5087,27 +4489,6 @@ const WellSaidApp = () => {
               </div>
               <ChevronRight size={20} className="text-gray-400" />
             </button>
-
-            <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-white/50 shadow-sm">
-              <div className="flex items-center mb-3">
-                <Users size={20} className="text-gray-600 mr-3" />
-                <span className="text-gray-800 font-medium">People</span>
-              </div>
-              {individuals.map(person => (
-                <div key={person.id} className="flex items-center justify-between py-2">
-                  <div className="flex items-center">
-                    <div className={`w-8 h-8 rounded-full ${person.color} flex items-center justify-center mr-3`}>
-                      <span className="text-white text-sm font-bold">{person.avatar}</span>
-                    </div>
-                    <span className="text-gray-800">{person.name}</span>
-                  </div>
-                  <button className="text-blue-600 text-sm">Edit</button>
-                </div>
-              ))}
-              <button className="w-full mt-3 py-2 border border-gray-200 rounded-lg text-gray-600 text-sm">
-                + Add Person
-              </button>
-            </div>
 
             {/* Legal Disclosures Accordion */}
             <div className="bg-white/80 backdrop-blur-sm rounded-xl border border-white/50 shadow-sm overflow-hidden">
