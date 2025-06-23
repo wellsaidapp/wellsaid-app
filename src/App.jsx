@@ -1190,7 +1190,7 @@ const WellSaidApp = () => {
   const [individuals, setIndividuals] = useState([
     { id: 1, name: 'Sage', age: 15, relationship: 'Daughter', avatar: 'S', gender: 'female', color: 'bg-blue-500' },
     { id: 2, name: 'Cohen', age: 16, relationship: 'Son', avatar: 'C', gender: 'male', color: 'bg-blue-500' },
-    { id: 3, name: 'Kove', age: 3, relationship: 'Son', avatar: 'K', gender: 'male', color: 'bg-blue-500' }
+    { id: 3, name: 'Truett', age: 12, relationship: 'Son', avatar: 'T', gender: 'male', color: 'bg-blue-500' }
   ]);
   const [insights, setInsights] = useState([
     // Entry for Sage's Summer Intensive
@@ -1199,7 +1199,7 @@ const WellSaidApp = () => {
       question: "What are you most excited about for your summer intensive?",
       text: "I'm really looking forward to learning new techniques from professional dancers and pushing myself beyond my current limits.",
       date: '2025-06-01',
-      collection: 'sage-summer-intensive',
+      collections: ['sage-summer-intensive', 'fitness-sports', 'personal-growth'],
       topics: ["Dance", "Growth"],
       recipients: [1] // Assuming ID 1 is Sage
     },
@@ -1210,7 +1210,7 @@ const WellSaidApp = () => {
       question: "What would make your 17th birthday truly special?",
       text: "I'd love a small gathering with close friends, maybe some video games and pizza. No big party this year.",
       date: '2025-11-15',
-      collection: 'cohens-birthday',
+      collections: ['cohens-birthday', 'personal-growth', 'family'],
       topics: ["Celebration", "Family"],
       recipients: [2] // Assuming ID 2 is Cohen
     },
@@ -1220,6 +1220,7 @@ const WellSaidApp = () => {
       id: 3,
       question: "Any concerns about being away for the summer intensive?",
       content: "[Voice note about being nervous but excited]",
+      collections: ['sage-summer-intensive', 'fitness-sports', 'personal-growth'],
       date: '2025-05-28',
       isVoiceNote: true,
       topics: ["Dance", "Nerves"]
@@ -1229,6 +1230,7 @@ const WellSaidApp = () => {
       question: "Birthday gift ideas for Cohen?",
       text: "",
       date: '2025-11-10',
+      collections: ['family'],
       isDraft: true,
       topics: ["Gifts"]
     }
@@ -1284,18 +1286,23 @@ const WellSaidApp = () => {
     'Health', 'Family Values', 'Personal Growth', 'Resilience', 'Education',
     'Life Skills', 'Character', 'Faith', 'Traditions', 'Dreams', 'Challenges'
   ]);
+  // Add this to your component's state or props
   const [collections, setCollections] = useState([
     {
       id: 'sage-summer-intensive',
       name: "Sage's Summer Intensive",
-      count: 1,
-      color: "bg-purple-500"
+      color: 'bg-purple-500',
+      type: 'occasion',
+      recipient: 'Sage',
+      created: '2025-05-01'
     },
     {
       id: 'cohens-birthday',
       name: "Cohen's 17th Birthday",
-      count: 1,
-      color: "bg-blue-500"
+      color: 'bg-blue-500',
+      type: 'occasion',
+      recipient: 'Cohen',
+      created: '2025-10-01'
     }
   ]);
   const [prompts] = useState([
@@ -1340,9 +1347,9 @@ const WellSaidApp = () => {
           setCurrentView={setCurrentView}
           resetForm={resetForm}
         />;
-      case 'organize':
-        return <OrganizeView />;
       case 'library':
+        return <OrganizeView />;
+      case 'people':
         return <LibraryView resetForm={resetForm} />;
       case 'profile':
         return <ProfileView />;
@@ -1398,8 +1405,6 @@ const WellSaidApp = () => {
         );
     }
   };
-
-
 
   const BookPreviewModal = ({ book, onClose }) => {
     const [currentPage, setCurrentPage] = useState(0);
@@ -1650,8 +1655,8 @@ const WellSaidApp = () => {
                 }
               }
             },
-            { id: 'organize', icon: FolderOpen, label: 'Organize' },
-            { id: 'library', icon: Book, label: 'Library' },
+            { id: 'library', icon: Library, label: 'Library' },
+            { id: 'people', icon: Users, label: 'People' },
             { id: 'profile', icon: User, label: 'Profile' }
           ].map(item => (
             <button
@@ -1678,6 +1683,84 @@ const WellSaidApp = () => {
     const weeklyGoal = 5;
     const progressPercent = (weekInsights / weeklyGoal) * 100;
     const [isShuffling, setIsShuffling] = useState(false);
+    const [selectedBook, setSelectedBook] = useState(null);
+    const [currentPage, setCurrentPage] = useState(0);
+    const [isFlipping, setIsFlipping] = useState(false);
+
+    const flipPage = (direction) => {
+        if (isFlipping) return;
+        setIsFlipping(true);
+
+        if (direction === 'next' && currentPage < selectedBook?.pages?.length - 1) {
+            setTimeout(() => setCurrentPage(currentPage + 1), 150);
+        } else if (direction === 'prev' && currentPage > 0) {
+            setTimeout(() => setCurrentPage(currentPage - 1), 150);
+        }
+
+        setTimeout(() => setIsFlipping(false), 300);
+    };
+
+    // Sample shared books data (you can move this to your constants or state)
+    const sharedBooks = [
+        {
+            id: 1,
+            name: "Truett's Scofield Graduation",
+            recipient: "Truett",
+            description: "Advice for Truett as he graduates from Scofield",
+            count: 5,
+            color: "bg-purple-500",
+            lastUpdated: "2 days ago",
+            type: "book",
+            pages: [
+                {
+                    type: "question",
+                    content: "What are your hopes for Sage during this summer intensive?",
+                    pageNumber: 1
+                },
+                {
+                    type: "answer",
+                    content: {
+                        text: "My hopes for Sage during this transformative experience:",
+                        points: [
+                            "That she discovers new strengths in herself",
+                            "She makes lasting connections with fellow dancers",
+                            "She learns to push through challenges with grace"
+                        ]
+                    },
+                    pageNumber: 2
+                }
+            ]
+        },
+        {
+            id: 2,
+            name: "Cohen's 16th Birthday",
+            recipient: "Cohen",
+            description: "Thoughts and advice for Cohen as he turns 16",
+            count: 4,
+            color: "bg-blue-500",
+            lastUpdated: "1 week ago",
+            type: "book",
+            pages: [
+                {
+                    type: "question",
+                    content: "What do you remember most about Cohen at age 15?",
+                    pageNumber: 1
+                },
+                {
+                    type: "answer",
+                    content: {
+                        text: "Memories that stand out from this past year:",
+                        points: [
+                            "His dedication to learning guitar",
+                            "How he stepped up as a big brother",
+                            "His growing sense of humor and wit"
+                        ]
+                    },
+                    pageNumber: 2
+                }
+            ]
+        }
+    ];
 
     const CaptureOptionsModal = ({ setShowCaptureOptions, setCurrentView, setCaptureMode }) => (
       <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-50 flex items-end">
@@ -1924,56 +2007,61 @@ const WellSaidApp = () => {
             )}
           </div>
 
-          {/* Recent Insights */}
-          <div className="mb-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-800">Your Recent Wisdom</h3>
-              <button
-                onClick={() => setCurrentView('library')}
-                className="text-blue-500 text-sm font-medium hover:text-blue-600 transition-colors"
-              >
-                View All
-              </button>
-            </div>
-            <div className="space-y-4">
-              {insights.filter(i => i.shared).slice(0, 2).map(insight => {
-                const recipients = insight.recipients.map(id => individuals.find(p => p.id === id)).filter(Boolean);
-                return (
-                  <div key={insight.id} className="bg-white/80 backdrop-blur-sm rounded-2xl p-5 shadow-sm border border-white/50">
-                    <div className="flex items-center mb-3">
-                      <div className="flex -space-x-2 mr-3">
-                        {recipients.map(person => (
-                          <div key={person.id} className={`w-8 h-8 rounded-full ${person.color} flex items-center justify-center border-2 border-white shadow-sm`}>
-                            <span className="text-white text-sm font-bold">{person.avatar}</span>
+          {/* NEW: Book Preview Section */}
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-sm border border-white/50 mb-6">
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">Your Shared Books</h3>
+              <p className="text-sm text-gray-600 mb-4">
+                  Collections you've prepared for special occasions and milestones.
+              </p>
+
+              <div className="space-y-4">
+                  {sharedBooks.map(book => (
+                      <div key={book.id} className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100">
+                          <div className="p-4">
+                              <div className="flex items-start">
+                                  <div className={`w-12 h-12 rounded-lg ${book.color} flex items-center justify-center mr-3 flex-shrink-0`}>
+                                      <Book className="w-6 h-6 text-white" />
+                                  </div>
+                                  <div className="flex-1">
+                                      <h3 className="font-semibold text-gray-800 mb-1">{book.name}</h3>
+                                      <p className="text-sm text-gray-600 mb-2">{book.description}</p>
+                                      <div className="flex items-center gap-3 text-xs text-gray-500">
+                                          <span>{book.pages.length / 2} chapters</span>
+                                          <span>•</span>
+                                          <span>For {book.recipient}</span>
+                                          <span>•</span>
+                                          <span>Updated {book.lastUpdated}</span>
+                                      </div>
+                                  </div>
+                              </div>
                           </div>
-                        ))}
+
+                          <div className="px-4 pb-3 border-t border-gray-100">
+                              <div className="flex items-center justify-between pt-3">
+                                  <div className="flex items-center gap-2">
+                                      <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
+                                          <span className="text-xs font-medium text-blue-600">
+                                              {book.recipient.charAt(0)}
+                                          </span>
+                                      </div>
+                                      <span className="text-xs text-gray-600">
+                                          Shared with {book.recipient}
+                                      </span>
+                                  </div>
+                                  <button
+                                      onClick={() => {
+                                          setSelectedBook(book);
+                                          setCurrentPage(0);
+                                      }}
+                                      className="text-xs font-medium text-blue-600 hover:text-blue-800"
+                                  >
+                                      View Book
+                                  </button>
+                              </div>
+                          </div>
                       </div>
-                      <div className="flex-1">
-                        <p className="font-medium text-gray-800 text-sm">
-                          For {recipients.map(p => p.name).join(', ')}
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          {new Date(insight.date).toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })}
-                        </p>
-                      </div>
-                      <Heart size={16} className="text-blue-400 fill-current" />
-                    </div>
-                    <p className="text-gray-700 leading-relaxed text-sm mb-3">{insight.text}</p>
-                    <div className="flex flex-wrap gap-1 mb-2">
-                      {insight.topics.map(topic => (
-                        <span key={topic} className="px-2 py-1 bg-gradient-to-r from-blue-100 to-blue-200 text-blue-700 text-xs rounded-full">
-                          {topic}
-                        </span>
-                      ))}
-                    </div>
-                    <div className="flex items-center justify-between pt-3 border-t border-gray-100">
-                      <span className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded-full">Shared</span>
-                      <button className="text-xs text-gray-500 hover:text-gray-700 transition-colors">View Full</button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+                  ))}
+              </div>
           </div>
 
           {/* Stats Overview */}
@@ -2004,7 +2092,145 @@ const WellSaidApp = () => {
             setCaptureMode={setCaptureMode}
           />
         )}
+        {/* NEW: Book Preview Modal */}
+        {selectedBook && (
+            <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
+                <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[95vh] overflow-hidden flex flex-col">
+                    {/* Header */}
+                    <div className="relative bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-100">
+                        <div className="flex items-center justify-between p-6">
+                            <div className="flex items-center space-x-3">
+                                <div className={`w-10 h-10 ${selectedBook.color} rounded-lg flex items-center justify-center shadow-lg`}>
+                                    <BookOpen className="w-5 h-5 text-white" />
+                                </div>
+                                <div>
+                                    <h3 className="text-xl font-bold text-blue-800 tracking-wide">
+                                        {selectedBook.name}
+                                    </h3>
+                                    <p className="text-sm text-blue-600 font-medium">
+                                        For {selectedBook.recipient}
+                                    </p>
+                                </div>
+                            </div>
 
+                            <button
+                                onClick={() => setSelectedBook(null)}
+                                className="w-10 h-10 rounded-full bg-white bg-opacity-70 hover:bg-opacity-100 flex items-center justify-center text-blue-600 hover:text-blue-800 transition-all duration-200 shadow-lg hover:shadow-xl"
+                            >
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Book Content */}
+                    <div className="flex-1 bg-gradient-to-br from-blue-50 to-indigo-50 flex items-center justify-center p-8">
+                        <div className="relative w-full max-w-md h-[500px]">
+                            <div className={`relative bg-white rounded-lg shadow-xl border border-blue-200 h-full overflow-y-auto ${isFlipping ? 'scale-95 opacity-70' : 'scale-100 opacity-100'}`}>
+                                {/* Current Page Content */}
+                                <div className="p-8 h-full flex flex-col">
+                                    {selectedBook.pages[currentPage].type === 'question' ? (
+                                        <>
+                                            <div className="mb-6">
+                                                <div className="inline-block px-3 py-1 bg-blue-100 rounded-full">
+                                                    <span className="text-xs font-semibold text-blue-700 uppercase tracking-wider">
+                                                        Question
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                            <div className="flex-1 flex items-center justify-center min-h-[300px]">
+                                                <p className="text-lg text-blue-800 text-center italic">
+                                                    {selectedBook.pages[currentPage].content}
+                                                </p>
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <div className="mb-6">
+                                                <div className="inline-block px-3 py-1 bg-blue-100 rounded-full">
+                                                    <span className="text-xs font-semibold text-blue-700 uppercase tracking-wider">
+                                                        Your Insight
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                            <div className="flex-1 min-h-[300px]">
+                                                <p className="text-blue-800 mb-4">
+                                                    {selectedBook.pages[currentPage].content.text}
+                                                </p>
+                                                <ul className="space-y-2 text-blue-700">
+                                                    {selectedBook.pages[currentPage].content.points.map((point, i) => (
+                                                        <li key={i} className="flex items-start">
+                                                            <span className="text-blue-500 mr-2">•</span>
+                                                            <span>{point}</span>
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            </div>
+                                        </>
+                                    )}
+
+                                    <div className="mt-auto pt-4 text-center">
+                                        <span className="text-xs text-blue-300 font-medium">
+                                            Page {selectedBook.pages[currentPage].pageNumber}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Navigation Arrows */}
+                        {currentPage > 0 && (
+                            <button
+                                onClick={() => flipPage('prev')}
+                                className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-white bg-opacity-80 hover:bg-opacity-100 rounded-full shadow-lg hover:shadow-xl flex items-center justify-center text-blue-600 hover:text-blue-800 transition-all duration-200"
+                            >
+                                <ChevronLeft className="w-5 h-5" />
+                            </button>
+                        )}
+
+                        {currentPage < selectedBook.pages.length - 1 && (
+                            <button
+                                onClick={() => flipPage('next')}
+                                className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-white bg-opacity-80 hover:bg-opacity-100 rounded-full shadow-lg hover:shadow-xl flex items-center justify-center text-blue-600 hover:text-blue-800 transition-all duration-200"
+                            >
+                                <ChevronRight className="w-5 h-5" />
+                            </button>
+                        )}
+                    </div>
+
+                    {/* Page Indicators */}
+                    <div className="flex justify-center py-3 bg-blue-50 border-t border-blue-100">
+                        <div className="flex space-x-2">
+                            {selectedBook.pages.map((_, idx) => (
+                                <button
+                                    key={idx}
+                                    onClick={() => !isFlipping && setCurrentPage(idx)}
+                                    className={`w-2 h-2 rounded-full transition-all duration-200 ${
+                                        idx === currentPage
+                                            ? 'bg-blue-600 scale-125'
+                                            : 'bg-blue-200 hover:bg-blue-300'
+                                    }`}
+                                />
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="flex justify-center gap-4 p-4 bg-blue-50 border-t border-blue-100">
+                        <button className="p-3 rounded-full bg-blue-100 text-blue-600 hover:bg-blue-200 transition-colors" title="Download PDF">
+                            <Download className="w-5 h-5" />
+                        </button>
+                        <button className="p-3 rounded-full bg-blue-100 text-blue-600 hover:bg-blue-200 transition-colors" title="Print">
+                            <Printer className="w-5 h-5" />
+                        </button>
+                        <button className="p-3 rounded-full bg-blue-100 text-blue-600 hover:bg-blue-200 transition-colors" title="Order">
+                            <ShoppingCart className="w-5 h-5" />
+                        </button>
+                    </div>
+                </div>
+            </div>
+        )}
         <style>{`
           @keyframes slide-up {
             from {
@@ -2022,6 +2248,8 @@ const WellSaidApp = () => {
       </div>
     );
   };
+
+
 
   const CaptureView = ({ captureMode, setCurrentView }) => {
       // Chat state
@@ -2854,69 +3082,89 @@ const WellSaidApp = () => {
     );
   };
 
+  // In your TagEditor component, modify it to support multiple collection selection
   const TagEditor = ({ entry, onClose, onSave }) => {
-    const topicSuggestions = [
-      "Parenting", "Relationships", "Work", "Money", "Health", "Faith",
-      "Education", "Life Skills", "Character", "Dreams"
-    ];
+    const [selectedCollections, setSelectedCollections] = useState(entry.collections || []);
+
+    const toggleCollection = (collectionId) => {
+      setSelectedCollections(prev =>
+        prev.includes(collectionId)
+          ? prev.filter(id => id !== collectionId)
+          : [...prev, collectionId]
+      );
+    };
 
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-        <div className="bg-white rounded-lg p-6 w-full max-w-sm">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-semibold text-gray-800">Organize Entry</h3>
-            <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
-              <ArrowLeft size={20} />
-            </button>
+      <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div className="bg-white rounded-2xl w-full max-w-md overflow-hidden">
+          {/* Header */}
+          <div className="p-4 border-b border-gray-200">
+            <h3 className="text-lg font-semibold">Organize Insight</h3>
           </div>
 
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-2">Topic</label>
-            <select className="w-full p-2 border border-gray-200 rounded-lg">
-              <option value="">Select topic...</option>
-              {topicSuggestions.map(topic => (
-                <option key={topic} value={topic}>{topic}</option>
-              ))}
-            </select>
-          </div>
+          {/* Content */}
+          <div className="p-4 max-h-[60vh] overflow-y-auto">
+            <h4 className="text-sm font-medium text-gray-700 mb-2">Add to Collections</h4>
 
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-2">Tags</label>
-            <div className="flex flex-wrap gap-2 mb-2">
-              {individuals.map(person => (
-                <button
-                  key={person.id}
-                  className="px-3 py-1 border border-gray-200 rounded-full text-sm hover:bg-gray-50"
-                >
-                  {person.name}
-                </button>
-              ))}
+            {/* System Collections */}
+            <div className="mb-4">
+              <h5 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                System Collections
+              </h5>
+              <div className="space-y-2">
+                {SYSTEM_COLLECTIONS.map(collection => (
+                  <label key={collection.id} className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      checked={selectedCollections.includes(collection.id)}
+                      onChange={() => toggleCollection(collection.id)}
+                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    />
+                    <span className="text-sm text-gray-700">{collection.name}</span>
+                  </label>
+                ))}
+              </div>
             </div>
+
+            {/* User Collections */}
+            {collections.length > 0 && (
+              <div>
+                <h5 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                  Your Collections
+                </h5>
+                <div className="space-y-2">
+                  {collections.map(collection => (
+                    <label key={collection.id} className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        checked={selectedCollections.includes(collection.id)}
+                        onChange={() => toggleCollection(collection.id)}
+                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      />
+                      <span className="text-sm text-gray-700">{collection.name}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-2">Add to Collection</label>
-            <select className="w-full p-2 border border-gray-200 rounded-lg">
-              <option value="">Choose collection...</option>
-              {collections.map(collection => (
-                <option key={collection.id} value={collection.id}>{collection.name}</option>
-              ))}
-              <option value="new">+ Create new collection</option>
-            </select>
-          </div>
-
-          <div className="flex gap-2">
+          {/* Footer */}
+          <div className="p-4 border-t border-gray-200 flex justify-end space-x-2">
             <button
               onClick={onClose}
-              className="flex-1 py-2 px-4 border border-gray-200 rounded-lg text-gray-600"
+              className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg"
             >
               Cancel
             </button>
             <button
-              onClick={() => { onSave(); onClose(); }}
-              className="flex-1 py-2 px-4 bg-blue-600 text-white rounded-lg"
+              onClick={() => {
+                onSave({ ...entry, collections: selectedCollections });
+                onClose();
+              }}
+              className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700"
             >
-              Save
+              Save Changes
             </button>
           </div>
         </div>
@@ -2925,255 +3173,948 @@ const WellSaidApp = () => {
   };
 
   const OrganizeView = () => {
-      const [selectedEntries, setSelectedEntries] = useState([]);
-      const [bulkAction, setBulkAction] = useState('');
-      const [showTagEditor, setShowTagEditor] = useState(false);
-      const [selectedEntry, setSelectedEntry] = useState(null);
-      const [expandedCollection, setExpandedCollection] = useState(null);
+    const [selectedEntries, setSelectedEntries] = useState([]);
+    const [bulkAction, setBulkAction] = useState('');
+    const [showTagEditor, setShowTagEditor] = useState(false);
+    const [selectedEntry, setSelectedEntry] = useState(null);
+    const [expandedCollection, setExpandedCollection] = useState(null);
+    const [viewMode, setViewMode] = useState('collections'); // 'collections' or 'books'
 
-      // Group entries by collection
-      const groupedEntries = insights.reduce((acc, entry) => {
-          const collectionId = entry.collection || 'unorganized';
-          if (!acc[collectionId]) {
-              acc[collectionId] = [];
+    // Search-related state (migrated from LibraryView)
+    const [searchQuery, setSearchQuery] = useState('');
+    const [searchResults, setSearchResults] = useState([]);
+    const [isSearching, setIsSearching] = useState(false);
+    const [selectedFilters, setSelectedFilters] = useState({
+      topics: [],
+      recipients: [],
+      entryTypes: []
+    });
+    const [showFilters, setShowFilters] = useState(false);
+
+    // Book preview state (migrated from LibraryView)
+    const [selectedBook, setSelectedBook] = useState(null);
+    const [currentPage, setCurrentPage] = useState(0);
+    const [isFlipping, setIsFlipping] = useState(false);
+
+    // Add this state near the top of your component
+    const [collectionFilter, setCollectionFilter] = useState('all'); // 'all', 'person', or 'occasion'
+
+    // Add this filter control above the collections display
+    <div className="flex space-x-2 mb-4">
+      <button
+        onClick={() => setCollectionFilter('all')}
+        className={`px-3 py-1 rounded-full text-sm ${
+          collectionFilter === 'all'
+            ? 'bg-blue-600 text-white'
+            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+        }`}
+      >
+        All
+      </button>
+      <button
+        onClick={() => setCollectionFilter('person')}
+        className={`px-3 py-1 rounded-full text-sm ${
+          collectionFilter === 'person'
+            ? 'bg-blue-600 text-white'
+            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+        }`}
+      >
+        By Person
+      </button>
+      <button
+        onClick={() => setCollectionFilter('occasion')}
+        className={`px-3 py-1 rounded-full text-sm ${
+          collectionFilter === 'occasion'
+            ? 'bg-blue-600 text-white'
+            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+        }`}
+      >
+        By Occasion
+      </button>
+    </div>
+
+    // Add this near the top of your component file
+    const SYSTEM_COLLECTIONS = [
+      // Core Themes
+      { id: 'relationships', name: 'Relationships', color: 'bg-red-500', type: 'system' },
+      { id: 'parenting', name: 'Parenting', color: 'bg-blue-500', type: 'system' },
+      { id: 'finances', name: 'Finances', color: 'bg-green-500', type: 'system' },
+      { id: 'work', name: 'Work', color: 'bg-yellow-500', type: 'system' },
+      { id: 'education', name: 'Education', color: 'bg-purple-500', type: 'system' },
+      { id: 'health-wellness', name: 'Health & Wellness', color: 'bg-pink-500', type: 'system' },
+      { id: 'creativity', name: 'Creativity', color: 'bg-indigo-500', type: 'system' },
+      { id: 'personal-growth', name: 'Personal Growth', color: 'bg-teal-500', type: 'system' },
+      { id: 'faith', name: 'Faith', color: 'bg-gray-500', type: 'system' },
+      { id: 'dreams', name: 'Dreams', color: 'bg-blue-400', type: 'system' },
+
+      // Life Context
+      { id: 'travel-adventure', name: 'Travel & Adventure', color: 'bg-orange-500', type: 'system' },
+      { id: 'family', name: 'Family', color: 'bg-amber-500', type: 'system' },
+      { id: 'home-living', name: 'Home & Living', color: 'bg-lime-500', type: 'system' },
+      { id: 'community', name: 'Community', color: 'bg-emerald-500', type: 'system' },
+      { id: 'food', name: 'Food', color: 'bg-rose-500', type: 'system' },
+      { id: 'nature', name: 'Nature', color: 'bg-green-400', type: 'system' },
+      { id: 'mindfulness', name: 'Mindfulness', color: 'bg-violet-500', type: 'system' },
+      { id: 'memories', name: 'Memories', color: 'bg-cyan-500', type: 'system' },
+      { id: 'culture', name: 'Culture', color: 'bg-fuchsia-500', type: 'system' },
+      { id: 'entertainment', name: 'Entertainment', color: 'bg-sky-500', type: 'system' },
+      { id: 'events-celebrations', name: 'Events & Celebrations', color: 'bg-pink-400', type: 'system' },
+      { id: 'self-care', name: 'Self-Care', color: 'bg-purple-400', type: 'system' },
+      { id: 'productivity', name: 'Productivity', color: 'bg-yellow-400', type: 'system' },
+
+      // Additional
+      { id: 'fitness-sports', name: 'Fitness & Sports', color: 'bg-red-400', type: 'system' },
+      { id: 'heritage', name: 'Heritage', color: 'bg-amber-400', type: 'system' },
+      { id: 'technology', name: 'Technology', color: 'bg-indigo-400', type: 'system' },
+      { id: 'life-lessons', name: 'Life Lessons', color: 'bg-teal-400', type: 'system' }
+    ];
+
+    // Shared books data (migrated from LibraryView)
+    const sharedBooks = [
+      {
+        id: 1,
+        name: "Letters to Sage",
+        recipient: "Sage",
+        description: "Life lessons and love letters for my daughter",
+        count: 12,
+        color: "bg-pink-500",
+        lastUpdated: "2 days ago",
+        type: "book",
+        pages: [
+          {
+            type: "question",
+            content: "How can I teach you about resilience when life gets difficult?",
+            pageNumber: 1
+          },
+          {
+            type: "answer",
+            content: {
+              text: "Resilience isn't about avoiding falls, but learning how to get up. When you face challenges:",
+              points: [
+                "Remember that struggles are temporary",
+                "Ask for help when you need it",
+                "Know that I'll always be here for you"
+              ]
+            },
+            pageNumber: 2
+          },
+          {
+            type: "question",
+            content: "What do I want you to know about finding true happiness?",
+            pageNumber: 3
+          },
+          {
+            type: "answer",
+            content: {
+              text: "Happiness comes from within and grows when you:",
+              points: [
+                "Cultivate gratitude daily",
+                "Build meaningful relationships",
+                "Pursue purpose, not just pleasure"
+              ]
+            },
+            pageNumber: 4
           }
-          acc[collectionId].push(entry);
-          return acc;
-      }, {});
-
-      const topicSuggestions = [
-          "Parenting", "Relationships", "Work", "Money", "Health", "Faith",
-          "Education", "Life Skills", "Character", "Dreams"
-      ];
-
-      const handleEntrySelect = (entryId) => {
-          setSelectedEntries(prev =>
-              prev.includes(entryId)
-                  ? prev.filter(id => id !== entryId)
-                  : [...prev, entryId]
-          );
-      };
-
-      const handleBulkAction = () => {
-          if (bulkAction === 'tag' && selectedEntries.length > 0) {
-              setShowTagEditor(true);
+        ]
+      },
+      {
+        id: 2,
+        name: "First Year Lessons",
+        recipient: "Cohen",
+        description: "What I learned in your first year of life",
+        count: 6,
+        color: "bg-blue-500",
+        lastUpdated: "1 week ago",
+        type: "book",
+        pages: [
+          {
+            type: "question",
+            content: "What surprised me most about becoming your parent?",
+            pageNumber: 1
+          },
+          {
+            type: "answer",
+            content: {
+              text: "The depth of love and responsibility I felt immediately:",
+              points: [
+                "How your smile could brighten my worst day",
+                "The instinct to protect you at all costs",
+                "The joy in your smallest discoveries"
+              ]
+            },
+            pageNumber: 2
+          },
+          {
+            type: "question",
+            content: "What advice would I give to new parents?",
+            pageNumber: 3
+          },
+          {
+            type: "answer",
+            content: {
+              text: "The things that matter most:",
+              points: [
+                "Trust your instincts - you know your child best",
+                "Don't compare milestones - every child develops differently",
+                "Take time to just be present together"
+              ]
+            },
+            pageNumber: 4
           }
-      };
+        ]
+      },
+      {
+        id: 3,
+        name: "For When You're Older",
+        recipient: "Both kids",
+        description: "Wisdom for their teenage years and beyond",
+        count: 4,
+        color: "bg-purple-500",
+        lastUpdated: "3 days ago",
+        type: "book",
+        pages: [
+          {
+            type: "question",
+            content: "How should you handle heartbreak when it comes?",
+            pageNumber: 1
+          },
+          {
+            type: "answer",
+            content: {
+              text: "Though painful, heartbreak teaches valuable lessons:",
+              points: [
+                "It's okay to grieve - don't rush the healing",
+                "Every ending makes space for new beginnings",
+                "Your worth isn't defined by any relationship"
+              ]
+            },
+            pageNumber: 2
+          },
+          {
+            type: "question",
+            content: "What financial principles will serve you best?",
+            pageNumber: 3
+          },
+          {
+            type: "answer",
+            content: {
+              text: "Money management fundamentals:",
+              points: [
+                "Live below your means and save consistently",
+                "Invest early - time is your greatest asset",
+                "True wealth is freedom, not possessions"
+              ]
+            },
+            pageNumber: 4
+          },
+          {
+            type: "question",
+            content: "How do I want you to remember me?",
+            pageNumber: 5
+          },
+          {
+            type: "answer",
+            content: {
+              text: "I hope you remember:",
+              points: [
+                "I loved you unconditionally, always",
+                "I did my best, even when I made mistakes",
+                "My greatest legacy is the people you become"
+              ]
+            },
+            pageNumber: 6
+          }
+        ]
+      }
+    ];
 
-      const toggleCollection = (collectionId) => {
-          setExpandedCollection(expandedCollection === collectionId ? null : collectionId);
-      };
+    // Replace the groupedEntries reducer with this:
+    const groupedEntries = insights.reduce((acc, entry) => {
+      // Handle unorganized entries (no collections)
+      if (!entry.collections || entry.collections.length === 0) {
+        if (!acc.unorganized) acc.unorganized = [];
+        acc.unorganized.push(entry);
+        return acc;
+      }
 
-      const renderEntryCard = (entry) => (
-          <div
-              key={entry.id}
-              className={`bg-white rounded-xl overflow-hidden shadow-sm border ${selectedEntries.includes(entry.id) ? 'border-blue-500' : 'border-gray-100'} mb-4`}
-          >
-              <div className="flex items-center p-3 border-b border-gray-100 bg-gray-50">
-                  <input
-                      type="checkbox"
-                      checked={selectedEntries.includes(entry.id)}
-                      onChange={() => handleEntrySelect(entry.id)}
-                      className="mr-3 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                  />
-                  <div className="flex-1 flex items-center justify-between">
-                      <div className="flex items-center space-x-2">
-                          {entry.isVoiceNote && (
-                              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800">
-                                  <Mic className="w-3 h-3 mr-1" /> Voice Note
-                              </span>
-                          )}
-                          {entry.isDraft && (
-                              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-orange-100 text-orange-800">
-                                  Draft
-                              </span>
-                          )}
-                          <span className="text-xs text-gray-500">
-                              {new Date(entry.date).toLocaleDateString()}
-                          </span>
-                      </div>
-                      <button
-                          onClick={() => {
-                              setSelectedEntry(entry);
-                              setShowTagEditor(true);
-                          }}
-                          className="text-sm font-medium text-blue-600 hover:text-blue-800"
-                      >
-                          Organize
-                      </button>
-                  </div>
-              </div>
+      // Add to each collection it belongs to
+      entry.collections.forEach(collectionId => {
+        if (!acc[collectionId]) {
+          acc[collectionId] = [];
+        }
+        acc[collectionId].push(entry);
+      });
 
-              <div className="p-4">
-                  <div className="mb-4">
-                      <div className="flex items-center mb-1">
-                          <span className="text-xs font-semibold text-blue-600 uppercase tracking-wider">Question</span>
-                      </div>
-                      <div className="bg-blue-50 rounded-lg p-3 text-sm text-gray-800">
-                          {entry.question || "What would you like to share?"}
-                      </div>
-                  </div>
+      return acc;
+    }, {});
 
-                  <div className="">
-                      <div className="flex items-center mb-1">
-                          <span className="text-xs font-semibold text-green-600 uppercase tracking-wider">Answer</span>
-                      </div>
-                      <div className="bg-green-50 rounded-lg p-3 text-sm text-gray-800">
-                          {entry.text || entry.content || "No content yet"}
-                      </div>
-                  </div>
-              </div>
+    // Search functions (migrated from LibraryView)
+    const performRAGSearch = async (query) => {
+      setIsSearching(true);
+      await new Promise(resolve => setTimeout(resolve, 500));
+      const results = insights.filter(entry => {
+        const matchesText = entry.text?.toLowerCase().includes(query.toLowerCase()) ||
+                          entry.content?.toLowerCase().includes(query.toLowerCase()) ||
+                          entry.question?.toLowerCase().includes(query.toLowerCase());
 
-              <div className="px-4 pb-3 pt-2 border-t border-gray-100">
-                  <div className="flex flex-wrap gap-2 mb-2">
-                      {entry.topics?.map(topic => (
-                          <span key={topic} className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-full">
-                              {topic}
-                          </span>
-                      ))}
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                      {entry.recipients?.map(id => {
-                          const person = individuals.find(p => p.id === id);
-                          return person ? (
-                              <span key={person.id} className="inline-flex items-center px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full">
-                                  <span className={`w-2 h-2 rounded-full ${person.color} mr-1`}></span>
-                                  {person.name}
-                              </span>
-                          ) : null;
-                      })}
-                  </div>
-              </div>
-          </div>
+        const matchesTopics = selectedFilters.topics.length === 0 ||
+                            entry.topics?.some(topic => selectedFilters.topics.includes(topic));
+
+        const matchesRecipients = selectedFilters.recipients.length === 0 ||
+                                entry.recipients?.some(id => selectedFilters.recipients.includes(id));
+
+        const matchesType = selectedFilters.entryTypes.length === 0 ||
+                          (selectedFilters.entryTypes.includes('draft') && entry.isDraft) ||
+                          (selectedFilters.entryTypes.includes('voice') && entry.isVoiceNote) ||
+                          (selectedFilters.entryTypes.includes('insight') && !entry.isDraft && !entry.isVoiceNote);
+
+        return matchesText && matchesTopics && matchesRecipients && matchesType;
+      });
+      setSearchResults(results);
+      setIsSearching(false);
+    };
+
+    const handleSearch = (e) => {
+      e.preventDefault();
+      if (searchQuery.trim()) {
+        performRAGSearch(searchQuery);
+      } else {
+        setSearchResults([]);
+      }
+    };
+
+    const toggleFilter = (filterType, value) => {
+      setSelectedFilters(prev => ({
+        ...prev,
+        [filterType]: prev[filterType].includes(value)
+            ? prev[filterType].filter(item => item !== value)
+            : [...prev[filterType], value]
+      }));
+    };
+
+    // Book functions (migrated from LibraryView)
+    const flipPage = (direction) => {
+      if (isFlipping) return;
+      setIsFlipping(true);
+
+      if (direction === 'next' && currentPage < selectedBook?.pages?.length - 1) {
+        setTimeout(() => setCurrentPage(currentPage + 1), 150);
+      } else if (direction === 'prev' && currentPage > 0) {
+        setTimeout(() => setCurrentPage(currentPage - 1), 150);
+      }
+
+      setTimeout(() => setIsFlipping(false), 300);
+    };
+
+    const handleEntrySelect = (entryId) => {
+      setSelectedEntries(prev =>
+        prev.includes(entryId)
+            ? prev.filter(id => id !== entryId)
+            : [...prev, entryId]
       );
+    };
 
-      return (
-          <div className="min-h-screen bg-gradient-to-br from-blue-50 via-blue-50 to-indigo-50 pb-20">
-              <Header />
+    const handleBulkAction = () => {
+      if (bulkAction === 'tag' && selectedEntries.length > 0) {
+        setShowTagEditor(true);
+      }
+    };
 
-              <div className="p-4">
-                  <div className="mb-4">
-                      <div className="flex items-center justify-between mb-3">
-                          <h2 className="text-lg font-semibold text-gray-800">Collections</h2>
-                          <span className="text-sm text-gray-500">{collections.length} collections</span>
-                      </div>
-                      <p className="text-sm text-gray-600 mb-4">
-                          Group related entries into meaningful collections and books.
-                      </p>
-                  </div>
+    const toggleCollection = (collectionId) => {
+      setExpandedCollection(expandedCollection === collectionId ? null : collectionId);
+    };
 
-                  {/* Unorganized Collection */}
-                  {groupedEntries.unorganized && groupedEntries.unorganized.length > 0 && (
-                      <div className="mb-6">
-                          <div
-                              onClick={() => toggleCollection('unorganized')}
-                              className="bg-white rounded-lg p-4 cursor-pointer hover:bg-gray-50 transition-colors"
-                          >
-                              <div className="flex items-center justify-between">
-                                  <div className="flex items-center">
-                                      <div className="w-10 h-10 rounded-lg bg-blue-600 flex items-center justify-center mr-3">
-                                          <Inbox className="w-5 h-5 text-white" />
-                                      </div>
-                                      <div>
-                                          <div className="font-medium text-gray-800">Unorganized</div>
-                                          <div className="text-sm text-gray-500">
-                                              {groupedEntries.unorganized.length} entries needing organization
-                                          </div>
-                                      </div>
-                                  </div>
-                                  <ChevronDown
-                                      className={`w-5 h-5 text-gray-400 transition-transform ${expandedCollection === 'unorganized' ? 'transform rotate-180' : ''}`}
-                                  />
-                              </div>
-                          </div>
+    const renderEntryCard = (entry) => (
+      <div key={entry.id} className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100 mb-4">
+        {/* Header */}
+        <div className="flex items-center p-3 border-b border-gray-100 bg-gray-50">
+          <div className="flex-1 flex items-center space-x-2">
+            {entry.isVoiceNote && (
+              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800">
+                <Mic className="w-3 h-3 mr-1" /> Voice Note
+              </span>
+            )}
+            {entry.isDraft && (
+              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-orange-100 text-orange-800">
+                Draft
+              </span>
+            )}
+            <span className="text-xs text-gray-500">
+              {new Date(entry.date).toLocaleDateString()}
+            </span>
+          </div>
+        </div>
 
-                          {expandedCollection === 'unorganized' && (
-                              <div className="mt-4 pl-4 border-l-2 border-gray-200 ml-5">
-                                  {/* Bulk Actions */}
-                                  {selectedEntries.length > 0 && (
-                                      <div className="bg-white rounded-lg p-3 mb-4 flex items-center justify-between">
-                                          <span className="text-sm text-gray-600">{selectedEntries.length} selected</span>
-                                          <div className="flex gap-2">
-                                              <select
-                                                  value={bulkAction}
-                                                  onChange={(e) => setBulkAction(e.target.value)}
-                                                  className="text-sm border border-gray-200 rounded px-2 py-1"
-                                              >
-                                                  <option value="">Bulk actions...</option>
-                                                  <option value="tag">Add tags</option>
-                                                  <option value="topic">Set topic</option>
-                                                  <option value="collection">Add to collection</option>
-                                              </select>
-                                              <button
-                                                  onClick={handleBulkAction}
-                                                  className="bg-blue-600 text-white px-3 py-1 rounded text-sm"
-                                              >
-                                                  Apply
-                                              </button>
-                                          </div>
-                                      </div>
-                                  )}
+        {/* Content */}
+        <div className="p-4">
+          {/* Question */}
+          {entry.question && (
+            <div className="mb-4">
+              <div className="flex items-center mb-1">
+                <span className="text-xs font-semibold text-blue-600 uppercase tracking-wider">Question</span>
+              </div>
+              <div className="bg-blue-50 rounded-lg p-3 text-sm text-gray-800">
+                {entry.question}
+              </div>
+            </div>
+          )}
 
-                                  {groupedEntries.unorganized.map(entry => renderEntryCard(entry))}
-                              </div>
-                          )}
-                      </div>
-                  )}
+          {/* Answer */}
+          <div>
+            <div className="flex items-center mb-1">
+              <span className="text-xs font-semibold text-green-600 uppercase tracking-wider">
+                {entry.isDraft ? "Draft Content" : "Your Insight"}
+              </span>
+            </div>
+            <div className={`rounded-lg p-3 text-sm ${
+              entry.isDraft || entry.isVoiceNote
+                ? "bg-gray-50 italic text-gray-600"
+                : "bg-green-50 text-gray-800"
+            }`}>
+              {entry.text || entry.content || "No content yet"}
+            </div>
+          </div>
+        </div>
 
-                  {/* User Collections */}
-                  {collections.map(collection => (
-                      <div key={collection.id} className="mb-6">
-                          <div
-                              onClick={() => toggleCollection(collection.id)}
-                              className="bg-white rounded-lg p-4 cursor-pointer hover:bg-gray-50 transition-colors"
-                          >
-                              <div className="flex items-center justify-between">
-                                  <div className="flex items-center">
-                                      <div className={`w-10 h-10 rounded-lg ${collection.color} flex items-center justify-center mr-3`}>
-                                          <FolderOpen className="w-5 h-5 text-white" />
-                                      </div>
-                                      <div>
-                                          <div className="font-medium text-gray-800">{collection.name}</div>
-                                          <div className="text-sm text-gray-500">
-                                              {groupedEntries[collection.id]?.length || 0} entries
-                                          </div>
-                                      </div>
-                                  </div>
-                                  <ChevronDown
-                                      className={`w-5 h-5 text-gray-400 transition-transform ${expandedCollection === collection.id ? 'transform rotate-180' : ''}`}
-                                  />
-                              </div>
-                          </div>
+        {/* Footer */}
+        <div className="px-4 pb-3 pt-2 border-t border-gray-100">
+          {/* Collections */}
+          <div className="flex flex-wrap gap-2 mb-2">
+            {entry.collections?.map(collectionId => {
+              const collection = [...SYSTEM_COLLECTIONS, ...collections].find(c => c.id === collectionId);
+              return collection ? (
+                <span key={collectionId} className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-full">
+                  {collection.name}
+                </span>
+              ) : null;
+            })}
+          </div>
 
-                          {expandedCollection === collection.id && groupedEntries[collection.id] && (
-                              <div className="mt-4 pl-4 border-l-2 border-gray-200 ml-5">
-                                  {groupedEntries[collection.id].map(entry => renderEntryCard(entry))}
-                              </div>
-                          )}
-                      </div>
+          {/* Recipients */}
+          <div className="flex flex-wrap gap-2">
+            {entry.recipients?.map(id => {
+              const person = individuals.find(p => p.id === id);
+              return person ? (
+                <span key={person.id} className="inline-flex items-center px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full">
+                  <span className={`w-2 h-2 rounded-full ${person.color} mr-1`}></span>
+                  {person.name}
+                </span>
+              ) : null;
+            })}
+          </div>
+        </div>
+      </div>
+    );
+
+    // Get unique topics and recipients for filters
+    const allTopics = [...new Set(insights.flatMap(entry => entry.topics || []))];
+    const allRecipients = individuals.map(person => person.id);
+
+    // Modify the collections rendering to filter based on collectionFilter
+    const filteredSystemCollections = SYSTEM_COLLECTIONS.filter(collection => {
+      const hasEntries = groupedEntries[collection.id]?.length > 0;
+      if (!hasEntries) return false;
+
+      if (collectionFilter === 'person') {
+        // Only show collections that have entries with recipients
+        return groupedEntries[collection.id].some(entry => entry.recipients?.length > 0);
+      }
+      if (collectionFilter === 'occasion') {
+        // System collections aren't occasions, so hide them in this view
+        return false;
+      }
+      return true;
+    });
+
+    const filteredUserCollections = collections.filter(collection => {
+      const hasEntries = groupedEntries[collection.id]?.length > 0;
+      if (!hasEntries) return false;
+
+      if (collectionFilter === 'person') {
+        return collection.type === 'person' ||
+               groupedEntries[collection.id].some(entry => entry.recipients?.length > 0);
+      }
+      if (collectionFilter === 'occasion') {
+        return collection.type === 'occasion';
+      }
+      return true;
+    });
+
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-blue-50 to-indigo-50 pb-20">
+        <Header />
+
+        <div className="p-4">
+          {/* Search Bar (migrated from LibraryView) */}
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 mb-6 shadow-sm border border-white/50">
+            <form onSubmit={handleSearch} className="flex items-center gap-2">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search your wisdom..."
+                  className="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={isSearching}
+                className="bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600 transition-colors"
+              >
+                {isSearching ? (
+                  <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                ) : (
+                  <Search className="w-4 h-4" />
+                )}
+              </button>
+
+              <button
+                onClick={() => setShowFilters(!showFilters)}
+                className={`p-2 rounded-lg transition-colors ${showFilters ? 'bg-blue-100 text-blue-600' : 'hover:bg-gray-100 text-gray-600'}`}
+                aria-label={showFilters ? "Hide filters" : "Show filters"}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                </svg>
+              </button>
+            </form>
+
+            {/* Filters section */}
+            {showFilters && (
+              <div className="mt-3 pt-3 border-t border-gray-100 space-y-3">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-xs font-medium text-gray-500">FILTER BY:</span>
+                  {allTopics.map(topic => (
+                    <button
+                      key={topic}
+                      onClick={() => toggleFilter('topics', topic)}
+                      className={`px-2.5 py-1 rounded-full text-xs ${
+                        selectedFilters.topics.includes(topic)
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
+                    >
+                      {topic}
+                    </button>
                   ))}
+                </div>
 
-                  <button className="w-full bg-gray-50 border-2 border-dashed border-gray-200 rounded-lg p-4 text-center text-gray-500 hover:bg-gray-100">
-                      <Plus className="w-5 h-5 mx-auto mb-1" />
-                      <div className="text-sm">Create New Collection</div>
-                  </button>
+                <div className="flex flex-wrap items-center gap-2">
+                  {allRecipients.map(id => {
+                    const person = individuals.find(p => p.id === id);
+                    return (
+                      <button
+                        key={id}
+                        onClick={() => toggleFilter('recipients', id)}
+                        className={`px-2.5 py-1 rounded-full text-xs flex items-center gap-1 ${
+                          selectedFilters.recipients.includes(id)
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        }`}
+                      >
+                        <span className={`w-2 h-2 rounded-full ${person.color}`}></span>
+                        {person.name}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2">
+                  {['insight', 'draft', 'voice'].map(type => (
+                    <button
+                      key={type}
+                      onClick={() => toggleFilter('entryTypes', type)}
+                      className={`px-2.5 py-1 rounded-full text-xs capitalize ${
+                        selectedFilters.entryTypes.includes(type)
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      }`}
+                    >
+                      {type}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Search Results Summary */}
+          {searchQuery.trim() && (
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-gray-800">
+                {searchResults.length} results for "{searchQuery}"
+              </h3>
+              <button
+                onClick={() => {
+                  setSearchQuery('');
+                  setSearchResults([]);
+                  setSelectedFilters({ topics: [], recipients: [], entryTypes: [] });
+                }}
+                className="text-blue-600 text-sm font-medium hover:text-blue-800"
+              >
+                Clear search
+              </button>
+            </div>
+          )}
+
+          {/* View Mode Toggle */}
+          <div className="flex bg-white rounded-lg p-1 mb-6">
+            <button
+              onClick={() => setViewMode('collections')}
+              className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+                viewMode === 'collections'
+                  ? 'bg-blue-600 text-white'
+                  : 'text-gray-600 hover:text-gray-800'
+              }`}
+            >
+              Collections
+            </button>
+            <button
+              onClick={() => setViewMode('books')}
+              className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+                viewMode === 'books'
+                  ? 'bg-blue-600 text-white'
+                  : 'text-gray-600 hover:text-gray-800'
+              }`}
+            >
+              Books
+            </button>
+          </div>
+
+          {/* Collections View */}
+          {viewMode === 'collections' && (
+            <>
+            <div className="mb-6">
+              <h3 className="text-md font-semibold text-gray-700 mb-3">General Collections</h3>
+              <div className="space-y-4">
+                {SYSTEM_COLLECTIONS.filter(collection => {
+                  // Only show collections that have entries
+                  return groupedEntries[collection.id]?.length > 0;
+                }).map(collection => (
+                  <div key={collection.id} className="mb-4">
+                    <div
+                      onClick={() => toggleCollection(collection.id)}
+                      className="bg-white rounded-lg p-4 cursor-pointer hover:bg-gray-50 transition-colors"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center">
+                          <div className={`w-10 h-10 rounded-lg ${collection.color} flex items-center justify-center mr-3`}>
+                            <FolderOpen className="w-5 h-5 text-white" />
+                          </div>
+                          <div>
+                            <div className="font-medium text-gray-800">{collection.name}</div>
+                            <div className="text-sm text-gray-500">
+                              {groupedEntries[collection.id]?.length || 0} insights
+                            </div>
+                          </div>
+                        </div>
+                        <ChevronDown
+                          className={`w-5 h-5 text-gray-400 transition-transform ${expandedCollection === collection.id ? 'transform rotate-180' : ''}`}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Expanded content for this collection */}
+                    {expandedCollection === collection.id && groupedEntries[collection.id] && (
+                      <div className="mt-3 pl-4 border-l-2 border-gray-200 ml-5">
+                        {groupedEntries[collection.id].map(entry => renderEntryCard(entry))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* User Collections (including special occasions) */}
+            {filteredUserCollections.length > 0 && (
+              <div className="mb-6">
+                <h3 className="text-md font-semibold text-gray-700 mb-3">Your Collections</h3>
+                {filteredUserCollections.map(collection => (
+                  <div key={collection.id} className="mb-4">
+                    <div
+                      onClick={() => toggleCollection(collection.id)}
+                      className="bg-white rounded-lg p-4 cursor-pointer hover:bg-gray-50 transition-colors"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center">
+                          <div className={`w-10 h-10 rounded-lg ${collection.color} flex items-center justify-center mr-3`}>
+                            {collection.type === 'occasion' ? (
+                              <Calendar className="w-5 h-5 text-white" />
+                            ) : (
+                              <FolderOpen className="w-5 h-5 text-white" />
+                            )}
+                          </div>
+                          <div>
+                            <div className="font-medium text-gray-800">{collection.name}</div>
+                            <div className="text-sm text-gray-500">
+                              {groupedEntries[collection.id]?.length || 0} insights
+                              {collection.recipient && ` • For ${collection.recipient}`}
+                            </div>
+                          </div>
+                        </div>
+                        <ChevronDown
+                          className={`w-5 h-5 text-gray-400 transition-transform ${expandedCollection === collection.id ? 'transform rotate-180' : ''}`}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Expanded content for this collection */}
+                    {expandedCollection === collection.id && groupedEntries[collection.id] && (
+                      <div className="mt-3 pl-4 border-l-2 border-gray-200 ml-5">
+                        {groupedEntries[collection.id].map(entry => renderEntryCard(entry))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+            </>
+          )}
+
+          {/* Books View */}
+          {viewMode === 'books' && (
+            <div>
+              <div className="mb-6">
+                <div className="flex items-center justify-between mb-3">
+                  <h2 className="text-lg font-semibold text-gray-800">Living Bookshelf</h2>
+                  <span className="text-sm text-gray-500">{sharedBooks.length} books</span>
+                </div>
+                <p className="text-sm text-gray-600 mb-4">
+                  Curated collections and books you've created to share with your loved ones.
+                </p>
+
+                <div className="space-y-4">
+                  {sharedBooks.map(book => (
+                    <div key={book.id} className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100">
+                      <div className="p-4">
+                        <div className="flex items-start">
+                          <div className={`w-12 h-12 rounded-lg ${book.color} flex items-center justify-center mr-3 flex-shrink-0`}>
+                            <Book className="w-6 h-6 text-white" />
+                          </div>
+                          <div className="flex-1">
+                            <h3 className="font-semibold text-gray-800 mb-1">{book.name}</h3>
+                            <p className="text-sm text-gray-600 mb-2">{book.description}</p>
+                            <div className="flex items-center gap-3 text-xs text-gray-500">
+                              <span>{book.pages.length / 2} chapters</span>
+                              <span>•</span>
+                              <span>For {book.recipient}</span>
+                              <span>•</span>
+                              <span>Updated {book.lastUpdated}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="px-4 pb-3 border-t border-gray-100">
+                        <div className="flex items-center justify-between pt-3">
+                          <div className="flex items-center gap-2">
+                            <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
+                              <span className="text-xs font-medium text-blue-600">
+                                {book.recipient === 'Sage' ? 'S' : book.recipient === 'Cohen' ? 'B' : 'B'}
+                              </span>
+                            </div>
+                            <span className="text-xs text-gray-600">
+                              {book.recipient === 'Both kids' ? 'Shared with both children' : `Shared with ${book.recipient}`}
+                            </span>
+                          </div>
+                          <button
+                            onClick={() => {
+                              setSelectedBook(book);
+                              setCurrentPage(0); // Reset to first page when opening a book
+                            }}
+                            className="text-xs font-medium text-blue-600 hover:text-blue-800"
+                          >
+                            View Book
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
 
-              {/* Tag Editor Modal */}
-              {showTagEditor && selectedEntry && (
-                  <TagEditor
-                      entry={selectedEntry}
-                      onClose={() => {
-                          setShowTagEditor(false);
-                          setSelectedEntry(null);
-                      }}
-                      onSave={() => {
-                          console.log('Saving entry organization');
-                      }}
-                  />
-              )}
+              {/* Create New Book Section */}
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-100">
+                <div className="flex items-center mb-2">
+                  <Heart className="w-5 h-5 text-blue-600 mr-2" />
+                  <span className="font-medium text-gray-800">Create a New Book</span>
+                </div>
+                <p className="text-sm text-gray-600 mb-3">
+                  Turn your insights into a meaningful collection for someone special.
+                </p>
+                <button
+                  className="w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white py-2 px-4 rounded-lg font-medium flex items-center justify-center gap-2"
+                  onClick={() => setCurrentView('createBook')}
+                >
+                  <Plus size={16} />
+                  Start New Book
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Tag Editor Modal */}
+        {showTagEditor && selectedEntry && (
+          <TagEditor
+            entry={selectedEntry}
+            onClose={() => {
+              setShowTagEditor(false);
+              setSelectedEntry(null);
+            }}
+            onSave={() => {
+              console.log('Saving entry organization');
+            }}
+          />
+        )}
+
+        {/* Book Preview Modal (migrated from LibraryView) */}
+        {selectedBook && (
+          <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
+            <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[95vh] overflow-hidden flex flex-col">
+              {/* Header */}
+              <div className="relative bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-100">
+                <div className="flex items-center justify-between p-6">
+                  <div className="flex items-center space-x-3">
+                    <div className={`w-10 h-10 ${selectedBook.color} rounded-lg flex items-center justify-center shadow-lg`}>
+                      <BookOpen className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold text-blue-800 tracking-wide">
+                        {selectedBook.name}
+                      </h3>
+                      <p className="text-sm text-blue-600 font-medium">
+                        For {selectedBook.recipient}
+                      </p>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => setSelectedBook(null)}
+                    className="w-10 h-10 rounded-full bg-white bg-opacity-70 hover:bg-opacity-100 flex items-center justify-center text-blue-600 hover:text-blue-800 transition-all duration-200 shadow-lg hover:shadow-xl"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Book Content - Fixed size container */}
+              <div className="flex-1 bg-gradient-to-br from-blue-50 to-indigo-50 flex items-center justify-center p-8">
+                <div className="relative w-full max-w-md h-[500px]">
+                  <div className={`relative bg-white rounded-lg shadow-xl border border-blue-200 h-full overflow-y-auto ${isFlipping ? 'scale-95 opacity-70' : 'scale-100 opacity-100'}`}>
+                    {/* Current Page Content */}
+                    <div className="p-8 h-full flex flex-col">
+                      {selectedBook.pages[currentPage].type === 'question' ? (
+                        <>
+                          <div className="mb-6">
+                            <div className="inline-block px-3 py-1 bg-blue-100 rounded-full">
+                              <span className="text-xs font-semibold text-blue-700 uppercase tracking-wider">
+                                Question
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="flex-1 flex items-center justify-center min-h-[300px]">
+                            <p className="text-lg text-blue-800 text-center italic">
+                              {selectedBook.pages[currentPage].content}
+                            </p>
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <div className="mb-6">
+                            <div className="inline-block px-3 py-1 bg-blue-100 rounded-full">
+                              <span className="text-xs font-semibold text-blue-700 uppercase tracking-wider">
+                                Your Insight
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="flex-1 min-h-[300px]">
+                            <p className="text-blue-800 mb-4">
+                              {selectedBook.pages[currentPage].content.text}
+                            </p>
+                            <ul className="space-y-2 text-blue-700">
+                              {selectedBook.pages[currentPage].content.points.map((point, i) => (
+                                <li key={i} className="flex items-start">
+                                  <span className="text-blue-500 mr-2">•</span>
+                                  <span>{point}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        </>
+                      )}
+
+                      <div className="mt-auto pt-4 text-center">
+                        <span className="text-xs text-blue-300 font-medium">
+                          Page {selectedBook.pages[currentPage].pageNumber}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Navigation Arrows */}
+                {currentPage > 0 && (
+                  <button
+                    onClick={() => flipPage('prev')}
+                    className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-white bg-opacity-80 hover:bg-opacity-100 rounded-full shadow-lg hover:shadow-xl flex items-center justify-center text-blue-600 hover:text-blue-800 transition-all duration-200"
+                  >
+                    <ChevronLeft className="w-5 h-5" />
+                  </button>
+                )}
+
+                {currentPage < selectedBook.pages.length - 1 && (
+                  <button
+                    onClick={() => flipPage('next')}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-white bg-opacity-80 hover:bg-opacity-100 rounded-full shadow-lg hover:shadow-xl flex items-center justify-center text-blue-600 hover:text-blue-800 transition-all duration-200"
+                  >
+                    <ChevronRight className="w-5 h-5" />
+                  </button>
+                )}
+              </div>
+
+              {/* Page Indicators */}
+              <div className="flex justify-center py-3 bg-blue-50 border-t border-blue-100">
+                <div className="flex space-x-2">
+                  {selectedBook.pages.map((_, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => !isFlipping && setCurrentPage(idx)}
+                      className={`w-2 h-2 rounded-full transition-all duration-200 ${
+                        idx === currentPage
+                          ? 'bg-blue-600 scale-125'
+                          : 'bg-blue-200 hover:bg-blue-300'
+                      }`}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              {/* Icon-only Action Buttons */}
+              <div className="flex justify-center gap-4 p-4 bg-blue-50 border-t border-blue-100">
+                <button className="p-3 rounded-full bg-blue-100 text-blue-600 hover:bg-blue-200 transition-colors" title="Download PDF">
+                  <Download className="w-5 h-5" />
+                </button>
+                <button className="p-3 rounded-full bg-blue-100 text-blue-600 hover:bg-blue-200 transition-colors" title="Print">
+                  <Printer className="w-5 h-5" />
+                </button>
+                <button className="p-3 rounded-full bg-blue-100 text-blue-600 hover:bg-blue-200 transition-colors" title="Order">
+                  <ShoppingCart className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
           </div>
-      );
+        )}
+      </div>
+    );
   };
 
   const LibraryView = ({ resetForm }) => {
