@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
-  Send, Mic, MicOff, ArrowRight, Check, Plus, User, Mail, Hash,
+  Send, Mic, MicOff, ArrowRight, Check, Plus, User, Mail, Hash, Inbox,
   MessageCircle, Wand2, BookOpen, Share2, ChevronLeft, X, Download,
   Sparkles, Printer, ShoppingCart, ChevronDown, ChevronUp, Home,
   MessageSquare, Book, FolderOpen, Search, Tag, Clock, ChevronRight,
@@ -1301,8 +1301,8 @@ const WellSaidApp = () => {
   const upcomingEvents = [
     {
       id: 1,
-      name: "Sage's Graduation",
-      type: "graduation", // Explicit type
+      name: "Sage's Summer Intensive",
+      type: "trip", // Explicit type
       date: '2025-06-15',
       daysAway: 27
     },
@@ -2847,35 +2847,13 @@ const WellSaidApp = () => {
     );
   };
 
-const OrganizeView = () => {
-    const [organizeView, setOrganizeView] = useState('inbox');
-    const [selectedEntries, setSelectedEntries] = useState([]);
-    const [bulkAction, setBulkAction] = useState('');
-    const [showTagEditor, setShowTagEditor] = useState(false);
-    const [selectedEntry, setSelectedEntry] = useState(null);
-
-    const unorganizedEntries = insights.filter(entry => !entry.collection);
-
+  const TagEditor = ({ entry, onClose, onSave }) => {
     const topicSuggestions = [
       "Parenting", "Relationships", "Work", "Money", "Health", "Faith",
       "Education", "Life Skills", "Character", "Dreams"
     ];
 
-    const handleEntrySelect = (entryId) => {
-      setSelectedEntries(prev =>
-        prev.includes(entryId)
-          ? prev.filter(id => id !== entryId)
-          : [...prev, entryId]
-      );
-    };
-
-    const handleBulkAction = () => {
-      if (bulkAction === 'tag' && selectedEntries.length > 0) {
-        setShowTagEditor(true);
-      }
-    };
-
-    const TagEditor = ({ entry, onClose, onSave }) => (
+    return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
         <div className="bg-white rounded-lg p-6 w-full max-w-sm">
           <div className="flex items-center justify-between mb-4">
@@ -2937,264 +2915,258 @@ const OrganizeView = () => {
         </div>
       </div>
     );
+  };
 
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-blue-50 to-indigo-50 pb-20">
-        <Header />
+  const OrganizeView = () => {
+      const [selectedEntries, setSelectedEntries] = useState([]);
+      const [bulkAction, setBulkAction] = useState('');
+      const [showTagEditor, setShowTagEditor] = useState(false);
+      const [selectedEntry, setSelectedEntry] = useState(null);
+      const [expandedCollection, setExpandedCollection] = useState(null);
 
-        <div className="p-4">
-          {/* Tab Navigation */}
-          <div className="flex bg-white rounded-lg p-1 mb-6">
-            <button
-              onClick={() => setOrganizeView('inbox')}
-              className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
-                organizeView === 'inbox'
-                  ? 'bg-blue-600 text-white'
-                  : 'text-gray-600 hover:text-gray-800'
-              }`}
-            >
-              Inbox ({unorganizedEntries.length})
-            </button>
-            <button
-              onClick={() => setOrganizeView('collections')}
-              className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
-                organizeView === 'collections'
-                  ? 'bg-blue-600 text-white'
-                  : 'text-gray-600 hover:text-gray-800'
-              }`}
-            >
-              Collections
-            </button>
-            <button
-              onClick={() => setOrganizeView('tags')}
-              className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
-                organizeView === 'tags'
-                  ? 'bg-blue-600 text-white'
-                  : 'text-gray-600 hover:text-gray-800'
-              }`}
-            >
-              Tags
-            </button>
-          </div>
+      // Group entries by collection
+      const groupedEntries = insights.reduce((acc, entry) => {
+          const collectionId = entry.collection || 'unorganized';
+          if (!acc[collectionId]) {
+              acc[collectionId] = [];
+          }
+          acc[collectionId].push(entry);
+          return acc;
+      }, {});
 
-          {/* Inbox View */}
-          {organizeView === 'inbox' && (
-            <div>
-              <div className="bg-blue-50 rounded-lg p-4 mb-4">
-                <div className="flex items-center mb-2">
-                  <FolderOpen className="w-5 h-5 text-blue-600 mr-2" />
-                  <span className="font-medium text-blue-800">Organization Inbox</span>
-                </div>
-                <p className="text-sm text-blue-700">
-                  {unorganizedEntries.length} items need tags, topics, or collections.
-                </p>
-              </div>
+      const topicSuggestions = [
+          "Parenting", "Relationships", "Work", "Money", "Health", "Faith",
+          "Education", "Life Skills", "Character", "Dreams"
+      ];
 
-              {/* Bulk Actions */}
-              {selectedEntries.length > 0 && (
-                <div className="bg-white rounded-lg p-3 mb-4 flex items-center justify-between">
-                  <span className="text-sm text-gray-600">{selectedEntries.length} selected</span>
-                  <div className="flex gap-2">
-                    <select
-                      value={bulkAction}
-                      onChange={(e) => setBulkAction(e.target.value)}
-                      className="text-sm border border-gray-200 rounded px-2 py-1"
-                    >
-                      <option value="">Bulk actions...</option>
-                      <option value="tag">Add tags</option>
-                      <option value="topic">Set topic</option>
-                      <option value="collection">Add to collection</option>
-                    </select>
-                    <button
-                      onClick={handleBulkAction}
-                      className="bg-blue-600 text-white px-3 py-1 rounded text-sm"
-                    >
-                      Apply
-                    </button>
-                  </div>
-                </div>
-              )}
+      const handleEntrySelect = (entryId) => {
+          setSelectedEntries(prev =>
+              prev.includes(entryId)
+                  ? prev.filter(id => id !== entryId)
+                  : [...prev, entryId]
+          );
+      };
 
-              {/* Enhanced Entry List with Q&A Cards */}
-              <div className="space-y-4">
-                {unorganizedEntries.map(entry => (
-                  <div
-                    key={entry.id}
-                    className={`bg-white rounded-xl overflow-hidden shadow-sm border ${selectedEntries.includes(entry.id) ? 'border-blue-500' : 'border-gray-100'}`}
-                  >
-                    <div className="flex items-center p-3 border-b border-gray-100 bg-gray-50">
-                      <input
-                        type="checkbox"
-                        checked={selectedEntries.includes(entry.id)}
-                        onChange={() => handleEntrySelect(entry.id)}
-                        className="mr-3 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                      />
-                      <div className="flex-1 flex items-center justify-between">
-                        <div className="flex items-center space-x-2">
+      const handleBulkAction = () => {
+          if (bulkAction === 'tag' && selectedEntries.length > 0) {
+              setShowTagEditor(true);
+          }
+      };
+
+      const toggleCollection = (collectionId) => {
+          setExpandedCollection(expandedCollection === collectionId ? null : collectionId);
+      };
+
+      const renderEntryCard = (entry) => (
+          <div
+              key={entry.id}
+              className={`bg-white rounded-xl overflow-hidden shadow-sm border ${selectedEntries.includes(entry.id) ? 'border-blue-500' : 'border-gray-100'} mb-4`}
+          >
+              <div className="flex items-center p-3 border-b border-gray-100 bg-gray-50">
+                  <input
+                      type="checkbox"
+                      checked={selectedEntries.includes(entry.id)}
+                      onChange={() => handleEntrySelect(entry.id)}
+                      className="mr-3 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  />
+                  <div className="flex-1 flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
                           {entry.isVoiceNote && (
-                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800">
-                              <Mic className="w-3 h-3 mr-1" /> Voice Note
-                            </span>
+                              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800">
+                                  <Mic className="w-3 h-3 mr-1" /> Voice Note
+                              </span>
                           )}
                           {entry.isDraft && (
-                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-orange-100 text-orange-800">
-                              Draft
-                            </span>
+                              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-orange-100 text-orange-800">
+                                  Draft
+                              </span>
                           )}
                           <span className="text-xs text-gray-500">
-                            {new Date(entry.date).toLocaleDateString()}
+                              {new Date(entry.date).toLocaleDateString()}
                           </span>
-                        </div>
-                        <button
+                      </div>
+                      <button
                           onClick={() => {
-                            setSelectedEntry(entry);
-                            setShowTagEditor(true);
+                              setSelectedEntry(entry);
+                              setShowTagEditor(true);
                           }}
                           className="text-sm font-medium text-blue-600 hover:text-blue-800"
-                        >
+                      >
                           Organize
-                        </button>
-                      </div>
-                    </div>
+                      </button>
+                  </div>
+              </div>
 
-                    {/* Q&A Card */}
-                    <div className="p-4">
-                      <div className="mb-4">
-                        <div className="flex items-center mb-1">
+              <div className="p-4">
+                  <div className="mb-4">
+                      <div className="flex items-center mb-1">
                           <span className="text-xs font-semibold text-blue-600 uppercase tracking-wider">Question</span>
-                        </div>
-                        <div className="bg-blue-50 rounded-lg p-3 text-sm text-gray-800">
+                      </div>
+                      <div className="bg-blue-50 rounded-lg p-3 text-sm text-gray-800">
                           {entry.question || "What would you like to share?"}
-                        </div>
                       </div>
+                  </div>
 
-                      <div className="">
-                        <div className="flex items-center mb-1">
+                  <div className="">
+                      <div className="flex items-center mb-1">
                           <span className="text-xs font-semibold text-green-600 uppercase tracking-wider">Answer</span>
-                        </div>
-                        <div className="bg-green-50 rounded-lg p-3 text-sm text-gray-800">
+                      </div>
+                      <div className="bg-green-50 rounded-lg p-3 text-sm text-gray-800">
                           {entry.text || entry.content || "No content yet"}
-                        </div>
                       </div>
-                    </div>
+                  </div>
+              </div>
 
-                    {/* Tags and Recipients */}
-                    <div className="px-4 pb-3 pt-2 border-t border-gray-100">
-                      <div className="flex flex-wrap gap-2 mb-2">
-                        {entry.topics?.map(topic => (
+              <div className="px-4 pb-3 pt-2 border-t border-gray-100">
+                  <div className="flex flex-wrap gap-2 mb-2">
+                      {entry.topics?.map(topic => (
                           <span key={topic} className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-full">
-                            {topic}
+                              {topic}
                           </span>
-                        ))}
-                      </div>
-                      <div className="flex flex-wrap gap-2">
-                        {entry.recipients?.map(id => {
+                      ))}
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                      {entry.recipients?.map(id => {
                           const person = individuals.find(p => p.id === id);
                           return person ? (
-                            <span key={person.id} className="inline-flex items-center px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full">
-                              <span className={`w-2 h-2 rounded-full ${person.color} mr-1`}></span>
-                              {person.name}
-                            </span>
+                              <span key={person.id} className="inline-flex items-center px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full">
+                                  <span className={`w-2 h-2 rounded-full ${person.color} mr-1`}></span>
+                                  {person.name}
+                              </span>
                           ) : null;
-                        })}
-                      </div>
-                    </div>
+                      })}
                   </div>
-                ))}
               </div>
-            </div>
-          )}
+          </div>
+      );
 
-          {/* Collections View */}
-          {organizeView === 'collections' && (
-            <div>
-              <div className="mb-4">
-                <div className="flex items-center justify-between mb-3">
-                  <h2 className="text-lg font-semibold text-gray-800">Collections</h2>
-                  <span className="text-sm text-gray-500">{collections.length} collections</span>
-                </div>
-                <p className="text-sm text-gray-600 mb-4">
-                  Group related entries into meaningful collections and books.
-                </p>
-              </div>
+      return (
+          <div className="min-h-screen bg-gradient-to-br from-blue-50 via-blue-50 to-indigo-50 pb-20">
+              <Header />
 
-              {collections.map(collection => (
-                <div key={collection.id} className="bg-white rounded-lg p-4 mb-3">
-                  <div className="flex items-center">
-                    <div className={`w-10 h-10 rounded-lg ${collection.color} flex items-center justify-center mr-3`}>
-                      <FolderOpen className="w-5 h-5 text-white" />
-                    </div>
-                    <div>
-                      <div className="font-medium text-gray-800">{collection.name}</div>
-                      <div className="text-sm text-gray-500">{collection.count} entries</div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-
-              <button className="w-full bg-gray-50 border-2 border-dashed border-gray-200 rounded-lg p-4 text-center text-gray-500 hover:bg-gray-100">
-                <Plus className="w-5 h-5 mx-auto mb-1" />
-                <div className="text-sm">Create New Collection</div>
-              </button>
-            </div>
-          )}
-
-          {/* Tags View */}
-          {organizeView === 'tags' && (
-            <div>
-              <div className="mb-4">
-                <h2 className="text-lg font-semibold text-gray-800 mb-3">Tag Management</h2>
-                <p className="text-sm text-gray-600 mb-4">
-                  Organize and manage your tags to keep your content structured.
-                </p>
-              </div>
-
-              <div className="bg-white rounded-lg p-4 mb-4">
-                <h3 className="font-medium text-gray-800 mb-3">Topics</h3>
-                <div className="flex flex-wrap gap-2">
-                  {topicSuggestions.map(topic => (
-                    <span key={topic} className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm">
-                      {topic}
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-              <div className="bg-white rounded-lg p-4">
-                <h3 className="font-medium text-gray-800 mb-3">People Tags</h3>
-                <div className="space-y-2">
-                  {individuals.map(person => (
-                    <div key={person.id} className="flex items-center justify-between py-2">
-                      <div className="flex items-center">
-                        <div className={`w-6 h-6 rounded-full ${person.color} flex items-center justify-center mr-3`}>
-                          <span className="text-white text-xs font-bold">{person.avatar}</span>
-                        </div>
-                        <span className="text-gray-800">{person.name}</span>
+              <div className="p-4">
+                  <div className="mb-4">
+                      <div className="flex items-center justify-between mb-3">
+                          <h2 className="text-lg font-semibold text-gray-800">Collections</h2>
+                          <span className="text-sm text-gray-500">{collections.length} collections</span>
                       </div>
-                      <span className="text-xs text-gray-500">2 entries</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
+                      <p className="text-sm text-gray-600 mb-4">
+                          Group related entries into meaningful collections and books.
+                      </p>
+                  </div>
 
-          {/* Tag Editor Modal */}
-          {showTagEditor && selectedEntry && (
-            <TagEditor
-              entry={selectedEntry}
-              onClose={() => {
-                setShowTagEditor(false);
-                setSelectedEntry(null);
-              }}
-              onSave={() => {
-                console.log('Saving entry organization');
-              }}
-            />
-          )}
-        </div>
-      </div>
-    );
+                  {/* Unorganized Collection */}
+                  {groupedEntries.unorganized && groupedEntries.unorganized.length > 0 && (
+                      <div className="mb-6">
+                          <div
+                              onClick={() => toggleCollection('unorganized')}
+                              className="bg-white rounded-lg p-4 cursor-pointer hover:bg-gray-50 transition-colors"
+                          >
+                              <div className="flex items-center justify-between">
+                                  <div className="flex items-center">
+                                      <div className="w-10 h-10 rounded-lg bg-blue-600 flex items-center justify-center mr-3">
+                                          <Inbox className="w-5 h-5 text-white" />
+                                      </div>
+                                      <div>
+                                          <div className="font-medium text-gray-800">Unorganized</div>
+                                          <div className="text-sm text-gray-500">
+                                              {groupedEntries.unorganized.length} entries needing organization
+                                          </div>
+                                      </div>
+                                  </div>
+                                  <ChevronDown
+                                      className={`w-5 h-5 text-gray-400 transition-transform ${expandedCollection === 'unorganized' ? 'transform rotate-180' : ''}`}
+                                  />
+                              </div>
+                          </div>
+
+                          {expandedCollection === 'unorganized' && (
+                              <div className="mt-4 pl-4 border-l-2 border-gray-200 ml-5">
+                                  {/* Bulk Actions */}
+                                  {selectedEntries.length > 0 && (
+                                      <div className="bg-white rounded-lg p-3 mb-4 flex items-center justify-between">
+                                          <span className="text-sm text-gray-600">{selectedEntries.length} selected</span>
+                                          <div className="flex gap-2">
+                                              <select
+                                                  value={bulkAction}
+                                                  onChange={(e) => setBulkAction(e.target.value)}
+                                                  className="text-sm border border-gray-200 rounded px-2 py-1"
+                                              >
+                                                  <option value="">Bulk actions...</option>
+                                                  <option value="tag">Add tags</option>
+                                                  <option value="topic">Set topic</option>
+                                                  <option value="collection">Add to collection</option>
+                                              </select>
+                                              <button
+                                                  onClick={handleBulkAction}
+                                                  className="bg-blue-600 text-white px-3 py-1 rounded text-sm"
+                                              >
+                                                  Apply
+                                              </button>
+                                          </div>
+                                      </div>
+                                  )}
+
+                                  {groupedEntries.unorganized.map(entry => renderEntryCard(entry))}
+                              </div>
+                          )}
+                      </div>
+                  )}
+
+                  {/* User Collections */}
+                  {collections.map(collection => (
+                      <div key={collection.id} className="mb-6">
+                          <div
+                              onClick={() => toggleCollection(collection.id)}
+                              className="bg-white rounded-lg p-4 cursor-pointer hover:bg-gray-50 transition-colors"
+                          >
+                              <div className="flex items-center justify-between">
+                                  <div className="flex items-center">
+                                      <div className={`w-10 h-10 rounded-lg ${collection.color} flex items-center justify-center mr-3`}>
+                                          <FolderOpen className="w-5 h-5 text-white" />
+                                      </div>
+                                      <div>
+                                          <div className="font-medium text-gray-800">{collection.name}</div>
+                                          <div className="text-sm text-gray-500">
+                                              {groupedEntries[collection.id]?.length || 0} entries
+                                          </div>
+                                      </div>
+                                  </div>
+                                  <ChevronDown
+                                      className={`w-5 h-5 text-gray-400 transition-transform ${expandedCollection === collection.id ? 'transform rotate-180' : ''}`}
+                                  />
+                              </div>
+                          </div>
+
+                          {expandedCollection === collection.id && groupedEntries[collection.id] && (
+                              <div className="mt-4 pl-4 border-l-2 border-gray-200 ml-5">
+                                  {groupedEntries[collection.id].map(entry => renderEntryCard(entry))}
+                              </div>
+                          )}
+                      </div>
+                  ))}
+
+                  <button className="w-full bg-gray-50 border-2 border-dashed border-gray-200 rounded-lg p-4 text-center text-gray-500 hover:bg-gray-100">
+                      <Plus className="w-5 h-5 mx-auto mb-1" />
+                      <div className="text-sm">Create New Collection</div>
+                  </button>
+              </div>
+
+              {/* Tag Editor Modal */}
+              {showTagEditor && selectedEntry && (
+                  <TagEditor
+                      entry={selectedEntry}
+                      onClose={() => {
+                          setShowTagEditor(false);
+                          setSelectedEntry(null);
+                      }}
+                      onSave={() => {
+                          console.log('Saving entry organization');
+                      }}
+                  />
+              )}
+          </div>
+      );
   };
 
   const LibraryView = ({ resetForm }) => {
