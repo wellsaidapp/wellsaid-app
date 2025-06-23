@@ -1714,17 +1714,17 @@ const WellSaidApp = () => {
             pages: [
                 {
                     type: "question",
-                    content: "What are your hopes for Sage during this summer intensive?",
+                    content: "What are your hopes for Truett as he enters this next chapter of school?",
                     pageNumber: 1
                 },
                 {
                     type: "answer",
                     content: {
-                        text: "My hopes for Sage during this transformative experience:",
+                        text: "My hopes for Truett as he graduates from Scofield are:",
                         points: [
-                            "That she discovers new strengths in herself",
-                            "She makes lasting connections with fellow dancers",
-                            "She learns to push through challenges with grace"
+                            "That he stays true to himself and is authentic",
+                            "That he continues to develop the relationships he's formed",
+                            "That he makes new lasting relationships at FBA"
                         ]
                     },
                     pageNumber: 2
@@ -1751,9 +1751,9 @@ const WellSaidApp = () => {
                     content: {
                         text: "Memories that stand out from this past year:",
                         points: [
-                            "His dedication to learning guitar",
-                            "How he stepped up as a big brother",
-                            "His growing sense of humor and wit"
+                            "His eagerness to learn how to drive",
+                            "The way he captivated audiences in Beauty and the Beast",
+                            "His maturity and commitment to press into relationships"
                         ]
                     },
                     pageNumber: 2
