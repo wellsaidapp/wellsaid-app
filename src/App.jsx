@@ -1077,7 +1077,13 @@ const WellSaidApp = () => {
   const [individuals, setIndividuals] = useState([
     { id: 1, name: 'Sage', age: 15, relationship: 'Daughter', avatar: 'S', gender: 'female', color: 'bg-blue-500' },
     { id: 2, name: 'Cohen', age: 16, relationship: 'Son', avatar: 'C', gender: 'male', color: 'bg-blue-500' },
-    { id: 3, name: 'Truett', age: 12, relationship: 'Son', avatar: 'T', gender: 'male', color: 'bg-blue-500' }
+    { id: 3, name: 'Ellie', age: 13, relationship: 'Daughter', avatar: 'E', gender: 'female', color: 'bg-blue-500' },
+    { id: 4, name: 'Truett', age: 12, relationship: 'Son', avatar: 'T', gender: 'male', color: 'bg-blue-500' },
+    { id: 5, name: 'Holland', age: 10, relationship: 'Daughter', avatar: 'H', gender: 'female', color: 'bg-blue-500' },
+    { id: 6, name: 'Sutton', age: 9, relationship: 'Daughter', avatar: 'S', gender: 'female', color: 'bg-blue-500' },
+    { id: 7, name: 'Foster', age: 7, relationship: 'Son', avatar: 'F', gender: 'male', color: 'bg-blue-500' },
+    { id: 8, name: 'Ledger', age: 5, relationship: 'Son', avatar: 'L', gender: 'male', color: 'bg-blue-500' },
+    { id: 9, name: 'Kove', age: 3, relationship: 'Son', avatar: 'K', gender: 'male', color: 'bg-blue-500' }
   ]);
   const [insights, setInsights] = useState([
     // Entry for Sage's Summer Intensive
@@ -2173,15 +2179,15 @@ const WellSaidApp = () => {
           }
         ],
         people: [
-          { id: '1', name: 'Sarah', relationship: 'daughter' },
-          { id: '2', name: 'Michael', relationship: 'son' }
+          { id: '1', name: 'Sage', relationship: 'daughter' },
+          { id: '2', name: 'Cohen', relationship: 'son' }
         ]
       });
 
       // Sample data
       const people = [
-        { id: '1', name: 'Sarah', relationship: 'daughter', interests: 'soccer, art' },
-        { id: '2', name: 'Michael', relationship: 'son', interests: 'science, basketball' }
+        { id: '1', name: 'Sage', relationship: 'daughter', interests: 'ballet, dance' },
+        { id: '2', name: 'Cohen', relationship: 'son', interests: 'business, basketball' }
       ];
 
       // NEW: Person creation state
@@ -2652,6 +2658,27 @@ const WellSaidApp = () => {
           }
       };
 
+      const handleSpecialOccasionResponse = (input) => {
+        const entry = {
+          text: input,
+          author: 'user',
+          date: new Date().toISOString(),
+          collection: 'milestone',
+          occasionDetails: occasion,
+        };
+
+        // Wrap up and return to neutral state
+        typeMessage(`Got it — your message for ${occasion.person.name} has been saved.`, true);
+        setConversationState('confirming'); // or 'idle', 'home', etc.
+        // Optional: thank the user
+        typeMessage(`Thanks for sharing that — it’s been added to your collection.`, true);
+
+        // Give it a moment before transitioning
+        setTimeout(() => {
+          setCurrentView('home');
+        }, 4000); // slight delay for smooth UX
+      };
+
       const handleMilestoneFreeform = (input) => {
           setOccasion(prev => ({
               ...prev,
@@ -2842,6 +2869,9 @@ const WellSaidApp = () => {
         } else if (conversationState === 'confirming') {
           handleConfirmation(input);
         }
+        else if (conversationState === 'special_occasion_active') {
+          handleSpecialOccasionResponse(input);
+        }
       };
 
     const startQuickCapture = () => {
@@ -2956,16 +2986,57 @@ const WellSaidApp = () => {
       setConversationState('confirming');
     };
 
-    const handleConfirmation = () => {
-      setShowOccasionConfirmation(false);
+    const startOccasionFlow = (occasion) => {
+      if (!occasion?.person?.name || !occasion?.type) return;
 
-      // Resume AI chat
-      setConversationState('chat'); // or whatever your active thread state is
-
-      // Optionally show a follow-up message
+      // Step 1: Friendly intro
       typeMessage(`Thanks! Let’s start capturing something meaningful for ${occasion.person.name}.`, true);
 
-      // Scroll to message thread
+      // Step 2: Occasion-specific question
+      const promptByOccasionType = {
+        wedding: `What advice or wisdom would you want ${occasion.person.name} to carry with them into marriage?`,
+        birthday: `What do you appreciate most about ${occasion.person.name} at this stage in life?`,
+        graduation: `What do you hope ${occasion.person.name} remembers as they begin this next chapter?`,
+        anniversary: `What memories stand out to you from the journey with ${occasion.person.name}?`,
+        birth: `What values or truths do you hope will shape ${occasion.person.name} as they grow up?`,
+        other: `What insight or reflection do you want to share with ${occasion.person.name} during this milestone?`
+      };
+
+      const nextPrompt = promptByOccasionType[occasion.type] || promptByOccasionType.other;
+      typeMessage(nextPrompt, true);
+
+      // Step 3: Set conversation state
+      setConversationState('special_occasion_active');
+      setShowOccasionConfirmation(false); // Hide modal
+      setShowPeopleSelection(false);      // Close people selection UI
+    };
+
+    const handleConfirmation = () => {
+      if (!occasion?.person?.name || !occasion?.type) return;
+
+      const promptByOccasionType = {
+        wedding: `What advice or wisdom would you want ${occasion.person.name} to carry with them into marriage?`,
+        birthday: `What do you appreciate most about ${occasion.person.name} at this stage in life?`,
+        graduation: `What do you hope ${occasion.person.name} remembers as they begin this next chapter?`,
+        anniversary: `What memories stand out to you from the journey with ${occasion.person.name}?`,
+        birth: `What values or truths do you hope will shape ${occasion.person.name} as they grow up?`,
+        other: `What insight or reflection do you want to share with ${occasion.person.name} during this milestone?`
+      };
+
+      const occasionLabel = promptByOccasionType[occasion.type] ? occasion.type : 'other';
+      const followUpPrompt = promptByOccasionType[occasionLabel];
+
+      // 1. Close modal
+      setShowOccasionConfirmation(false);
+
+      // 2. Set conversation context
+      setConversationState('special_occasion_active');
+
+      // 3. Send intro + question
+      typeMessage(`Thanks! Let’s start capturing something meaningful for ${occasion.person.name}.`, true);
+      typeMessage(followUpPrompt, true);
+
+      // 4. Scroll down
       setTimeout(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
       }, 100);
@@ -3045,9 +3116,9 @@ const WellSaidApp = () => {
         case 'milestone_complete':
             return "Choose 'save', 'share', or 'edit'";
         case 'milestone_init':
-            return "e.g., 'My sister's wedding', 'Dad's retirement'";
+            return "e.g., 'My daughter's wedding'";
         case 'milestone_confirm':
-            return "Tell me who and when (e.g., 'Emily's wedding in October')";
+            return "Tell me who and when (e.g., 'Sage's wedding in October')";
         case 'milestone_relationship':
             return "Describe your relationship...";
         case 'milestone_theme':
@@ -3257,48 +3328,50 @@ const WellSaidApp = () => {
         )}
 
         {/* Input Area - Fixed positioning */}
-        <div className="fixed bottom-[72px] left-0 right-0 px-4 z-20">
-          <div className="max-w-2xl mx-auto">
-            <div className="bg-white rounded-xl shadow-md p-3">
-              <div className="flex gap-2 items-end">
-                <div className="flex-1">
-                  <textarea
-                    value={currentInput}
-                    onChange={(e) => setCurrentInput(e.target.value)}
-                    placeholder={getPlaceholderText()}
-                    className="w-full p-2 border border-gray-200 rounded-xl focus:outline-none focus:border-blue-500 resize-none"
-                    rows={2}
-                    onKeyPress={(e) => {
-                      if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault();
-                        handleInputSubmit();
-                      }
-                    }}
-                  />
+        {conversationState !== 'milestone_init' && (
+          <div className="fixed bottom-[72px] left-0 right-0 px-4 z-20">
+            <div className="max-w-2xl mx-auto">
+              <div className="bg-white rounded-xl shadow-md p-3">
+                <div className="flex gap-2 items-end">
+                  <div className="flex-1">
+                    <textarea
+                      value={currentInput}
+                      onChange={(e) => setCurrentInput(e.target.value)}
+                      placeholder={getPlaceholderText()}
+                      className="w-full p-2 border border-gray-200 rounded-xl focus:outline-none focus:border-blue-500 resize-none"
+                      rows={2}
+                      onKeyPress={(e) => {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                          e.preventDefault();
+                          handleInputSubmit();
+                        }
+                      }}
+                    />
+                  </div>
+                  <button
+                    onClick={toggleRecording}
+                    className={`p-3 rounded-xl transition-colors ${
+                      isRecording ? 'bg-red-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    }`}
+                  >
+                    {isRecording ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
+                  </button>
+                  <button
+                    onClick={handleInputSubmit}
+                    disabled={!currentInput.trim()}
+                    className={`p-3 rounded-xl transition-colors ${
+                      currentInput.trim()
+                        ? 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600'
+                        : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                    }`}
+                  >
+                    <Send className="w-5 h-5" />
+                  </button>
                 </div>
-                <button
-                  onClick={toggleRecording}
-                  className={`p-3 rounded-xl transition-colors ${
-                    isRecording ? 'bg-red-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                  }`}
-                >
-                  {isRecording ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
-                </button>
-                <button
-                  onClick={handleInputSubmit}
-                  disabled={!currentInput.trim()}
-                  className={`p-3 rounded-xl transition-colors ${
-                    currentInput.trim()
-                      ? 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600'
-                      : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                  }`}
-                >
-                  <Send className="w-5 h-5" />
-                </button>
               </div>
             </div>
           </div>
-        </div>
+        )}
 
         {/* Bottom navigation - fixed position */}
         <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow z-10 h-[56px]">
