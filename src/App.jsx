@@ -1053,6 +1053,23 @@ const WellSaidApp = () => {
   const [showLogin, setShowLogin] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [currentTopic, setCurrentTopic] = useState(null); // Add this line
+  const startQuickCaptureFromCollection = (collection) => {
+    const topicName = collection.name; // or map it to a standard topic if needed
+
+    const topicObject = {
+      name: topicName,
+      tags: [topicName.toLowerCase()], // could add predefined tags if needed
+    };
+
+    setCurrentTopic(topicObject); // sets context for quick capture
+    setConversationState('quick_capture_response'); // enter quick capture flow
+
+    typeMessage(`Let’s capture something related to ${topicName}.`, true);
+    typeMessage("What’s something you’ve realized or learned recently in this area?", true, 500);
+
+    scrollToBottom();
+  };
 
   // Simulate checking auth status - in a real app this would check Cognito
   useEffect(() => {
@@ -1238,7 +1255,10 @@ const WellSaidApp = () => {
           resetForm={resetForm}
         />;
       case 'library':
-        return <OrganizeView />;
+        return <OrganizeView
+          resetForm={resetForm}
+          startQuickCaptureFromCollection={startQuickCaptureFromCollection}
+        />;
       case 'people':
         return <LibraryView resetForm={resetForm} />;
       case 'profile':
@@ -2862,15 +2882,17 @@ const WellSaidApp = () => {
         }
       };
 
-    const startQuickCapture = () => {
-        // Select a random topic from user's profile
-        const randomTopic = userProfile.topics[Math.floor(Math.random() * userProfile.topics.length)];
-        setCurrentTopic(randomTopic);
+      const startQuickCapture = () => {
+        // Use the currentTopic if it exists, otherwise select random
+        const topic = currentTopic ||
+          userProfile.topics[Math.floor(Math.random() * userProfile.topics.length)];
+
+        setCurrentTopic(topic);
         setConversationState('quick_capture_response');
 
         typeMessage("Let's capture a quick insight!", true);
-        typeMessage(randomTopic.prompt, true, 1500);
-    };
+        typeMessage(topic.prompt || `Share your thoughts about ${topic.name}...`, true, 1500);
+      };
 
     const handleQuickCaptureResponse = (input) => {
         setConversationState('quick_capture_followup');
@@ -4145,6 +4167,29 @@ const WellSaidApp = () => {
       return true;
     });
 
+    const startQuickCaptureFromCollection = (collection) => {
+      const topicName = collection.name; // or map it to a standard topic if needed
+
+      const topicObject = {
+        name: topicName,
+        tags: [topicName.toLowerCase()], // could add predefined tags if needed
+      };
+
+      setCurrentTopic(topicObject); // sets context for quick capture
+      setCaptureMode('quick');
+      setCurrentView('capture');
+      setShowCaptureOptions(false); // ensure capture options don't show
+
+      // You may need to reset conversation state
+      setConversationState('quick_capture_response');
+
+      // Pre-populate with a relevant prompt
+      typeMessage(`Let's capture something related to ${topicName}.`, true);
+      typeMessage("What's something you've realized or learned recently in this area?", true, 500);
+
+      scrollToBottom();
+    };
+
     const CollectionItem = ({
       collection,
       entries,
@@ -4156,7 +4201,7 @@ const WellSaidApp = () => {
     }) => (
       <div className={`${!isActive ? 'opacity-70' : ''}`}>
         <div
-          onClick={isActive ? onToggle : undefined}
+          onClick={isActive ? onToggle : () => onAddToCollection(collection)}
           className={`bg-white rounded-lg p-4 ${isActive ? 'cursor-pointer hover:bg-gray-50' : ''} transition-colors border ${
             isActive ? 'border-gray-200' : 'border-gray-100'
           }`}
@@ -4189,7 +4234,7 @@ const WellSaidApp = () => {
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    onAddToCollection?.(collection.id);
+                    startQuickCaptureFromCollection(collection);
                   }}
                   className={`flex items-center gap-1 px-3 py-1 rounded-full text-sm transition-colors ${
                     isActive
@@ -4443,11 +4488,7 @@ const WellSaidApp = () => {
                         isActive={false}
                         expanded={false}
                         onToggle={() => {}}
-                        onAddToCollection={(collectionId) => {
-                          // Set the collection context and navigate to capture
-                          setCurrentCollection(collectionId);
-                          setCurrentView('capture');
-                        }}
+                        onAddToCollection={startQuickCaptureFromCollection}
                       />
                     ))}
                   </div>
