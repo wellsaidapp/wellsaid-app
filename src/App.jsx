@@ -863,8 +863,6 @@ const WellSaidOnboarding = ({ onComplete }) => {
   );
 };
 
-// ... (keep all your existing components like LandingPage, OnboardingFlow, etc.)
-
 const SplashScreen = ({ onComplete }) => {
   const animationRef = useRef();
   const [showLanding, setShowLanding] = useState(false);
@@ -1045,117 +1043,6 @@ const SplashScreen = ({ onComplete }) => {
           }}
           className="w-full h-full"
         />
-      </div>
-    </div>
-  );
-};
-
-
-const QuickCaptureFlow = ({ onClose }) => {
-  const questions = [
-    "What's one lesson you learned this week?",
-    "What made you feel grateful today?",
-    "What would you tell your younger self?"
-  ];
-
-  return (
-    <div className="space-y-4">
-      <div className="text-center">
-        <div className="bg-blue-50 rounded-xl p-6 mb-4 min-h-[120px] flex items-center justify-center">
-          <p className="text-lg font-medium">{questions[currentQuestionIndex]}</p>
-        </div>
-        <div className="flex justify-center gap-2 mb-6">
-          {questions.map((_, i) => (
-            <button
-              key={i}
-              onClick={() => setCurrentQuestionIndex(i)}
-              className={`w-2 h-2 rounded-full ${i === currentQuestionIndex ? 'bg-blue-500' : 'bg-gray-300'}`}
-            />
-          ))}
-        </div>
-      </div>
-
-      <textarea
-        className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-        rows={4}
-        placeholder="Type your thoughts here..."
-      />
-
-      <div className="flex gap-3">
-        <button
-          onClick={onClose}
-          className="flex-1 py-2 px-4 border rounded-lg hover:bg-gray-50"
-        >
-          Cancel
-        </button>
-        <button
-          onClick={() => {
-            // Handle submission
-            onClose();
-          }}
-          className="flex-1 bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600"
-        >
-          Submit
-        </button>
-      </div>
-    </div>
-  );
-};
-
-const MilestoneFlow = ({ onClose }) => {
-  const [selectedOccasion, setSelectedOccasion] = useState(null);
-
-  const occasions = [
-    { type: 'Birthday', icon: <Cake size={18} /> },
-    { type: 'Wedding', icon: <Orbit size={18} /> },
-    { type: 'Graduation', icon: <GraduationCap size={18} /> },
-    { type: 'Holiday', icon: <Gift size={18} /> }
-  ];
-
-  return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-3">
-        {occasions.map((occasion) => (
-          <button
-            key={occasion.type}
-            onClick={() => setSelectedOccasion(occasion.type)}
-            className={`p-3 border rounded-lg flex flex-col items-center gap-2 ${
-              selectedOccasion === occasion.type
-                ? 'border-indigo-500 bg-indigo-50'
-                : 'hover:bg-gray-50'
-            }`}
-          >
-            <span className="text-indigo-500">{occasion.icon}</span>
-            <span>{occasion.type}</span>
-          </button>
-        ))}
-      </div>
-
-      <input
-        type="text"
-        placeholder="Or enter custom occasion"
-        className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-        value={selectedOccasion?.startsWith('Custom:') ? selectedOccasion.substring(8) : ''}
-        onChange={(e) => setSelectedOccasion(`Custom: ${e.target.value}`)}
-      />
-
-      <div className="flex gap-3 pt-2">
-        <button
-          onClick={onClose}
-          className="flex-1 py-2 px-4 border rounded-lg hover:bg-gray-50"
-        >
-          Cancel
-        </button>
-        <button
-          onClick={() => {
-            // Handle milestone creation
-            onClose();
-          }}
-          className="flex-1 bg-gradient-to-r from-indigo-500 to-purple-500 text-white py-2 px-4 rounded-lg hover:from-indigo-600 hover:to-purple-600"
-          disabled={!selectedOccasion}
-        >
-          Continue
-        </button>
       </div>
     </div>
   );
@@ -2262,30 +2149,34 @@ const WellSaidApp = () => {
       const [currentInsight, setCurrentInsight] = useState(null);
       const messagesEndRef = useRef(null);
       const [currentTopic, setCurrentTopic] = useState(null); // Add this line
+      // NEW: State for showing person selection UI
+      const [showPeopleSelection, setShowPeopleSelection] = useState(false);
+      // NEW: State for showing occasion confirmation
+      const [showOccasionConfirmation, setShowOccasionConfirmation] = useState(false);
       // User profile data with topics
-      const userProfile = {
-          topics: [
-              {
-                  name: 'Relationships',
-                  prompt: "What's one moment that challenged how you show love—and what did it teach you about staying connected?",
-                  tags: ['Love', 'Connection', 'Growth']
-              },
-              {
-                  name: 'Health',
-                  prompt: "When did you realize your approach to health needed to change—and what's stuck with you since?",
-                  tags: ['Wellness', 'Habits', 'Self-care']
-              },
-              {
-                  name: 'Money',
-                  prompt: "What's a financial decision you struggled with—but now see as a turning point in how you manage money?",
-                  tags: ['Finance', 'Lessons', 'Decision-making']
-              }
-          ],
-          people: [
-              { id: '1', name: 'Sarah', relationship: 'daughter' },
-              { id: '2', name: 'Michael', relationship: 'son' }
-          ]
-      };
+      const [userProfile, setUserProfile] = useState({
+        topics: [
+          {
+            name: 'Relationships',
+            prompt: "What's one moment that challenged how you show love—and what did it teach you about staying connected?",
+            tags: ['Love', 'Connection', 'Growth']
+          },
+          {
+            name: 'Health',
+            prompt: "When did you realize your approach to health needed to change—and what's stuck with you since?",
+            tags: ['Wellness', 'Habits', 'Self-care']
+          },
+          {
+            name: 'Money',
+            prompt: "What's a financial decision you struggled with—but now see as a turning point in how you manage money?",
+            tags: ['Finance', 'Lessons', 'Decision-making']
+          }
+        ],
+        people: [
+          { id: '1', name: 'Sarah', relationship: 'daughter' },
+          { id: '2', name: 'Michael', relationship: 'son' }
+        ]
+      });
 
       // Sample data
       const people = [
@@ -2293,17 +2184,22 @@ const WellSaidApp = () => {
         { id: '2', name: 'Michael', relationship: 'son', interests: 'science, basketball' }
       ];
 
+      // NEW: Person creation state
+      const [newPersonData, setNewPersonData] = useState({
+          name: '',
+          relationship: '',
+          interests: '',
+          collections: []
+      });
+
       // NEW: Special Occasion state
       const [occasion, setOccasion] = useState({
           type: '',
           date: '',
-          person: {
-              name: '',
-              relationship: ''
-          },
+          person: null, // Changed to store the selected person object
           reflections: [],
-          currentQuestionIndex: 0,  // Add this line
-          questions: [],           // Add this line
+          currentQuestionIndex: 0,
+          questions: [],
           finalMessage: ''
       });
 
@@ -2354,6 +2250,152 @@ const WellSaidApp = () => {
           }
         }
       }, []);
+
+      // NEW: Start person creation flow
+      const startPersonCreation = () => {
+          setConversationState('person_creation_name');
+          typeMessage("Let's add someone new to your circle.", true);
+          typeMessage("First, what's their name?", true, 1000);
+      };
+
+      // NEW: Handle person creation responses
+      const handlePersonCreation = (input) => {
+          if (conversationState === 'person_creation_name') {
+              setNewPersonData(prev => ({ ...prev, name: input }));
+              setConversationState('person_creation_relationship');
+              typeMessage(`Thanks. How are you related to ${input}?`, true);
+              typeMessage("(e.g., 'daughter', 'friend', 'colleague')", true, 1000);
+          }
+          else if (conversationState === 'person_creation_relationship') {
+              setNewPersonData(prev => ({ ...prev, relationship: input }));
+              setConversationState('person_creation_interests');
+              typeMessage("What topics or interests would you like to share with them?", true);
+              typeMessage("(e.g., 'parenting advice', 'life lessons', 'funny stories')", true, 1000);
+          }
+          else if (conversationState === 'person_creation_interests') {
+              setNewPersonData(prev => ({ ...prev, interests: input }));
+              setConversationState('person_creation_complete');
+
+              // Generate a simple ID for the new person
+              const newId = `person-${Date.now()}`;
+              const newPerson = {
+                  id: newId,
+                  name: newPersonData.name,
+                  relationship: newPersonData.relationship,
+                  interests: input
+              };
+
+              // Update user profile with new person
+              setUserProfile(prev => ({
+                  ...prev,
+                  people: [...prev.people, newPerson]
+              }));
+
+              // Clear the new person data
+              setNewPersonData({
+                  name: '',
+                  relationship: '',
+                  interests: '',
+                  collections: []
+              });
+
+              typeMessage(`Great! ${newPersonData.name} has been added to your circle.`, true);
+              typeMessage("Now, let's continue with the special occasion.", true, 1000);
+
+              // Set this person as the occasion recipient
+              setOccasion(prev => ({
+                  ...prev,
+                  person: newPerson
+              }));
+
+              // Move to occasion type selection
+              setConversationState('milestone_type');
+              typeMessage("What type of occasion is this for them?", true);
+              typeMessage("(e.g., 'birthday', 'wedding', 'graduation')", true, 1000);
+          }
+      };
+
+      // NEW: Show person selection UI
+      const showPersonSelection = () => {
+          if (userProfile.people.length === 0) {
+              startPersonCreation();
+              return;
+          }
+
+          setConversationState('person_selection');
+          typeMessage("Who is this special occasion for?", true);
+
+          // Create a message showing all people with their relationships
+          let peopleList = "Your circle:\n";
+          userProfile.people.forEach((person, index) => {
+              peopleList += `${index + 1}. ${person.name} (${person.relationship})\n`;
+          });
+          peopleList += "\nType the number or name, or say 'new' to add someone.";
+
+          typeMessage(peopleList, true, 500);
+      };
+
+      const handlePersonSelect = (person) => {
+        setOccasion(prev => ({
+          ...prev,
+          person: person
+        }));
+        setShowPeopleSelection(false);
+        setConversationState('milestone_type');
+        typeMessage(`Got it. This is for ${person.name}.`, true);
+        typeMessage("What type of occasion is this?", true, 1000);
+        typeMessage("(e.g., 'birthday', 'wedding', 'graduation')", true, 1500);
+      };
+
+      // NEW: Start adding new person
+      const startAddNewPerson = () => {
+          setShowPeopleSelection(false);
+          startPersonCreation();
+      };
+
+      // NEW: Show occasion confirmation card
+      const triggerOccasionConfirmation = () => {
+          if (!occasion.person || !occasion.type) return;
+
+          const occasionName = occasionTypes[occasion.type]?.name || occasion.type;
+          let confirmationMessage = `\n**Special Occasion Details**\n`;
+          confirmationMessage += `• For: ${occasion.person.name} (${occasion.person.relationship})\n`;
+          confirmationMessage += `• Occasion: ${occasionName}\n`;
+          confirmationMessage += occasion.date ? `• Date: ${occasion.date}\n` : `• Date: Sometime in the future\n`;
+          confirmationMessage += `\nType 'confirm' to continue or edit any detail.`;
+
+          setConversationState('occasion_confirmation');
+          typeMessage(confirmationMessage, true);
+      };
+
+      // NEW: Handle occasion confirmation
+      const handleOccasionConfirmation = (input) => {
+          const normalizedInput = input.toLowerCase().trim();
+
+          if (normalizedInput === 'confirm') {
+              setConversationState('milestone_theme');
+              typeMessage("Occasion confirmed! Would you like help reflecting on something specific?", true);
+              typeMessage("Like a memory, advice, or how you've seen them grow? Or should I guide you with questions?", true, 1500);
+              return;
+          }
+
+          // Check for edit requests
+          if (normalizedInput.includes('for') || normalizedInput.includes('person')) {
+              showPersonSelection();
+          }
+          else if (normalizedInput.includes('type') || normalizedInput.includes('occasion')) {
+              setConversationState('milestone_type');
+              typeMessage("What type of occasion is this?", true);
+              typeMessage("(e.g., 'birthday', 'wedding', 'graduation')", true, 1000);
+          }
+          else if (normalizedInput.includes('date') || normalizedInput.includes('when')) {
+              setConversationState('milestone_date');
+              typeMessage("When is this occasion happening? (e.g., 'next month', 'June 15th', 'sometime next year')", true);
+          }
+          else {
+              typeMessage("I didn't understand that. Please say 'confirm' to continue or specify what to edit.", true);
+          }
+      };
 
       const extractThemes = (reflections) => {
           // Simple theme extraction from responses
@@ -2469,28 +2511,51 @@ const WellSaidApp = () => {
         typeMessage("Does this look correct now?", true, 1500);
       };
 
-      // NEW: Special Occasion Flow Functions
       const startMilestoneSelection = () => {
-          setConversationState('milestone_init');
-          typeMessage("Hey there! Let's get started shaping something meaningful.", true);
-          typeMessage("Is there a special occasion coming up that you'd like to reflect on or capture something for?", true, 1500);
+        setConversationState('milestone_init');
+        setShowPeopleSelection(true);
+
+        typeMessage("Let's create something meaningful for a special occasion.", true);
+
+        if (userProfile.people.length > 0) {
+          typeMessage("Who is this special occasion for? Tap on a person below or add someone new.", true);
+        } else {
+          typeMessage("You haven't added anyone to your circle yet. Let's add someone first.", true);
+        }
       };
 
+      // Modified handleMilestoneInit to handle person selection
       const handleMilestoneInit = (input) => {
-          // Simple occasion type detection
-          const detectedType =
-              input.includes('wedding') ? 'wedding' :
-              input.includes('birthday') ? 'birthday' :
-              input.includes('graduation') ? 'graduation' : 'custom';
+          showPersonSelection();
+      };
 
-          setOccasion(prev => ({
-              ...prev,
-              type: detectedType
-          }));
+      const handleOccasionTypeSelection = (input) => {
+        const detectedType =
+          input.includes('wedding') ? 'wedding' :
+          input.includes('birthday') ? 'birthday' :
+          input.includes('graduation') ? 'graduation' :
+          input.toLowerCase().trim();
 
-          setConversationState('milestone_confirm');
-          typeMessage(`That sounds wonderful! Just to confirm — the occasion is ${detectedType === 'custom' ? 'this special event' : `a ${occasionTypes[detectedType].name.toLowerCase()}`}`, true);
-          typeMessage("Can you tell me who this is for and when it's happening? (e.g., 'Emily's wedding in October')", true, 1500);
+        setOccasion(prev => ({
+          ...prev,
+          type: detectedType
+        }));
+
+        setConversationState('milestone_date');
+        typeMessage(`Got it. This is a ${detectedType === 'custom' ? 'special occasion' : detectedType}.`, true);
+        typeMessage("When is it happening? (e.g., 'next month', 'June 15th', or 'sometime in the future')", true, 1500);
+      };
+
+      const handleOccasionDateSelection = (input) => {
+        setOccasion(prev => ({
+          ...prev,
+          date: input
+        }));
+
+        // Now show the confirmation card after all questions are answered
+        setConversationState('occasion_confirmation');
+        setShowOccasionConfirmation(true);
+        typeMessage("Here's what we have so far:", true);
       };
 
       const handleMilestoneConfirm = (input) => {
@@ -2703,8 +2768,25 @@ const WellSaidApp = () => {
         setCurrentInput('');
         scrollToBottom();
 
-        // Milestone states
-        if (conversationState === 'milestone_complete') {
+        // Person management states
+        if (conversationState === 'person_selection') {
+            handlePersonSelection(input);
+        }
+        else if (conversationState.startsWith('person_creation')) {
+            handlePersonCreation(input);
+        }
+        // Occasion creation states
+        else if (conversationState === 'milestone_type') {
+            handleOccasionTypeSelection(input);
+        }
+        else if (conversationState === 'milestone_date') {
+            handleOccasionDateSelection(input);
+        }
+        else if (conversationState === 'occasion_confirmation') {
+            handleOccasionConfirmation(input);
+        }
+        // Rest of your existing state handlers
+        else if (conversationState === 'milestone_complete') {
             handleMilestoneComplete(input);
         }
         else if (conversationState === 'milestone_sharing') {
@@ -2874,14 +2956,40 @@ const WellSaidApp = () => {
       setConversationState('confirming');
     };
 
-    const handleConfirmation = (input) => {
-      if (input.toLowerCase().startsWith('y')) {
-        typeMessage("Wonderful! I've saved this for you.", true);
-        setTimeout(() => setCurrentView('home'), 2000);
-      } else {
-        typeMessage("Let me try again. What would you like to change?", true);
-        setConversationState('capturing');
-      }
+    const handleConfirmation = () => {
+      setShowOccasionConfirmation(false);
+
+      // Resume AI chat
+      setConversationState('chat'); // or whatever your active thread state is
+
+      // Optionally show a follow-up message
+      typeMessage(`Thanks! Let’s start capturing something meaningful for ${occasion.person.name}.`, true);
+
+      // Scroll to message thread
+      setTimeout(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      }, 100);
+    };
+
+    // NEW: Handle edit action
+    const handleEdit = (field) => {
+        setShowOccasionConfirmation(false);
+
+        switch(field) {
+            case 'person':
+                setShowPeopleSelection(true);
+                break;
+            case 'type':
+                setConversationState('milestone_type');
+                typeMessage("What type of occasion is this?", true);
+                typeMessage("(e.g., 'birthday', 'wedding', 'graduation')", true, 1000);
+                break;
+            case 'date':
+                setConversationState('milestone_date');
+                typeMessage("When is this occasion happening?", true);
+                typeMessage("(e.g., 'next month', 'June 15th', 'sometime in the future')", true, 1000);
+                break;
+        }
     };
 
     const toggleRecording = () => {
@@ -2896,6 +3004,17 @@ const WellSaidApp = () => {
 
     const getPlaceholderText = () => {
       switch (conversationState) {
+
+        // Person management states
+        case 'person_selection':
+            return "Type the number or name, or 'new' to add someone";
+        case 'person_creation_name':
+            return "Enter their name...";
+        case 'person_creation_relationship':
+            return "Describe your relationship...";
+        case 'person_creation_interests':
+            return "What topics would you share with them?";
+
         // Quick Capture states
         case 'quick_capture_response':
           return `Share your thoughts about ${currentTopic?.name.toLowerCase()}...`;
@@ -2960,6 +3079,17 @@ const WellSaidApp = () => {
       }
     };
 
+    useEffect(() => {
+      const ready =
+        occasion.person &&
+        occasion.type &&
+        (occasion.date || occasion.date === null);
+
+      if (ready) {
+        setShowOccasionConfirmation(true);
+      }
+    }, [occasion]);
+
     return (
       <div className="fixed inset-0 bg-gradient-to-br from-blue-50 to-indigo-50 overflow-y-auto">
         {/* Main content area */}
@@ -2983,19 +3113,16 @@ const WellSaidApp = () => {
             </div>
           </div>
 
-          {/* Messages */}
-          <div className="flex-1 px-4 overflow-y-auto pb-60">
+          {/* Scrollable content area */}
+          <div className="flex-1 overflow-y-auto pb-[136px] px-4">
+            {/* Messages container */}
             <div className="bg-white rounded-2xl shadow-lg p-6 mb-4">
               <div className="space-y-4">
                 {messages.map((message, index) => (
                   <div key={index} className={`flex ${message.isBot ? 'justify-start' : 'justify-end'}`}>
-                    <div
-                      className={`max-w-xs lg:max-w-md px-4 py-2 rounded-2xl ${
-                        message.isBot
-                          ? 'bg-gray-100 text-gray-800'
-                          : 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white'
-                      }`}
-                    >
+                    <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-2xl ${
+                      message.isBot ? 'bg-gray-100 text-gray-800' : 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white'
+                    }`}>
                       {message.text}
                     </div>
                   </div>
@@ -3011,11 +3138,123 @@ const WellSaidApp = () => {
                     </div>
                   </div>
                 )}
-                <div ref={messagesEndRef} />
               </div>
             </div>
+
+            {/* People Selection UI - appears below messages */}
+            {showPeopleSelection && (
+              <div className="bg-white rounded-2xl shadow-lg p-6 mb-4">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="font-semibold text-gray-800">People in your circle</h3>
+                  <span className="text-sm text-gray-500">{userProfile.people.length} added</span>
+                </div>
+
+                {userProfile.people.length > 0 ? (
+                  userProfile.people.map((person, index) => (
+                    <div
+                      key={person.id}
+                      className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg mb-2 cursor-pointer hover:bg-gray-100 transition-colors"
+                      onClick={() => handlePersonSelect(person)}
+                    >
+                      <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                        <User className="w-4 h-4 text-blue-600" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-medium text-gray-800">
+                          {person.name || `Person ${index + 1}`}
+                        </p>
+                        <p className="text-sm text-gray-500">
+                          {person.relationship} {person.age && `• ${person.age} years old`}
+                        </p>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-4 text-gray-500">
+                    No people added yet
+                  </div>
+                )}
+
+                <button
+                  onClick={startAddNewPerson}
+                  className="w-full mt-4 bg-gray-100 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-200 transition-colors flex items-center justify-center gap-2"
+                >
+                  <Plus className="w-4 h-4" />
+                  Add New Person
+                </button>
+              </div>
+            )}
+            <div ref={messagesEndRef} />
           </div>
         </div>
+
+        {/* Occasion Confirmation Card - appears below messages or people selection */}
+        {showOccasionConfirmation &&
+          occasion.person &&
+          occasion.type &&
+          (occasion.date || occasion.date === null) && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-30">
+            <div className="bg-white rounded-2xl shadow-lg p-6 mx-4 w-full max-w-md">
+              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Check className="w-8 h-8 text-green-600" />
+              </div>
+              <h2 className="text-xl font-bold text-gray-800 mb-4">Special Occasion Details</h2>
+
+              <div className="text-left mb-6">
+                <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg mb-2">
+                  <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                    <User className="w-4 h-4 text-blue-600" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-medium text-gray-800">
+                      {occasion.person.name}
+                    </p>
+                    <p className="text-sm text-gray-500">
+                      {occasion.person.relationship}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => handleEdit('person')}
+                    className="text-blue-500 text-sm font-medium"
+                  >
+                    Edit
+                  </button>
+                </div>
+
+                <div className="p-3 bg-gray-50 rounded-lg mb-2">
+                  <p className="font-medium text-gray-800">
+                    {occasionTypes[occasion.type]?.name || occasion.type}
+                  </p>
+                  <button
+                    onClick={() => handleEdit('type')}
+                    className="text-blue-500 text-sm font-medium mt-1"
+                  >
+                    Edit
+                  </button>
+                </div>
+
+                <div className="p-3 bg-gray-50 rounded-lg">
+                  <p className="font-medium text-gray-800">
+                    {occasion.date || "Sometime in the future"}
+                  </p>
+                  <button
+                    onClick={() => handleEdit('date')}
+                    className="text-blue-500 text-sm font-medium mt-1"
+                  >
+                    Edit
+                  </button>
+                </div>
+              </div>
+
+              <button
+                onClick={handleConfirmation}
+                className="w-full bg-gradient-to-r from-blue-500 to-indigo-500 text-white py-3 px-8 rounded-xl font-medium hover:from-blue-600 hover:to-indigo-600 transition-colors"
+              >
+                Confirm & Continue
+              </button>
+              </div>
+          </div>
+        )}
 
         {/* Input Area - Fixed positioning */}
         <div className="fixed bottom-[72px] left-0 right-0 px-4 z-20">
@@ -3649,7 +3888,7 @@ const WellSaidApp = () => {
       showRecipient = false,
       onAddToCollection
     }) => (
-      <div className={`mb-4 ${!isActive ? 'opacity-70' : ''}`}>
+      <div className={`${!isActive ? 'opacity-70' : ''}`}>
         <div
           onClick={isActive ? onToggle : undefined}
           className={`bg-white rounded-lg p-4 ${isActive ? 'cursor-pointer hover:bg-gray-50' : ''} transition-colors border ${
@@ -3680,21 +3919,23 @@ const WellSaidApp = () => {
 
             {/* Updated button/chevron area */}
             <div className="flex items-center gap-2">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onAddToCollection?.(collection.id);
-                }}
-                className={`flex items-center gap-1 px-3 py-1 rounded-full text-sm transition-colors ${
-                  isActive
-                    ? 'bg-blue-50 text-blue-600 hover:bg-blue-100'
-                    : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
-                }`}
-                aria-label={`Add to ${collection.name}`}
-              >
-                <Plus className="w-4 h-4" />
-                <span>New</span>
-              </button>
+              {!isActive && (  // Only show "+ New" button for inactive collections
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onAddToCollection?.(collection.id);
+                  }}
+                  className={`flex items-center gap-1 px-3 py-1 rounded-full text-sm transition-colors ${
+                    isActive
+                      ? 'bg-blue-50 text-blue-600 hover:bg-blue-100'
+                      : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                  }`}
+                  aria-label={`Add to ${collection.name}`}
+                >
+                  <PlusCircle className="w-5 h-5 text-blue-700" />
+                  <span className="ml-1">Capture</span>
+                </button>
+              )}
               {isActive && (
                 <ChevronDown
                   className={`w-5 h-5 text-gray-400 transition-transform ${
@@ -3708,7 +3949,7 @@ const WellSaidApp = () => {
 
         {/* Expanded content */}
         {isActive && expanded && entries.length > 0 && (
-          <div className="mt-3 pl-4 border-l-2 border-gray-200 ml-5">
+          <div className="pl-4 border-l-2 border-gray-200 ml-5">
             {entries.map(entry => renderEntryCard(entry))}
           </div>
         )}
