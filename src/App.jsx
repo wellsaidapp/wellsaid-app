@@ -3452,7 +3452,7 @@ const WellSaidApp = () => {
             {collections.length > 0 && (
               <div>
                 <h5 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
-                  Your Collections
+                  Special Occasion Collections
                 </h5>
                 <div className="space-y-2">
                   {collections.map(collection => (
@@ -4317,19 +4317,6 @@ const WellSaidApp = () => {
               <div className="mt-3 pt-3 border-t border-gray-100 space-y-3">
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="text-xs font-medium text-gray-500">FILTER BY:</span>
-                  {allTopics.map(topic => (
-                    <button
-                      key={topic}
-                      onClick={() => toggleFilter('topics', topic)}
-                      className={`px-2.5 py-1 rounded-full text-xs ${
-                        selectedFilters.topics.includes(topic)
-                          ? 'bg-blue-600 text-white'
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                      }`}
-                    >
-                      {topic}
-                    </button>
-                  ))}
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2">
@@ -4350,22 +4337,6 @@ const WellSaidApp = () => {
                       </button>
                     );
                   })}
-                </div>
-
-                <div className="flex flex-wrap items-center gap-2">
-                  {['insight', 'draft', 'voice'].map(type => (
-                    <button
-                      key={type}
-                      onClick={() => toggleFilter('entryTypes', type)}
-                      className={`px-2.5 py-1 rounded-full text-xs capitalize ${
-                        selectedFilters.entryTypes.includes(type)
-                          ? 'bg-blue-600 text-white'
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                      }`}
-                    >
-                      {type}
-                    </button>
-                  ))}
                 </div>
               </div>
             )}
@@ -4443,7 +4414,7 @@ const WellSaidApp = () => {
               {/* User Collections */}
               {filteredUserCollections.length > 0 && (
                 <div className="mb-6">
-                  <h3 className="text-md font-semibold text-gray-700 mb-3">Your Collections</h3>
+                  <h3 className="text-md font-semibold text-gray-700 mb-3">Special Occasion Collections</h3>
                   <div className="space-y-2">
                     {filteredUserCollections.map(collection => (
                       <CollectionItem
@@ -4559,7 +4530,7 @@ const WellSaidApp = () => {
                   <span className="font-medium text-gray-800">Create a New Book</span>
                 </div>
                 <p className="text-sm text-gray-600 mb-3">
-                  Turn your insights into a meaningful collection for someone special.
+                  Turn your insights into a meaningful book for someone special.
                 </p>
                 <button
                   className="w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white py-2 px-4 rounded-lg font-medium flex items-center justify-center gap-2"
