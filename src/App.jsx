@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
-  Send, Mic, MicOff, ArrowRight, Check, Plus, User, Mail, Hash, Inbox,
+  Send, Mic, MicOff, ArrowRight, Check, Plus, User, Mail, Hash, Inbox, Trash2, Save,
   MessageCircle, Wand2, BookOpen, Share2, ChevronLeft, X, Download,
   Sparkles, Printer, ShoppingCart, ChevronDown, ChevronUp, Home,
   MessageSquare, Book, FolderOpen, Search, Tag, Clock, ChevronRight,
@@ -1093,7 +1093,6 @@ const WellSaidApp = () => {
       text: "I'm really looking forward to learning new techniques from professional dancers and pushing myself beyond my current limits.",
       date: '2025-06-01',
       collections: ['sage-summer-intensive', 'fitness-sports', 'personal-growth'],
-      topics: ["Dance", "Growth"],
       recipients: [1] // Assuming ID 1 is Sage
     },
 
@@ -1103,31 +1102,29 @@ const WellSaidApp = () => {
       question: "What would make your 17th birthday truly special?",
       text: "I'd love a small gathering with close friends, maybe some video games and pizza. No big party this year.",
       date: '2025-11-15',
-      collections: ['cohens-birthday', 'personal-growth', 'family'],
-      topics: ["Celebration", "Family"],
+      collections: ['cohens-birthday', 'events-celebrations', 'family'],
       recipients: [2] // Assuming ID 2 is Cohen
     },
 
     // Unorganized entries (voice note and draft examples)
     {
       id: 3,
-      question: "Any concerns about being away for the summer intensive?",
-      content: "[Voice note about being nervous but excited]",
-      collections: ['sage-summer-intensive', 'fitness-sports', 'personal-growth'],
+      question: "A reflection for Sage before her summer intensive begins",
+      text: "I know you’re feeling a mix of nerves and excitement — and that’s exactly where growth happens. Trust yourself and let this experience shape you in ways you can’t yet imagine.",
       date: '2025-05-28',
-      isVoiceNote: true,
-      topics: ["Dance", "Nerves"]
+      collections: ['sage-summer-intensive', 'fitness-sports', 'personal-growth'],
+      recipients: [1] // Assuming ID 1 is Sage
     },
     {
       id: 4,
-      question: "Birthday gift ideas for Cohen?",
-      text: "",
+      question: "A note for Cohen’s 17th birthday",
+      text: "Seventeen suits you. You’ve grown into a thoughtful, funny, and driven young man — and I’m proud of the way you carry yourself in the world. Here’s to another year of discovering who you’re becoming.",
       date: '2025-11-10',
-      collections: ['family'],
-      isDraft: true,
-      topics: ["Gifts"]
+      collections: ['family', 'cohens-birthday', 'personal-growth'],
+      recipients: [2] // Assuming ID 2 is Cohen
     }
   ]);
+
   const resetForm = () => {
     setNewInsight('');
     setSelectedRecipients([]);
@@ -1602,7 +1599,6 @@ const WellSaidApp = () => {
             description: "Advice for Truett as he graduates from Scofield",
             count: 5,
             color: "bg-purple-500",
-            lastUpdated: "2 days ago",
             type: "book",
             pages: [
                 {
@@ -1631,7 +1627,6 @@ const WellSaidApp = () => {
             description: "Thoughts and advice for Cohen as he turns 16",
             count: 4,
             color: "bg-blue-500",
-            lastUpdated: "1 week ago",
             type: "book",
             pages: [
                 {
@@ -1918,13 +1913,6 @@ const WellSaidApp = () => {
                                   <div className="flex-1">
                                       <h3 className="font-semibold text-gray-800 mb-1">{book.name}</h3>
                                       <p className="text-sm text-gray-600 mb-2">{book.description}</p>
-                                      <div className="flex items-center gap-3 text-xs text-gray-500">
-                                          <span>{book.pages.length / 2} chapters</span>
-                                          <span>•</span>
-                                          <span>For {book.recipient}</span>
-                                          <span>•</span>
-                                          <span>Updated {book.lastUpdated}</span>
-                                      </div>
                                   </div>
                               </div>
                           </div>
@@ -3492,7 +3480,7 @@ const WellSaidApp = () => {
     const [expandedCollection, setExpandedCollection] = useState(null);
     const [viewMode, setViewMode] = useState('collections'); // 'collections' or 'books'
     const [showInactiveCollections, setShowInactiveCollections] = useState(false);
-    // Search-related state (migrated from LibraryView)
+    const [entries, setEntries] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState([]);
     const [isSearching, setIsSearching] = useState(false);
@@ -3510,6 +3498,14 @@ const WellSaidApp = () => {
 
     // Add this state near the top of your component
     const [collectionFilter, setCollectionFilter] = useState('all'); // 'all', 'person', or 'occasion'
+
+    const updateEntry = (updatedEntry) => {
+      setEntries(prevEntries =>
+        prevEntries.map(entry =>
+          entry.id === updatedEntry.id ? updatedEntry : entry
+        )
+      );
+    };
 
     // Add this filter control above the collections display
     <div className="flex space-x-2 mb-4">
@@ -3557,7 +3553,7 @@ const WellSaidApp = () => {
       { id: 'creativity', name: 'Creativity', color: 'bg-indigo-500', type: 'system' },
       { id: 'personal-growth', name: 'Personal Growth', color: 'bg-teal-500', type: 'system' },
       { id: 'faith', name: 'Faith', color: 'bg-gray-500', type: 'system' },
-      { id: 'dreams', name: 'Dreams', color: 'bg-blue-400', type: 'system' },
+      { id: 'death', name: 'Death & Grief', color: 'bg-blue-400', type: 'system' },
 
       // Life Context
       { id: 'travel-adventure', name: 'Travel & Adventure', color: 'bg-orange-500', type: 'system' },
@@ -3678,7 +3674,7 @@ const WellSaidApp = () => {
       {
         id: 3,
         name: "For When You're Older",
-        recipient: "Both kids",
+        recipient: "Ellie",
         description: "Wisdom for their teenage years and beyond",
         count: 4,
         color: "bg-purple-500",
@@ -3737,6 +3733,62 @@ const WellSaidApp = () => {
             pageNumber: 6
           }
         ]
+      },
+      {
+          id: 4,
+          name: "Truett's Scofield Graduation",
+          recipient: "Truett",
+          description: "Advice for Truett as he graduates from Scofield",
+          count: 5,
+          color: "bg-purple-500",
+          type: "book",
+          pages: [
+              {
+                  type: "question",
+                  content: "What are your hopes for Truett as he enters this next chapter of school?",
+                  pageNumber: 1
+              },
+              {
+                  type: "answer",
+                  content: {
+                      text: "My hopes for Truett as he graduates from Scofield are:",
+                      points: [
+                          "That he stays true to himself and is authentic",
+                          "That he continues to develop the relationships he's formed",
+                          "That he makes new lasting relationships at FBA"
+                      ]
+                  },
+                  pageNumber: 2
+              }
+          ]
+      },
+      {
+          id: 5,
+          name: "Cohen's 16th Birthday",
+          recipient: "Cohen",
+          description: "Thoughts and advice for Cohen as he turns 16",
+          count: 4,
+          color: "bg-blue-500",
+          type: "book",
+          pages: [
+              {
+                  type: "question",
+                  content: "What do you remember most about Cohen at age 15?",
+                  pageNumber: 1
+              },
+              {
+                  type: "answer",
+                  content: {
+                      text: "Memories that stand out from this past year:",
+                      points: [
+                          "His eagerness to learn how to drive",
+                          "The way he captivated audiences in Beauty and the Beast",
+                          "His maturity and commitment to press into relationships"
+                      ]
+                  },
+                  pageNumber: 2
+              }
+          ]
       }
     ];
 
@@ -3836,87 +3888,228 @@ const WellSaidApp = () => {
       setExpandedCollection(expandedCollection === collectionId ? null : collectionId);
     };
 
-    const renderEntryCard = (entry) => (
-      <div key={entry.id} className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100 mb-4">
-        {/* Header */}
-        <div className="flex items-center p-3 border-b border-gray-100 bg-gray-50">
-          <div className="flex-1 flex items-center space-x-2">
-            {entry.isVoiceNote && (
-              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800">
-                <Mic className="w-3 h-3 mr-1" /> Voice Note
-              </span>
-            )}
-            {entry.isDraft && (
-              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-orange-100 text-orange-800">
-                Draft
-              </span>
-            )}
-            <span className="text-xs text-gray-500">
-              {new Date(entry.date).toLocaleDateString()}
-            </span>
-          </div>
-        </div>
+    const [editingId, setEditingId] = useState(null);
+    const [editedEntry, setEditedEntry] = useState(null);
 
-        {/* Content */}
-        <div className="p-4">
-          {/* Question */}
-          {entry.question && (
-            <div className="mb-4">
+    const renderEntryCard = (entry) => {
+      const isEditing = editingId === entry.id;
+      const currentEntry = isEditing ? editedEntry : entry;
+
+      const handleChange = (field, value) => {
+        setEditedEntry(prev => ({ ...prev, [field]: value }));
+      };
+
+      const handleCollectionToggle = (collectionId) => {
+        setEditedEntry(prev => {
+          const newCollections = prev.collections?.includes(collectionId)
+            ? prev.collections.filter(id => id !== collectionId)
+            : [...(prev.collections || []), collectionId];
+          return { ...prev, collections: newCollections };
+        });
+      };
+
+      const handleRecipientToggle = (recipientId) => {
+        setEditedEntry(prev => {
+          const newRecipients = prev.recipients?.includes(recipientId)
+            ? prev.recipients.filter(id => id !== recipientId)
+            : [...(prev.recipients || []), recipientId];
+          return { ...prev, recipients: newRecipients };
+        });
+      };
+
+      const saveChanges = () => {
+        // Call your API or state update function here
+        updateEntry(currentEntry); // You'll need to implement this
+        setEditingId(null);
+      };
+
+      const cancelEditing = () => {
+        setEditingId(null);
+      };
+
+      const deleteEntry = () => {
+        if (window.confirm("Are you sure you want to delete this entry?")) {
+          deleteEntry(entry.id); // You'll need to implement this
+        }
+      };
+
+      return (
+        <div key={entry.id} className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100 mb-4">
+          {/* Header */}
+          <div className="flex items-center p-3 border-b border-gray-100 bg-gray-50">
+            <div className="flex-1 flex items-center space-x-2">
+              {entry.isVoiceNote && (
+                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800">
+                  <Mic className="w-3 h-3 mr-1" /> Voice Note
+                </span>
+              )}
+              {entry.isDraft && (
+                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-orange-100 text-orange-800">
+                  Draft
+                </span>
+              )}
+              <span className="text-xs text-gray-500">
+                {new Date(entry.date).toLocaleDateString()}
+              </span>
+            </div>
+
+            {/* Action buttons - now with icons */}
+            <div className="flex space-x-2">
+              {!isEditing ? (
+                <>
+                  <button
+                    onClick={() => {
+                      setEditedEntry({ ...entry });
+                      setEditingId(entry.id);
+                    }}
+                    className="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
+                    aria-label="Edit"
+                  >
+                    <Pencil className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={deleteEntry}
+                    className="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"
+                    aria-label="Delete"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    onClick={saveChanges}
+                    className="p-1.5 text-gray-500 hover:text-green-600 hover:bg-green-50 rounded-md transition-colors"
+                    aria-label="Save"
+                  >
+                    <Save className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={cancelEditing}
+                    className="p-1.5 text-gray-500 hover:text-gray-600 hover:bg-gray-50 rounded-md transition-colors"
+                    aria-label="Cancel"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* Content */}
+          <div className="p-4">
+            {/* Question */}
+            {currentEntry.question && (
+              <div className="mb-4">
+                <div className="flex items-center mb-1">
+                  <span className="text-xs font-semibold text-blue-600 uppercase tracking-wider">Question</span>
+                </div>
+                {isEditing ? (
+                  <textarea
+                    value={currentEntry.question}
+                    onChange={(e) => handleChange('question', e.target.value)}
+                    className="w-full bg-blue-50 rounded-lg p-3 text-sm text-gray-800 border border-blue-200"
+                  />
+                ) : (
+                  <div className="bg-blue-50 rounded-lg p-3 text-sm text-gray-800">
+                    {currentEntry.question}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Answer */}
+            <div>
               <div className="flex items-center mb-1">
-                <span className="text-xs font-semibold text-blue-600 uppercase tracking-wider">Question</span>
+                <span className="text-xs font-semibold text-green-600 uppercase tracking-wider">
+                  {currentEntry.isDraft ? "Draft Content" : "Answer"}
+                </span>
               </div>
-              <div className="bg-blue-50 rounded-lg p-3 text-sm text-gray-800">
-                {entry.question}
-              </div>
+              {isEditing ? (
+                <textarea
+                  value={currentEntry.text || currentEntry.content || ""}
+                  onChange={(e) => handleChange(entry.text ? 'text' : 'content', e.target.value)}
+                  className={`w-full rounded-lg p-3 text-sm ${
+                    currentEntry.isDraft || currentEntry.isVoiceNote
+                      ? "bg-gray-50 italic text-gray-600 border border-gray-200"
+                      : "bg-green-50 text-gray-800 border border-green-200"
+                  }`}
+                />
+              ) : (
+                <div className={`rounded-lg p-3 text-sm ${
+                  currentEntry.isDraft || currentEntry.isVoiceNote
+                    ? "bg-gray-50 italic text-gray-600"
+                    : "bg-green-50 text-gray-800"
+                }`}>
+                  {currentEntry.text || currentEntry.content || "No content yet"}
+                </div>
+              )}
             </div>
-          )}
+          </div>
 
-          {/* Answer */}
-          <div>
-            <div className="flex items-center mb-1">
-              <span className="text-xs font-semibold text-green-600 uppercase tracking-wider">
-                {entry.isDraft ? "Draft Content" : "Your Insight"}
-              </span>
+          {/* Footer */}
+          <div className="px-4 pb-3 pt-2 border-t border-gray-100">
+            {/* Collections */}
+            <div className="flex flex-wrap gap-2 mb-2">
+              {isEditing ? (
+                [...SYSTEM_COLLECTIONS, ...collections].map(collection => (
+                  <button
+                    key={collection.id}
+                    onClick={() => handleCollectionToggle(collection.id)}
+                    className={`px-2 py-1 text-xs rounded-full ${
+                      currentEntry.collections?.includes(collection.id)
+                        ? "bg-gray-800 text-white"
+                        : "bg-gray-100 text-gray-700"
+                    }`}
+                  >
+                    {collection.name}
+                  </button>
+                ))
+              ) : (
+                currentEntry.collections?.map(collectionId => {
+                  const collection = [...SYSTEM_COLLECTIONS, ...collections].find(c => c.id === collectionId);
+                  return collection ? (
+                    <span key={collectionId} className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-full">
+                      {collection.name}
+                    </span>
+                  ) : null;
+                })
+              )}
             </div>
-            <div className={`rounded-lg p-3 text-sm ${
-              entry.isDraft || entry.isVoiceNote
-                ? "bg-gray-50 italic text-gray-600"
-                : "bg-green-50 text-gray-800"
-            }`}>
-              {entry.text || entry.content || "No content yet"}
+
+            {/* Recipients */}
+            <div className="flex flex-wrap gap-2">
+              {isEditing ? (
+                individuals.map(person => (
+                  <button
+                    key={person.id}
+                    onClick={() => handleRecipientToggle(person.id)}
+                    className={`inline-flex items-center px-2 py-1 text-xs rounded-full ${
+                      currentEntry.recipients?.includes(person.id)
+                        ? "bg-blue-800 text-white"
+                        : "bg-blue-100 text-blue-700"
+                    }`}
+                  >
+                    <span className={`w-2 h-2 rounded-full ${person.color} mr-1`}></span>
+                    {person.name}
+                  </button>
+                ))
+              ) : (
+                currentEntry.recipients?.map(id => {
+                  const person = individuals.find(p => p.id === id);
+                  return person ? (
+                    <span key={person.id} className="inline-flex items-center px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full">
+                      <span className={`w-2 h-2 rounded-full ${person.color} mr-1`}></span>
+                      {person.name}
+                    </span>
+                  ) : null;
+                })
+              )}
             </div>
           </div>
         </div>
-
-        {/* Footer */}
-        <div className="px-4 pb-3 pt-2 border-t border-gray-100">
-          {/* Collections */}
-          <div className="flex flex-wrap gap-2 mb-2">
-            {entry.collections?.map(collectionId => {
-              const collection = [...SYSTEM_COLLECTIONS, ...collections].find(c => c.id === collectionId);
-              return collection ? (
-                <span key={collectionId} className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-full">
-                  {collection.name}
-                </span>
-              ) : null;
-            })}
-          </div>
-
-          {/* Recipients */}
-          <div className="flex flex-wrap gap-2">
-            {entry.recipients?.map(id => {
-              const person = individuals.find(p => p.id === id);
-              return person ? (
-                <span key={person.id} className="inline-flex items-center px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full">
-                  <span className={`w-2 h-2 rounded-full ${person.color} mr-1`}></span>
-                  {person.name}
-                </span>
-              ) : null;
-            })}
-          </div>
-        </div>
-      </div>
-    );
+      );
+    };
 
     // Get unique topics and recipients for filters
     const allTopics = [...new Set(insights.flatMap(entry => entry.topics || []))];
@@ -4286,13 +4479,6 @@ const WellSaidApp = () => {
                           <div className="flex-1">
                             <h3 className="font-semibold text-gray-800 mb-1">{book.name}</h3>
                             <p className="text-sm text-gray-600 mb-2">{book.description}</p>
-                            <div className="flex items-center gap-3 text-xs text-gray-500">
-                              <span>{book.pages.length / 2} chapters</span>
-                              <span>•</span>
-                              <span>For {book.recipient}</span>
-                              <span>•</span>
-                              <span>Updated {book.lastUpdated}</span>
-                            </div>
                           </div>
                         </div>
                       </div>
@@ -4302,11 +4488,11 @@ const WellSaidApp = () => {
                           <div className="flex items-center gap-2">
                             <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
                               <span className="text-xs font-medium text-blue-600">
-                                {book.recipient === 'Sage' ? 'S' : book.recipient === 'Cohen' ? 'B' : 'B'}
+                                {book.recipient?.charAt(0).toUpperCase() || 'B'}
                               </span>
                             </div>
                             <span className="text-xs text-gray-600">
-                              {book.recipient === 'Both kids' ? 'Shared with both children' : `Shared with ${book.recipient}`}
+                              {`Shared with ${book.recipient}`}
                             </span>
                           </div>
                           <button
