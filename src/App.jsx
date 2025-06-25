@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
-  Send, Mic, MicOff, ArrowRight, Check, Plus, User, Mail, Hash, Inbox, Trash2, Save,
-  MessageCircle, Wand2, BookOpen, Share2, ChevronLeft, X, Download,
+  Send, Mic, MicOff, ArrowRight, Check, Plus, User, Mail, Hash, Inbox, Trash2, Save, GripVertical, Bookmark, CheckCircle,
+  MessageCircle, Wand2, BookOpen, Share2, ChevronLeft, X, Download, ImageIcon,
   Sparkles, Printer, ShoppingCart, ChevronDown, ChevronUp, Home,
   MessageSquare, Book, FolderOpen, Search, Tag, Clock, ChevronRight,
   Star, Bell, Settings, Users, Edit3, Calendar, Target, Trophy, Zap,
@@ -11,7 +11,14 @@ import logo from './assets/wellsaid.svg';
 import Lottie from 'lottie-react';
 import animationData from './assets/animations/TypeBounce.json';
 import { motion } from 'framer-motion';
-
+import { DndProvider } from 'react-dnd';
+import { HTML5Backend } from 'react-dnd-html5-backend';
+import { useDrag } from 'react-dnd';
+import { useDrop } from 'react-dnd';
+import { Image } from 'antd';
+import { Switch } from 'antd';
+import ReactCrop from 'react-image-crop';
+import 'react-image-crop/dist/ReactCrop.css'; // Important for styling
 const LandingPage = ({ onGetStarted, onShowLogin }) => {
   const [messages, setMessages] = useState([
     { id: 1, show: false, text: '', typing: false, complete: false, bold: true },
@@ -3517,7 +3524,7 @@ const WellSaidApp = () => {
     const [selectedBook, setSelectedBook] = useState(null);
     const [currentPage, setCurrentPage] = useState(0);
     const [isFlipping, setIsFlipping] = useState(false);
-
+    const [showBookCreation, setShowBookCreation] = useState(false)
     // Add this state near the top of your component
     const [collectionFilter, setCollectionFilter] = useState('all'); // 'all', 'person', or 'occasion'
 
@@ -3528,6 +3535,26 @@ const WellSaidApp = () => {
         )
       );
     };
+
+    const [bookCreationStep, setBookCreationStep] = useState(0);
+    const [newBook, setNewBook] = useState({
+      title: '',
+      description: '',
+      selectedCollections: [],
+      selectedEntries: [],
+      coverImage: null,
+      backCoverNote: '',
+      recipient: null,
+      showTags: true,
+      fontStyle: 'serif',
+      isDraft: false
+    });
+    const [tempCoverImage, setTempCoverImage] = useState(null);
+    const [croppedCoverImage, setCroppedCoverImage] = useState(null);
+    const [crop, setCrop] = useState({ x: 0, y: 0 });
+    const [zoom, setZoom] = useState(1);
+    const [showCropModal, setShowCropModal] = useState(false);
+    const [entryOrder, setEntryOrder] = useState([]);
 
     // Add this filter control above the collections display
     <div className="flex space-x-2 mb-4">
@@ -4190,6 +4217,82 @@ const WellSaidApp = () => {
       scrollToBottom();
     };
 
+    const moveEntry = (fromIndex, toIndex) => {
+      setEntryOrder(prev => {
+        const newOrder = [...prev];
+        const [removed] = newOrder.splice(fromIndex, 1);
+        newOrder.splice(toIndex, 0, removed);
+        return newOrder;
+      });
+    };
+
+    const DraggableEntry = ({ entry, index, moveEntry, onRemove }) => {
+      const ref = useRef(null);
+
+      const [{ isDragging }, drag] = useDrag({
+        type: 'ENTRY',
+        item: { index },
+        collect: (monitor) => ({
+          isDragging: monitor.isDragging(),
+        }),
+      });
+
+      const [, drop] = useDrop({
+        accept: 'ENTRY',
+        hover(item, monitor) {
+          if (!ref.current) return;
+          const dragIndex = item.index;
+          const hoverIndex = index;
+          if (dragIndex === hoverIndex) return;
+
+          // Determine rectangle on screen
+          const hoverBoundingRect = ref.current.getBoundingClientRect();
+          // Get vertical middle
+          const hoverMiddleY = (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2;
+          // Determine mouse position
+          const clientOffset = monitor.getClientOffset();
+          // Get pixels to the top
+          const hoverClientY = clientOffset.y - hoverBoundingRect.top;
+
+          // Only perform the move when the mouse has crossed half of the items height
+          if (dragIndex < hoverIndex && hoverClientY < hoverMiddleY) return;
+          if (dragIndex > hoverIndex && hoverClientY > hoverMiddleY) return;
+
+          // Time to actually perform the action
+          moveEntry(dragIndex, hoverIndex);
+          item.index = hoverIndex;
+        },
+      });
+
+      drag(drop(ref));
+
+      return (
+        <div
+          ref={ref}
+          style={{ opacity: isDragging ? 0.5 : 1 }}
+          className="p-3 border border-gray-200 rounded-lg bg-white shadow-sm"
+        >
+          <div className="flex items-center">
+            <GripVertical className="w-5 h-5 text-gray-400 mr-3 cursor-move" />
+            <div className="flex-1">
+              <div className="text-sm font-medium text-gray-700 mb-1">
+                Page {index + 1}
+              </div>
+              {entry.question && (
+                <div className="text-xs text-gray-600 truncate">{entry.question}</div>
+              )}
+            </div>
+            <button
+              onClick={onRemove}
+              className="text-gray-400 hover:text-red-500"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      );
+    };
+
     const CollectionItem = ({
       collection,
       entries,
@@ -4266,6 +4369,956 @@ const WellSaidApp = () => {
         )}
       </div>
     );
+
+    // Add these components before your main OrganizeView return statement
+
+    const BookCreationModal = ({ onClose }) => {
+      const steps = [
+        'Select Collections',
+        'Choose Insights',
+        'Arrange Pages',
+        'Upload Cover',
+        'Write Back Cover',
+        'Assign Recipient',
+        'Preview',
+        'Publish'
+      ];
+
+      const [coverImageState, setCoverImageState] = useState({
+        tempImage: null,
+        showCropModal: false
+      });
+
+      // Add this effect to handle when we come from the arrange view
+      useEffect(() => {
+        if (currentView === 'arrangeBook' && bookCreationStep < 2) {
+          setBookCreationStep(2);
+        }
+      }, [currentView]);
+
+      return (
+        <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl w-full max-w-4xl max-h-[95vh] overflow-hidden flex flex-col">
+            {/* Header with progress steps */}
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-100 p-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-bold text-blue-800">Create New Book</h2>
+                <button
+                  onClick={onClose}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Progress steps */}
+              <div className="flex justify-between mt-4 relative">
+                {steps.map((step, index) => (
+                  <div key={index} className="flex flex-col items-center z-10">
+                    <div
+                      className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+                        bookCreationStep === index
+                          ? 'bg-blue-600 text-white border-2 border-blue-600'
+                          : bookCreationStep > index
+                            ? 'bg-green-500 text-white border-2 border-green-500'
+                            : 'bg-white text-gray-500 border-2 border-gray-300'
+                      }`}
+                    >
+                      {index + 1}
+                    </div>
+                    <span className={`text-xs mt-1 text-center ${
+                      bookCreationStep === index ? 'font-semibold text-blue-600' : 'text-gray-500'
+                    }`}>
+                      {step}
+                    </span>
+                  </div>
+                ))}
+                <div className="absolute top-4 left-0 right-0 h-1 bg-gray-200 -z-1">
+                  <div
+                    className="h-full bg-blue-600 transition-all duration-300"
+                    style={{ width: `${(bookCreationStep / (steps.length - 1)) * 100}%` }}
+                  ></div>
+                </div>
+              </div>
+            </div>
+
+            {/* Content area */}
+            <div className="flex-1 overflow-y-auto p-6">
+              {bookCreationStep === 0 && (
+                <Step1Collections
+                  newBook={newBook}
+                  setNewBook={setNewBook}
+                  SYSTEM_COLLECTIONS={SYSTEM_COLLECTIONS}
+                  collections={collections}
+                  groupedEntries={groupedEntries}
+                />
+              )}
+
+              {bookCreationStep === 1 && (
+                <Step2Insights
+                  newBook={newBook}
+                  setNewBook={setNewBook}
+                  insights={insights}
+                  setEntryOrder={setEntryOrder}
+                />
+              )}
+
+              {bookCreationStep === 2 && (
+                <DndProvider backend={HTML5Backend}>
+                  <Step3Arrange
+                    newBook={newBook}
+                    setNewBook={setNewBook}
+                    entryOrder={entryOrder}
+                    setEntryOrder={setEntryOrder}
+                    insights={insights}
+                    moveEntry={moveEntry}
+                  />
+                </DndProvider>
+              )}
+
+              {bookCreationStep === 3 && (
+                <Step4Cover
+                  newBook={newBook}
+                  setNewBook={setNewBook}
+                  coverImageState={coverImageState}
+                  setCoverImageState={setCoverImageState}
+                />
+              )}
+              {newBook.coverImage && (
+                <div className="mt-4">
+                  <h4>Debug Image Preview</h4>
+                  <img
+                    src={newBook.coverImage}
+                    alt="Debug preview"
+                    style={{ maxWidth: '100%', maxHeight: '200px' }}
+                  />
+                </div>
+              )}
+              {bookCreationStep === 4 && (
+                <Step5BackCover
+                  newBook={newBook}
+                  setNewBook={setNewBook}
+                />
+              )}
+
+              {bookCreationStep === 5 && (
+                <Step6Recipient
+                  newBook={newBook}
+                  setNewBook={setNewBook}
+                  individuals={individuals}
+                />
+              )}
+
+              {bookCreationStep === 6 && (
+                <Step7Preview
+                  newBook={newBook}
+                  entryOrder={entryOrder}
+                  insights={insights}
+                />
+              )}
+
+              {bookCreationStep === 7 && (
+                <Step8Publish
+                  newBook={newBook}
+                  onClose={onClose}
+                  entryOrder={entryOrder}
+                  individuals={individuals}
+                />
+              )}
+            </div>
+
+            {/* Navigation buttons */}
+            <div className="flex justify-between p-4 border-t border-gray-200">
+              <button
+                onClick={() => {
+                  if (bookCreationStep === 2) {
+                    // When going back from arrange step, show the compact view
+                    setCurrentView('arrangeBook');
+                    onClose();
+                  } else {
+                    setBookCreationStep(bookCreationStep - 1);
+                  }
+                }}
+                disabled={bookCreationStep === 0}
+                className={`px-4 py-2 rounded-lg ${bookCreationStep === 0 ? 'text-gray-400 bg-gray-100' : 'text-blue-600 hover:bg-blue-50'}`}
+              >
+                Back
+              </button>
+
+              <div className="flex items-center space-x-2">
+                {bookCreationStep < 7 && (
+                  <button
+                    onClick={() => {
+                      setNewBook(prev => ({ ...prev, isDraft: true }));
+                      // Save as draft logic here
+                      onClose();
+                    }}
+                    className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg"
+                  >
+                    Save as Draft
+                  </button>
+                )}
+
+                <button
+                  onClick={() => {
+                    if (bookCreationStep < 7) {
+                      setBookCreationStep(bookCreationStep + 1);
+                    } else {
+                      // Publish logic here
+                      onClose();
+                    }
+                  }}
+                  className={`px-4 py-2 rounded-lg ${
+                    bookCreationStep === 7
+                      ? 'bg-green-600 hover:bg-green-700 text-white'
+                      : 'bg-blue-600 hover:bg-blue-700 text-white'
+                  }`}
+                >
+                  {bookCreationStep === 7 ? 'Publish Book' : 'Next'}
+                </button>
+              </div>
+            </div>
+            {coverImageState.showCropModal && coverImageState.tempImage && (
+              <ImageCropperModal
+                image={coverImageState.tempImage}
+                onCropComplete={(croppedImage) => {
+                  setNewBook((prev) => ({ ...prev, coverImage: croppedImage }));
+                  setCoverImageState({ tempImage: null, showCropModal: false });
+                }}
+                onClose={() => setCoverImageState((prev) => ({ ...prev, showCropModal: false }))}
+              />
+            )}
+          </div>
+        </div>
+      );
+    };
+
+
+
+    // Step Components
+    const Step1Collections = ({ newBook, setNewBook, SYSTEM_COLLECTIONS, collections, groupedEntries }) => {
+      const toggleCollection = (collectionId) => {
+        setNewBook(prev => ({
+          ...prev,
+          selectedCollections: prev.selectedCollections.includes(collectionId)
+            ? prev.selectedCollections.filter(id => id !== collectionId)
+            : [...prev.selectedCollections, collectionId]
+        }));
+      };
+
+      return (
+        <div>
+          <h3 className="text-lg font-semibold text-gray-800 mb-4">Which collections would you like to include?</h3>
+          <p className="text-sm text-gray-600 mb-6">Select one or more collections to pull insights from.</p>
+
+          <div className="space-y-3">
+            {[...SYSTEM_COLLECTIONS, ...collections].filter(c => groupedEntries[c.id]?.length > 0).map(collection => (
+              <div
+                key={collection.id}
+                onClick={() => toggleCollection(collection.id)}
+                className={`p-4 border rounded-lg cursor-pointer transition-colors ${
+                  newBook.selectedCollections.includes(collection.id)
+                    ? 'border-blue-500 bg-blue-50'
+                    : 'border-gray-200 hover:bg-gray-50'
+                }`}
+              >
+                <div className="flex items-center">
+                  <div className={`w-8 h-8 ${collection.color} rounded-md flex items-center justify-center mr-3`}>
+                    {collection.type === 'occasion' ? (
+                      <Calendar className="w-4 h-4 text-white" />
+                    ) : (
+                      <FolderOpen className="w-4 h-4 text-white" />
+                    )}
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-gray-800">{collection.name}</h4>
+                    <p className="text-xs text-gray-500">
+                      {groupedEntries[collection.id]?.length || 0} insights
+                    </p>
+                  </div>
+                  <div className="ml-auto">
+                    <Check
+                      checked={newBook.selectedCollections.includes(collection.id)}
+                      onChange={() => toggleCollection(collection.id)}
+                    />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    };
+
+    const Step2Insights = ({ newBook, setNewBook, insights, setEntryOrder }) => {
+      // Get all entries from selected collections
+      const allEntries = newBook.selectedCollections.flatMap(collectionId =>
+        groupedEntries[collectionId] || []
+      );
+
+      // Remove duplicates
+      const uniqueEntries = allEntries.filter(
+        (entry, index, self) => index === self.findIndex(e => e.id === entry.id)
+      );
+
+      const toggleEntry = (entryId) => {
+        setNewBook(prev => ({
+          ...prev,
+          selectedEntries: prev.selectedEntries.includes(entryId)
+            ? prev.selectedEntries.filter(id => id !== entryId)
+            : [...prev.selectedEntries, entryId]
+        }));
+
+        // Initialize entry order when first selecting entries
+      if (!newBook.selectedEntries.includes(entryId)) {
+          setEntryOrder(prev => [...prev, entryId]);
+        } else {
+          setEntryOrder(prev => prev.filter(id => id !== entryId));
+        }
+      };
+
+      return (
+        <div>
+          <h3 className="text-lg font-semibold text-gray-800 mb-4">Select insights to include</h3>
+          <p className="text-sm text-gray-600 mb-6">
+            {newBook.selectedEntries.length} of {uniqueEntries.length} insights selected
+          </p>
+
+          <div className="space-y-4">
+            {uniqueEntries.map(entry => (
+              <div
+                key={entry.id}
+                onClick={() => toggleEntry(entry.id)}
+                className={`p-4 border rounded-lg cursor-pointer transition-colors ${
+                  newBook.selectedEntries.includes(entry.id)
+                    ? 'border-blue-500 bg-blue-50'
+                    : 'border-gray-200 hover:bg-gray-50'
+                }`}
+              >
+                <div className="flex items-start">
+                  <div className="mr-3 mt-1">
+                    <Check
+                      checked={newBook.selectedEntries.includes(entry.id)}
+                      onChange={() => toggleEntry(entry.id)}
+                    />
+                  </div>
+                  <div className="flex-1">
+                    {entry.question && (
+                      <div className="mb-2">
+                        <div className="text-xs font-medium text-blue-600 uppercase tracking-wider mb-1">Question</div>
+                        <p className="text-sm text-gray-800">{entry.question}</p>
+                      </div>
+                    )}
+                    <div>
+                      <div className="text-xs font-medium text-green-600 uppercase tracking-wider mb-1">Answer</div>
+                      <p className="text-sm text-gray-800">
+                        {entry.text || entry.content || "No content yet"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    };
+
+    const Step3Arrange = ({ newBook, entryOrder, setEntryOrder, insights, moveEntry }) => {
+      return (
+        <div>
+          <h3 className="text-lg font-semibold text-gray-800 mb-4">Arrange your book pages</h3>
+          <p className="text-sm text-gray-600 mb-6">
+            Drag and drop to reorder your insights. The first item will be page 1.
+          </p>
+
+          <div className="space-y-3">
+            {entryOrder.map((entryId, index) => {
+              const entry = insights.find(e => e.id === entryId);
+              if (!entry) return null;
+
+              return (
+                <DraggableEntry
+                  key={entryId}
+                  entry={entry}
+                  index={index}
+                  moveEntry={moveEntry}
+                  onRemove={() => {
+                    setEntryOrder(prev => prev.filter(id => id !== entryId));
+                    setNewBook(prev => ({
+                      ...prev,
+                      selectedEntries: prev.selectedEntries.filter(id => id !== entryId)
+                    }));
+                  }}
+                />
+              );
+            })}
+          </div>
+
+          {/* Quick actions */}
+          <div className="mt-6 flex flex-wrap gap-2">
+            <button
+              onClick={() => {
+                // Auto-arrange by date
+                const sorted = [...entryOrder].sort((a, b) => {
+                  const entryA = insights.find(e => e.id === a);
+                  const entryB = insights.find(e => e.id === b);
+                  return new Date(entryB.date) - new Date(entryA.date);
+                });
+                setEntryOrder(sorted);
+              }}
+              className="px-3 py-1.5 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg"
+            >
+              Arrange by Date
+            </button>
+            <button
+              onClick={() => {
+                // Auto-arrange by collection
+                const sorted = [...entryOrder].sort((a, b) => {
+                  const entryA = insights.find(e => e.id === a);
+                  const entryB = insights.find(e => e.id === b);
+                  return entryA.collections?.[0]?.localeCompare(entryB.collections?.[0]);
+                });
+                setEntryOrder(sorted);
+              }}
+              className="px-3 py-1.5 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg"
+            >
+              Arrange by Collection
+            </button>
+          </div>
+        </div>
+      );
+    };
+
+    const Step4Cover = ({ newBook, setNewBook, coverImageState, setCoverImageState }) => {
+      const fileInputRef = useRef(null);
+      const [isLoading, setIsLoading] = useState(false);
+
+      useEffect(() => {
+        console.log('coverImageState changed:', coverImageState);
+      }, [coverImageState]);
+
+      const handleImageUpload = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        setIsLoading(true);
+        const reader = new FileReader();
+
+        reader.onload = (event) => {
+          setCoverImageState({
+            tempImage: event.target.result,
+            showCropModal: true
+          });
+          setIsLoading(false);
+        };
+
+        reader.onerror = () => {
+          setIsLoading(false);
+          alert('Error loading image');
+        };
+
+        reader.readAsDataURL(file);
+      };
+
+      const handleCropComplete = (croppedImage) => {
+        setNewBook(prev => ({ ...prev, coverImage: croppedImage }));
+        setCoverImageState({ tempImage: null, showCropModal: false });
+      };
+
+
+      return (
+        <div>
+          <h3 className="text-lg font-semibold text-gray-800 mb-4">Upload a cover image</h3>
+          <p className="text-sm text-gray-600 mb-6">
+            Choose an image that represents your book.
+          </p>
+
+          <div className="flex flex-col items-center">
+            <div className="w-64 h-80 border-2 border-dashed border-gray-300 rounded-lg mb-4 flex items-center justify-center overflow-hidden bg-gray-50">
+              {newBook.coverImage ? (
+                <img
+                  src={newBook.coverImage}
+                  alt="Book cover"
+                  className="w-full h-full object-cover"
+                />
+              ) : isLoading ? (
+                <div className="flex flex-col items-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                  <p className="mt-2 text-sm text-gray-500">Loading image...</p>
+                </div>
+              ) : (
+                <div className="text-center p-4">
+                  <ImageIcon className="w-12 h-12 mx-auto text-gray-400 mb-2" />
+                  <p className="text-sm text-gray-500">No cover selected</p>
+                </div>
+              )}
+            </div>
+
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleImageUpload}
+              accept="image/*"
+              className="hidden"
+            />
+
+            <button
+              onClick={() => fileInputRef.current.click()}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              disabled={isLoading}
+            >
+              {isLoading ? 'Uploading...' : newBook.coverImage ? 'Change Image' : 'Upload Image'}
+            </button>
+          </div>
+        </div>
+      );
+    };
+
+    // Step 5: Write Back Cover Note
+    const Step5BackCover = ({ newBook, setNewBook }) => {
+      return (
+        <div>
+          <h3 className="text-lg font-semibold text-gray-800 mb-4">Write a back cover note</h3>
+          <p className="text-sm text-gray-600 mb-6">
+            Add a personal message that will appear on the back cover of your book.
+          </p>
+
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Book Title
+            </label>
+            <input
+              type="text"
+              value={newBook.title}
+              onChange={(e) => setNewBook(prev => ({ ...prev, title: e.target.value }))}
+              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Enter book title"
+            />
+          </div>
+
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Book Description
+            </label>
+            <input
+              type="text"
+              value={newBook.description}
+              onChange={(e) => setNewBook(prev => ({ ...prev, description: e.target.value }))}
+              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Enter short description"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Personal Note
+            </label>
+            <textarea
+              value={newBook.backCoverNote}
+              onChange={(e) => setNewBook(prev => ({ ...prev, backCoverNote: e.target.value }))}
+              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 h-32"
+              placeholder="Write your personal note here..."
+            />
+          </div>
+
+          <div className="mt-4 flex items-center">
+            <button
+              onClick={() => {
+                // AI-assisted note generation would go here
+                setNewBook(prev => ({
+                  ...prev,
+                  backCoverNote: "I've collected these thoughts and lessons especially for you. May they guide, comfort, and inspire you throughout your life's journey."
+                }));
+              }}
+              className="text-sm text-blue-600 hover:text-blue-800 flex items-center"
+            >
+              <Sparkles className="w-4 h-4 mr-1" />
+              Generate with AI
+            </button>
+          </div>
+        </div>
+      );
+    };
+
+    // Step 6: Assign Recipient
+    const Step6Recipient = ({ newBook, setNewBook, individuals }) => {
+      return (
+        <div>
+          <h3 className="text-lg font-semibold text-gray-800 mb-4">Who is this book for?</h3>
+          <p className="text-sm text-gray-600 mb-6">
+            Select the person you're creating this book for.
+          </p>
+
+          <div className="grid grid-cols-2 gap-4">
+            {individuals.map(person => (
+              <div
+                key={person.id}
+                onClick={() => setNewBook(prev => ({ ...prev, recipient: person.id }))}
+                className={`p-4 border rounded-lg cursor-pointer transition-colors ${
+                  newBook.recipient === person.id
+                    ? 'border-blue-500 bg-blue-50'
+                    : 'border-gray-200 hover:bg-gray-50'
+                }`}
+              >
+                <div className="flex items-center">
+                  <div className={`w-10 h-10 ${person.color} rounded-full flex items-center justify-center mr-3`}>
+                    <span className="text-white font-medium">
+                      {person.name.charAt(0).toUpperCase()}
+                    </span>
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-gray-800">{person.name}</h4>
+                    <p className="text-xs text-gray-500">
+                      {person.relationship || 'Family member'}
+                    </p>
+                  </div>
+                  {newBook.recipient === person.id && (
+                    <div className="ml-auto text-blue-600">
+                      <Check className="w-5 h-5" />
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    };
+
+    // Step 7: Preview
+    const Step7Preview = ({ newBook, entryOrder }) => {
+      const [currentPreviewPage, setCurrentPreviewPage] = useState(0);
+      const [isFlipping, setIsFlipping] = useState(false);
+
+      // Get all entries in order
+      const orderedEntries = entryOrder.map(id => insights.find(e => e.id === id)).filter(Boolean);
+
+      const flipPage = (direction) => {
+        if (isFlipping) return;
+        setIsFlipping(true);
+
+        if (direction === 'next' && currentPreviewPage < orderedEntries.length - 1) {
+          setCurrentPreviewPage(currentPreviewPage + 1);
+        } else if (direction === 'prev' && currentPreviewPage > 0) {
+          setCurrentPreviewPage(currentPreviewPage - 1);
+        }
+
+        setTimeout(() => setIsFlipping(false), 300);
+      };
+
+      return (
+        <div>
+          <h3 className="text-lg font-semibold text-gray-800 mb-4">Preview your book</h3>
+          <p className="text-sm text-gray-600 mb-6">
+            Review how your book will look before publishing.
+          </p>
+
+          <div className="flex justify-center">
+            <div className="relative w-full max-w-md">
+              {/* Book cover */}
+              {currentPreviewPage === 0 && (
+                <div className={`bg-white rounded-lg shadow-xl border border-gray-200 h-[500px] overflow-hidden relative ${
+                  isFlipping ? 'scale-95 opacity-70' : 'scale-100 opacity-100'
+                }`}>
+                  <div className="absolute inset-0 bg-gradient-to-br from-blue-100 to-indigo-100 flex flex-col items-center justify-center p-8">
+                    {newBook.coverImage ? (
+                      <img
+                        src={newBook.coverImage}
+                        alt="Book cover"
+                        className="w-full h-full object-cover absolute inset-0"
+                      />
+                    ) : (
+                      <div className="text-center z-10">
+                        <BookOpen className="w-12 h-12 mx-auto text-blue-600 mb-4" />
+                        <h3 className="text-2xl font-bold text-blue-800 mb-2">{newBook.title || 'Untitled Book'}</h3>
+                        <p className="text-blue-600">{newBook.description || 'A collection of wisdom and insights'}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Back cover */}
+              {currentPreviewPage === orderedEntries.length + 1 && (
+                <div className={`bg-white rounded-lg shadow-xl border border-gray-200 h-[500px] overflow-hidden relative ${
+                  isFlipping ? 'scale-95 opacity-70' : 'scale-100 opacity-100'
+                }`}>
+                  <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-indigo-50 p-8 flex flex-col">
+                    <div className="flex-1 flex items-center justify-center">
+                      <div className="text-center">
+                        <Heart className="w-10 h-10 mx-auto text-pink-500 mb-4" />
+                        <p className="text-gray-700 whitespace-pre-line">
+                          {newBook.backCoverNote || 'With love and care...'}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-center text-sm text-gray-500">
+                      <p>Created with Love</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Content pages */}
+              {currentPreviewPage > 0 && currentPreviewPage <= orderedEntries.length && (
+                <div className={`bg-white rounded-lg shadow-xl border border-gray-200 h-[500px] overflow-y-auto ${
+                  isFlipping ? 'scale-95 opacity-70' : 'scale-100 opacity-100'
+                }`}>
+                  <div className="p-8 h-full flex flex-col">
+                    <div className="mb-6">
+                      <div className="inline-block px-3 py-1 bg-blue-100 rounded-full">
+                        <span className="text-xs font-semibold text-blue-700 uppercase tracking-wider">
+                          {orderedEntries[currentPreviewPage - 1].question ? 'Question' : 'Insight'}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex-1 min-h-[300px]">
+                      {orderedEntries[currentPreviewPage - 1].question && (
+                        <div className="mb-6">
+                          <p className="text-lg text-blue-800 italic">
+                            {orderedEntries[currentPreviewPage - 1].question}
+                          </p>
+                        </div>
+                      )}
+
+                      <p className="text-gray-800 mb-4">
+                        {orderedEntries[currentPreviewPage - 1].text || orderedEntries[currentPreviewPage - 1].content}
+                      </p>
+                    </div>
+
+                    <div className="mt-auto pt-4 text-center">
+                      <span className="text-xs text-gray-400 font-medium">
+                        Page {currentPreviewPage} of {orderedEntries.length}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Navigation arrows */}
+              {currentPreviewPage > 0 && (
+                <button
+                  onClick={() => flipPage('prev')}
+                  className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-white rounded-full shadow-lg hover:shadow-xl flex items-center justify-center text-blue-600 hover:text-blue-800 transition-all duration-200"
+                >
+                  <ChevronLeft className="w-5 h-5" />
+                </button>
+              )}
+
+              {currentPreviewPage < orderedEntries.length + 1 && (
+                <button
+                  onClick={() => flipPage('next')}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-white rounded-full shadow-lg hover:shadow-xl flex items-center justify-center text-blue-600 hover:text-blue-800 transition-all duration-200"
+                >
+                  <ChevronRight className="w-5 h-5" />
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    // Step 8: Publish
+    const Step8Publish = ({ newBook, onClose }) => {
+      const recipient = individuals.find(p => p.id === newBook.recipient);
+
+      const handlePublish = () => {
+        // Here you would typically:
+        // 1. Save the book to your database
+        // 2. Maybe trigger a print job or PDF generation
+        // 3. Show a success message
+        alert(`Book "${newBook.title}" published successfully for ${recipient?.name || 'your recipient'}!`);
+        onClose();
+      };
+
+      return (
+        <div>
+          <h3 className="text-lg font-semibold text-gray-800 mb-4">Ready to publish your book</h3>
+          <p className="text-sm text-gray-600 mb-6">
+            Review your book details before finalizing.
+          </p>
+
+          <div className="bg-blue-50 rounded-xl p-6 mb-6">
+            <div className="flex items-start">
+              <div className="w-16 h-20 bg-white rounded-md shadow-sm mr-4 overflow-hidden">
+                {newBook.coverImage ? (
+                  <img
+                    src={newBook.coverImage}
+                    alt="Book cover"
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center">
+                    <BookOpen className="w-6 h-6 text-blue-500" />
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <h4 className="font-bold text-gray-800 mb-1">{newBook.title || 'Untitled Book'}</h4>
+                <p className="text-sm text-gray-600 mb-2">{newBook.description || 'No description'}</p>
+
+                <div className="flex items-center text-sm text-gray-500">
+                  <span>{entryOrder.length} pages</span>
+                  <span className="mx-2">•</span>
+                  <span>For {recipient?.name || 'No recipient selected'}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <div className="flex items-center justify-between p-3 bg-white rounded-lg border border-gray-200">
+              <div className="flex items-center">
+                <Bookmark className="w-5 h-5 text-blue-500 mr-3" />
+                <span className="font-medium">Save as draft</span>
+              </div>
+              <Switch
+                checked={!newBook.isDraft}
+                onChange={() => setNewBook(prev => ({ ...prev, isDraft: !prev.isDraft }))}
+              />
+            </div>
+
+            <div className="p-4 bg-green-50 rounded-lg border border-green-200">
+              <div className="flex items-center mb-2">
+                <CheckCircle className="w-5 h-5 text-green-500 mr-2" />
+                <span className="font-medium text-green-800">Ready to publish</span>
+              </div>
+              <p className="text-sm text-green-700">
+                Your book meets all requirements for publishing. Click the button below to finalize.
+              </p>
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    const ImageCropperModal = ({ image, onCropComplete, onClose }) => {
+      const [crop, setCrop] = useState({
+        unit: 'px',
+        x: 100,
+        y: 100,
+        width: 200,
+        height: 300,
+        aspect: 2 / 3
+      });
+      const imgRef = useRef(null);
+      const [isLoaded, setIsLoaded] = useState(false);
+
+      const handleImageLoaded = (img) => {
+        imgRef.current = img;
+        setIsLoaded(true);
+
+        // Optional: reset crop to match image
+        setCrop({
+          unit: 'px',
+          x: 20,
+          y: 20,
+          width: img.width * 0.6,
+          height: img.height * 0.6,
+        });
+
+        return false;
+      };
+
+      const getCroppedImg = async () => {
+        if (!imgRef.current || !crop?.width || !crop?.height) {
+          console.warn('Missing image or crop dimensions', crop);
+          return;
+        }
+
+        const canvas = document.createElement('canvas');
+        const scaleX = imgRef.current.naturalWidth / imgRef.current.width;
+        const scaleY = imgRef.current.naturalHeight / imgRef.current.height;
+
+        canvas.width = crop.width;
+        canvas.height = crop.height;
+        const ctx = canvas.getContext('2d');
+
+        ctx.drawImage(
+          imgRef.current,
+          crop.x * scaleX,
+          crop.y * scaleY,
+          crop.width * scaleX,
+          crop.height * scaleY,
+          0,
+          0,
+          crop.width,
+          crop.height
+        );
+
+        return new Promise((resolve) => {
+          canvas.toBlob((blob) => {
+            if (!blob) return;
+            resolve(URL.createObjectURL(blob));
+          }, 'image/jpeg', 0.9);
+        });
+      };
+
+      const handleSave = async () => {
+        const croppedImage = await getCroppedImg();
+        if (croppedImage) {
+          onCropComplete(croppedImage);
+        }
+      };
+
+      return (
+        <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-4 w-full max-w-md">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold">Crop Image</h3>
+              <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="relative h-64 w-full bg-gray-100 rounded-lg overflow-hidden">
+              {!isLoaded && (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                </div>
+              )}
+
+              <ReactCrop
+                src={image}
+                crop={crop}
+                onChange={newCrop => setCrop(newCrop)}
+                onComplete={c => setCrop(c)}
+                onImageLoaded={handleImageLoaded}
+                style={{
+                  maxWidth: '100%',
+                  maxHeight: '400px',
+                  objectFit: 'contain'
+                }}
+                imageStyle={{
+                  maxWidth: '100%',
+                  maxHeight: '400px'
+                }}
+              />
+            </div>
+
+            <div className="mt-4 flex justify-end gap-2">
+              <button
+                onClick={onClose}
+                className="px-4 py-2 border border-gray-300 rounded-lg"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSave}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg"
+                disabled={!isLoaded}
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    };
 
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-blue-50 to-indigo-50 pb-20">
@@ -4532,17 +5585,75 @@ const WellSaidApp = () => {
                 <p className="text-sm text-gray-600 mb-3">
                   Turn your insights into a meaningful book for someone special.
                 </p>
+
+                {/* Step 3 Preview (when in arrange mode) */}
+                {currentView === 'arrangeBook' && (
+                  <div className="mb-4 p-4 bg-white rounded-lg border border-blue-200">
+                    <h4 className="font-medium text-gray-800 mb-3">Arrange Your Pages</h4>
+                    <div className="space-y-2">
+                      {entryOrder.slice(0, 3).map((entryId, index) => {
+                        const entry = insights.find(e => e.id === entryId);
+                        if (!entry) return null;
+
+                        return (
+                          <div key={entryId} className="flex items-center p-2 bg-gray-50 rounded">
+                            <GripVertical className="w-4 h-4 text-gray-400 mr-2" />
+                            <span className="text-sm text-gray-700 truncate">
+                              {entry.question || entry.text || `Page ${index + 1}`}
+                            </span>
+                          </div>
+                        );
+                      })}
+                      {entryOrder.length > 3 && (
+                        <div className="text-center text-sm text-gray-500">
+                          + {entryOrder.length - 3} more pages
+                        </div>
+                      )}
+                    </div>
+                    <button
+                      onClick={() => setBookCreationStep(3)} // Continue to next step
+                      className="w-full mt-3 bg-blue-600 text-white py-2 px-4 rounded-lg text-sm"
+                    >
+                      Continue Arranging
+                    </button>
+                  </div>
+                )}
+
                 <button
                   className="w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white py-2 px-4 rounded-lg font-medium flex items-center justify-center gap-2"
-                  onClick={() => setCurrentView('createBook')}
+                  onClick={() => {
+                    // Reset book creation state
+                    setNewBook({
+                      title: '',
+                      description: '',
+                      selectedCollections: [],
+                      selectedEntries: [],
+                      coverImage: null,
+                      backCoverNote: '',
+                      recipient: null,
+                      showTags: true,
+                      fontStyle: 'serif',
+                      isDraft: false
+                    });
+                    setEntryOrder([]);
+                    setBookCreationStep(0);
+                    setShowBookCreation(true); // Add this line
+                  }}
                 >
                   <Plus size={16} />
-                  Start New Book
+                  {currentView === 'arrangeBook' ? 'Continue Book Creation' : 'Start New Book'}
                 </button>
               </div>
             </div>
           )}
         </div>
+
+        {/* Book Creation Modal */}
+        {showBookCreation && (
+          <BookCreationModal
+            onClose={() => setShowBookCreation(false)}
+          />
+        )}
 
         {/* Tag Editor Modal */}
         {showTagEditor && selectedEntry && (
