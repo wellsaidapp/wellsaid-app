@@ -1,3 +1,51 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+/* ReactCrop container styles */
+.react-crop-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Crop selection styling */
+.ReactCrop__crop-selection {
+  border: 2px dashed rgba(255, 255, 255, 0.8);
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5);
+  z-index: 40 !important;
+}
+
+/* Image containment */
+.ReactCrop__child-wrapper {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.ReactCrop__image {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+/* Image container styling */
+.react-crop-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+/* Modal z-index assurance */
+.fixed.z-50 {
+  z-index: 50;
+}
+
+.bg-white.rounded-lg {
+  position: relative;
+  z-index: 51;
+}
