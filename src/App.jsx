@@ -15,6 +15,7 @@ import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { useDrag } from 'react-dnd';
 import { useDrop } from 'react-dnd';
+import { createPortal } from 'react-dom';
 import { Image } from 'antd';
 import { Switch } from 'antd';
 import ReactCrop from 'react-image-crop';
@@ -4484,16 +4485,6 @@ const WellSaidApp = () => {
                   setCoverImageState={setCoverImageState}
                 />
               )}
-              {newBook.coverImage && (
-                <div className="mt-4">
-                  <h4>Debug Image Preview</h4>
-                  <img
-                    src={newBook.coverImage}
-                    alt="Debug preview"
-                    style={{ maxWidth: '100%', maxHeight: '200px' }}
-                  />
-                </div>
-              )}
               {bookCreationStep === 4 && (
                 <Step5BackCover
                   newBook={newBook}
@@ -4582,6 +4573,7 @@ const WellSaidApp = () => {
               <ImageCropperModal
                 image={coverImageState.tempImage}
                 onCropComplete={(croppedImage) => {
+                  console.log("Cropped image received:", croppedImage);
                   setNewBook((prev) => ({ ...prev, coverImage: croppedImage }));
                   setCoverImageState({ tempImage: null, showCropModal: false });
                 }}
@@ -5251,40 +5243,77 @@ const WellSaidApp = () => {
       };
 
       const getCroppedImg = async () => {
-        if (!imgRef.current) return null;
+        if (!imgRef.current) {
+          console.error("No image reference found");
+          return null;
+        }
 
-        const canvas = document.createElement('canvas');
-        canvas.width = crop.width;
-        canvas.height = crop.height;
-        const ctx = canvas.getContext('2d');
+        try {
+          const canvas = document.createElement('canvas');
+          canvas.width = crop.width;
+          canvas.height = crop.height;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) throw new Error("Could not get canvas context");
 
-        ctx.drawImage(
-          imgRef.current,
-          crop.x,
-          crop.y,
-          crop.width,
-          crop.height,
-          0,
-          0,
-          crop.width,
-          crop.height
-        );
+          ctx.drawImage(
+            imgRef.current,
+            crop.x,
+            crop.y,
+            crop.width,
+            crop.height,
+            0,
+            0,
+            crop.width,
+            crop.height
+          );
 
-        return new Promise((resolve) => {
-          canvas.toBlob((blob) => {
-            resolve(blob ? URL.createObjectURL(blob) : null);
-          }, 'image/jpeg', 0.9);
-        });
+          return new Promise((resolve) => {
+            canvas.toBlob(
+              (blob) => {
+                if (!blob) throw new Error("Canvas returned null blob");
+                resolve(URL.createObjectURL(blob));
+              },
+              'image/jpeg',
+              0.9
+            );
+          });
+        } catch (error) {
+          console.error("Error in getCroppedImg:", error);
+          return null;
+        }
       };
 
-      const handleSave = async () => {
-        const croppedImage = await getCroppedImg();
-        if (croppedImage) onCropComplete(croppedImage);
+      const handleSave = async (e) => {
+        console.log("✅ Save button clicked");
+        e.preventDefault(); // Prevent any default form behavior
+        e.stopPropagation(); // Stop event bubbling
+
+        console.log('Attempting to save crop:', crop); // Debug log
+
+        if (!imgRef.current || !crop.width || !crop.height) {
+          console.warn('Cannot save - missing image reference or invalid crop dimensions');
+          return;
+        }
+
+        try {
+          const croppedImage = await getCroppedImg();
+          if (croppedImage) {
+            console.log('Successfully cropped image');
+            onCropComplete(croppedImage);
+          } else {
+            console.error('Cropping failed - no image returned');
+          }
+        } catch (error) {
+          console.error('Error during cropping:', error);
+        }
       };
 
       return (
-        <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-4 w-full max-w-md relative">
+        <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 pointer-events-auto">
+          <div
+            className="bg-white rounded-lg p-4 w-full max-w-md relative"
+            onClick={(e) => e.stopPropagation()} // Prevent clicks from bubbling
+          >
             {/* Header with close button */}
             <div className="flex justify-between items-center mb-4 z-10">
               <h3 className="text-lg font-semibold">Crop Image</h3>
@@ -5326,27 +5355,26 @@ const WellSaidApp = () => {
                 <ReactCrop
                   crop={crop}
                   onChange={setCrop}
-                  onComplete={setCrop}
-                  onImageLoaded={handleImageLoaded}
+                  onComplete={(c) => setCrop(c)}
+                  onImageLoaded={(img) => {
+                    imgRef.current = img;
+                    handleImageLoaded(img); // Your existing logic
+                  }}
                   minWidth={100}
                   minHeight={100}
                 >
                   <img
+                    ref={imgRef} // Add direct ref here
                     src={image}
-                    alt="Crop preview"
                     onError={handleImageError}
-                    style={{
-                      width: '100%',
-                      height: 'auto',
-                      objectFit: 'contain'
-                    }}
+                    style={{ maxWidth: '100%', maxHeight: '100%' }}
                   />
                 </ReactCrop>
               )}
             </div>
 
             {/* Modal controls */}
-            <div className="mt-4 flex justify-end gap-2">
+            <div className="mt-4 flex justify-end gap-2 relative z-[60]"> {/* Increased z-index */}
               <button
                 onClick={onClose}
                 className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
@@ -5355,8 +5383,7 @@ const WellSaidApp = () => {
               </button>
               <button
                 onClick={handleSave}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-                disabled={!isLoaded}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 pointer-events-auto"
               >
                 Save
               </button>

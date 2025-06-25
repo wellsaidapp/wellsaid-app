@@ -11,11 +11,12 @@
   align-items: center;
 }
 
-/* Crop selection styling */
 .ReactCrop__crop-selection {
-  border: 2px dashed rgba(255, 255, 255, 0.8);
-  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5);
-  z-index: 40 !important;
+  box-shadow:
+    0 0 0 9999px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(255, 255, 255, 0.8); /* retain border look */
+  pointer-events: auto;
+  pointer-events: bounding-box; /* limits shadow’s hit area (in browsers that support it) */
 }
 
 /* Image containment */
