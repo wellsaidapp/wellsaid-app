@@ -21,6 +21,9 @@ import { Switch } from 'antd';
 import ReactCrop from 'react-image-crop';
 import BookCreationModal from './components/BookCreation/BookCreationModal';
 
+// Constants
+import { SHARED_BOOKS, getRecentBooks } from './constants/sharedBooks';
+
 import 'react-image-crop/dist/ReactCrop.css'; // Important for styling
 const LandingPage = ({ onGetStarted, onShowLogin }) => {
   const [messages, setMessages] = useState([
@@ -1198,11 +1201,6 @@ const WellSaidApp = () => {
     setSelectedTopics([]);
   };
 
-  const [availableTopics] = useState([
-    'Finances', 'Relationships', 'Marriage', 'School', 'Friends', 'Work', 'Career',
-    'Health', 'Family Values', 'Personal Growth', 'Resilience', 'Education',
-    'Life Skills', 'Character', 'Faith', 'Traditions', 'Dreams', 'Challenges'
-  ]);
   // Add this to your component's state or props
   const [collections, setCollections] = useState([
     {
@@ -1596,7 +1594,6 @@ const WellSaidApp = () => {
   };
 
   const HomeView = () => {
-
     // Calculate metrics
     const todayInsights = insights.filter(i => i.date === '2025-06-16' && i.shared).length;
     const weekInsights = insights.filter(i => i.shared).length;
@@ -1606,7 +1603,8 @@ const WellSaidApp = () => {
     const [selectedBook, setSelectedBook] = useState(null);
     const [currentPage, setCurrentPage] = useState(0);
     const [isFlipping, setIsFlipping] = useState(false);
-
+    // Get the 2 most recent books
+    const recentBooks = getRecentBooks(2);
     const flipPage = (direction) => {
         if (isFlipping) return;
         setIsFlipping(true);
@@ -1619,66 +1617,6 @@ const WellSaidApp = () => {
 
         setTimeout(() => setIsFlipping(false), 300);
     };
-
-    // Sample shared books data (you can move this to your constants or state)
-    const sharedBooks = [
-        {
-            id: 1,
-            name: "Truett's Scofield Graduation",
-            recipient: "Truett",
-            description: "Advice for Truett as he graduates from Scofield",
-            count: 5,
-            color: "bg-purple-500",
-            type: "book",
-            pages: [
-                {
-                    type: "question",
-                    content: "What are your hopes for Truett as he enters this next chapter of school?",
-                    pageNumber: 1
-                },
-                {
-                    type: "answer",
-                    content: {
-                        text: "My hopes for Truett as he graduates from Scofield are:",
-                        points: [
-                            "That he stays true to himself and is authentic",
-                            "That he continues to develop the relationships he's formed",
-                            "That he makes new lasting relationships at FBA"
-                        ]
-                    },
-                    pageNumber: 2
-                }
-            ]
-        },
-        {
-            id: 2,
-            name: "Cohen's 16th Birthday",
-            recipient: "Cohen",
-            description: "Thoughts and advice for Cohen as he turns 16",
-            count: 4,
-            color: "bg-blue-500",
-            type: "book",
-            pages: [
-                {
-                    type: "question",
-                    content: "What do you remember most about Cohen at age 15?",
-                    pageNumber: 1
-                },
-                {
-                    type: "answer",
-                    content: {
-                        text: "Memories that stand out from this past year:",
-                        points: [
-                            "His eagerness to learn how to drive",
-                            "The way he captivated audiences in Beauty and the Beast",
-                            "His maturity and commitment to press into relationships"
-                        ]
-                    },
-                    pageNumber: 2
-                }
-            ]
-        }
-    ];
 
     const CaptureOptionsModal = ({ setShowCaptureOptions, setCurrentView, setCaptureMode }) => (
       <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-50 flex items-end">
@@ -1933,45 +1871,45 @@ const WellSaidApp = () => {
               </p>
 
               <div className="space-y-4">
-                  {sharedBooks.map(book => (
-                      <div key={book.id} className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100">
-                          <div className="p-4">
-                              <div className="flex items-start">
-                                  <div className={`w-12 h-12 rounded-lg ${book.color} flex items-center justify-center mr-3 flex-shrink-0`}>
-                                      <Book className="w-6 h-6 text-white" />
-                                  </div>
-                                  <div className="flex-1">
-                                      <h3 className="font-semibold text-gray-800 mb-1">{book.name}</h3>
-                                      <p className="text-sm text-gray-600 mb-2">{book.description}</p>
-                                  </div>
-                              </div>
-                          </div>
-
-                          <div className="px-4 pb-3 border-t border-gray-100">
-                              <div className="flex items-center justify-between pt-3">
-                                  <div className="flex items-center gap-2">
-                                      <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
-                                          <span className="text-xs font-medium text-blue-600">
-                                              {book.recipient.charAt(0)}
-                                          </span>
-                                      </div>
-                                      <span className="text-xs text-gray-600">
-                                          Shared with {book.recipient}
-                                      </span>
-                                  </div>
-                                  <button
-                                      onClick={() => {
-                                          setSelectedBook(book);
-                                          setCurrentPage(0);
-                                      }}
-                                      className="text-xs font-medium text-blue-600 hover:text-blue-800"
-                                  >
-                                      View Book
-                                  </button>
-                              </div>
-                          </div>
+                {recentBooks.map(book => (
+                  <div key={book.id} className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100">
+                    <div className="p-4">
+                      <div className="flex items-start">
+                        <div className={`w-12 h-12 rounded-lg ${book.color} flex items-center justify-center mr-3 flex-shrink-0`}>
+                          <Book className="w-6 h-6 text-white" />
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="font-semibold text-gray-800 mb-1">{book.name}</h3>
+                          <p className="text-sm text-gray-600 mb-2">{book.description}</p>
+                        </div>
                       </div>
-                  ))}
+                    </div>
+
+                    <div className="px-4 pb-3 border-t border-gray-100">
+                      <div className="flex items-center justify-between pt-3">
+                        <div className="flex items-center gap-2">
+                          <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
+                            <span className="text-xs font-medium text-blue-600">
+                              {book.recipient.charAt(0)}
+                            </span>
+                          </div>
+                          <span className="text-xs text-gray-600">
+                            Shared with {book.recipient}
+                          </span>
+                        </div>
+                        <button
+                          onClick={() => {
+                            setSelectedBook(book);
+                            setCurrentPage(0);
+                          }}
+                          className="text-xs font-medium text-blue-600 hover:text-blue-800"
+                        >
+                          View Book
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
           </div>
 
@@ -2172,12 +2110,9 @@ const WellSaidApp = () => {
       const [autoTags, setAutoTags] = useState({ topics: [], people: [] });
       const [currentInsight, setCurrentInsight] = useState(null);
       const messagesEndRef = useRef(null);
-      const [currentTopic, setCurrentTopic] = useState(null); // Add this line
-      // NEW: State for showing person selection UI
+      const [currentTopic, setCurrentTopic] = useState(null);
       const [showPeopleSelection, setShowPeopleSelection] = useState(false);
-      // NEW: State for showing occasion confirmation
       const [showOccasionConfirmation, setShowOccasionConfirmation] = useState(false);
-      // User profile data with topics
       const [userProfile, setUserProfile] = useState({
         topics: [
           {
@@ -3656,221 +3591,6 @@ const WellSaidApp = () => {
       { id: 'life-lessons', name: 'Life Lessons', color: 'bg-teal-400', type: 'system' }
     ];
 
-    // Shared books data (migrated from LibraryView)
-    const sharedBooks = [
-      {
-        id: 1,
-        name: "Letters to Sage",
-        recipient: "Sage",
-        description: "Life lessons and love letters for my daughter",
-        count: 12,
-        color: "bg-pink-500",
-        lastUpdated: "2 days ago",
-        type: "book",
-        pages: [
-          {
-            type: "question",
-            content: "How can I teach you about resilience when life gets difficult?",
-            pageNumber: 1
-          },
-          {
-            type: "answer",
-            content: {
-              text: "Resilience isn't about avoiding falls, but learning how to get up. When you face challenges:",
-              points: [
-                "Remember that struggles are temporary",
-                "Ask for help when you need it",
-                "Know that I'll always be here for you"
-              ]
-            },
-            pageNumber: 2
-          },
-          {
-            type: "question",
-            content: "What do I want you to know about finding true happiness?",
-            pageNumber: 3
-          },
-          {
-            type: "answer",
-            content: {
-              text: "Happiness comes from within and grows when you:",
-              points: [
-                "Cultivate gratitude daily",
-                "Build meaningful relationships",
-                "Pursue purpose, not just pleasure"
-              ]
-            },
-            pageNumber: 4
-          }
-        ]
-      },
-      {
-        id: 2,
-        name: "First Year Lessons",
-        recipient: "Cohen",
-        description: "What I learned in your first year of life",
-        count: 6,
-        color: "bg-blue-500",
-        lastUpdated: "1 week ago",
-        type: "book",
-        pages: [
-          {
-            type: "question",
-            content: "What surprised me most about becoming your parent?",
-            pageNumber: 1
-          },
-          {
-            type: "answer",
-            content: {
-              text: "The depth of love and responsibility I felt immediately:",
-              points: [
-                "How your smile could brighten my worst day",
-                "The instinct to protect you at all costs",
-                "The joy in your smallest discoveries"
-              ]
-            },
-            pageNumber: 2
-          },
-          {
-            type: "question",
-            content: "What advice would I give to new parents?",
-            pageNumber: 3
-          },
-          {
-            type: "answer",
-            content: {
-              text: "The things that matter most:",
-              points: [
-                "Trust your instincts - you know your child best",
-                "Don't compare milestones - every child develops differently",
-                "Take time to just be present together"
-              ]
-            },
-            pageNumber: 4
-          }
-        ]
-      },
-      {
-        id: 3,
-        name: "For When You're Older",
-        recipient: "Ellie",
-        description: "Wisdom for their teenage years and beyond",
-        count: 4,
-        color: "bg-purple-500",
-        lastUpdated: "3 days ago",
-        type: "book",
-        pages: [
-          {
-            type: "question",
-            content: "How should you handle heartbreak when it comes?",
-            pageNumber: 1
-          },
-          {
-            type: "answer",
-            content: {
-              text: "Though painful, heartbreak teaches valuable lessons:",
-              points: [
-                "It's okay to grieve - don't rush the healing",
-                "Every ending makes space for new beginnings",
-                "Your worth isn't defined by any relationship"
-              ]
-            },
-            pageNumber: 2
-          },
-          {
-            type: "question",
-            content: "What financial principles will serve you best?",
-            pageNumber: 3
-          },
-          {
-            type: "answer",
-            content: {
-              text: "Money management fundamentals:",
-              points: [
-                "Live below your means and save consistently",
-                "Invest early - time is your greatest asset",
-                "True wealth is freedom, not possessions"
-              ]
-            },
-            pageNumber: 4
-          },
-          {
-            type: "question",
-            content: "How do I want you to remember me?",
-            pageNumber: 5
-          },
-          {
-            type: "answer",
-            content: {
-              text: "I hope you remember:",
-              points: [
-                "I loved you unconditionally, always",
-                "I did my best, even when I made mistakes",
-                "My greatest legacy is the people you become"
-              ]
-            },
-            pageNumber: 6
-          }
-        ]
-      },
-      {
-          id: 4,
-          name: "Truett's Scofield Graduation",
-          recipient: "Truett",
-          description: "Advice for Truett as he graduates from Scofield",
-          count: 5,
-          color: "bg-purple-500",
-          type: "book",
-          pages: [
-              {
-                  type: "question",
-                  content: "What are your hopes for Truett as he enters this next chapter of school?",
-                  pageNumber: 1
-              },
-              {
-                  type: "answer",
-                  content: {
-                      text: "My hopes for Truett as he graduates from Scofield are:",
-                      points: [
-                          "That he stays true to himself and is authentic",
-                          "That he continues to develop the relationships he's formed",
-                          "That he makes new lasting relationships at FBA"
-                      ]
-                  },
-                  pageNumber: 2
-              }
-          ]
-      },
-      {
-          id: 5,
-          name: "Cohen's 16th Birthday",
-          recipient: "Cohen",
-          description: "Thoughts and advice for Cohen as he turns 16",
-          count: 4,
-          color: "bg-blue-500",
-          type: "book",
-          pages: [
-              {
-                  type: "question",
-                  content: "What do you remember most about Cohen at age 15?",
-                  pageNumber: 1
-              },
-              {
-                  type: "answer",
-                  content: {
-                      text: "Memories that stand out from this past year:",
-                      points: [
-                          "His eagerness to learn how to drive",
-                          "The way he captivated audiences in Beauty and the Beast",
-                          "His maturity and commitment to press into relationships"
-                      ]
-                  },
-                  pageNumber: 2
-              }
-          ]
-      }
-    ];
-
     // Replace the groupedEntries reducer with this:
     const groupedEntries = insights.reduce((acc, entry) => {
       // Handle unorganized entries (no collections)
@@ -4531,14 +4251,14 @@ const WellSaidApp = () => {
               <div className="mb-6">
                 <div className="flex items-center justify-between mb-3">
                   <h2 className="text-lg font-semibold text-gray-800">Living Bookshelf</h2>
-                  <span className="text-sm text-gray-500">{sharedBooks.length} books</span>
+                  <span className="text-sm text-gray-500">{SHARED_BOOKS.length} books</span>
                 </div>
                 <p className="text-sm text-gray-600 mb-4">
                   Curated collections and books you've created to share with your loved ones.
                 </p>
 
                 <div className="space-y-4">
-                  {sharedBooks.map(book => (
+                  {SHARED_BOOKS.map(book => (
                     <div key={book.id} className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100">
                       <div className="p-4">
                         <div className="flex items-start">
