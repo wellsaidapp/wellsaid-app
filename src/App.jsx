@@ -4374,7 +4374,7 @@ const WellSaidApp = () => {
     // Add these components before your main OrganizeView return statement
 
     const BookCreationModal = ({ onClose }) => {
-      const steps = [
+      const steps = React.useMemo(() => [
         'Select Collections',
         'Choose Insights',
         'Arrange Pages',
@@ -4383,13 +4383,17 @@ const WellSaidApp = () => {
         'Assign Recipient',
         'Preview',
         'Publish'
-      ];
+      ], []);
 
       const [coverImageState, setCoverImageState] = useState({
         tempImage: null,
         showCropModal: false
       });
 
+      useEffect(() => {
+        console.log('NewBook:', newBook);
+      }, [newBook]);
+      
       // Add this effect to handle when we come from the arrange view
       useEffect(() => {
         if (currentView === 'arrangeBook' && bookCreationStep < 2) {
@@ -4828,12 +4832,13 @@ const WellSaidApp = () => {
           </p>
 
           <div className="flex flex-col items-center">
-            <div className="w-64 h-80 border-2 border-dashed border-gray-300 rounded-lg mb-4 flex items-center justify-center overflow-hidden bg-gray-50">
+            {/* Changed to square container w-64 h-64 */}
+            <div className="w-64 h-64 border-2 border-dashed border-gray-300 rounded-lg mb-4 flex items-center justify-center overflow-hidden bg-gray-50 relative">
               {newBook.coverImage ? (
                 <img
                   src={newBook.coverImage}
                   alt="Book cover"
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-contain"  // Changed to object-contain
                 />
               ) : isLoading ? (
                 <div className="flex flex-col items-center">
@@ -4869,7 +4874,7 @@ const WellSaidApp = () => {
     };
 
     // Step 5: Write Back Cover Note
-    const Step5BackCover = ({ newBook, setNewBook }) => {
+    const Step5BackCover = React.memo(({ newBook, setNewBook }) => {
       return (
         <div>
           <h3 className="text-lg font-semibold text-gray-800 mb-4">Write a back cover note</h3>
@@ -4918,7 +4923,6 @@ const WellSaidApp = () => {
           <div className="mt-4 flex items-center">
             <button
               onClick={() => {
-                // AI-assisted note generation would go here
                 setNewBook(prev => ({
                   ...prev,
                   backCoverNote: "I've collected these thoughts and lessons especially for you. May they guide, comfort, and inspire you throughout your life's journey."
@@ -4932,7 +4936,7 @@ const WellSaidApp = () => {
           </div>
         </div>
       );
-    };
+    });
 
     // Step 6: Assign Recipient
     const Step6Recipient = ({ newBook, setNewBook, individuals }) => {
@@ -5014,12 +5018,12 @@ const WellSaidApp = () => {
                 <div className={`bg-white rounded-lg shadow-xl border border-gray-200 h-[500px] overflow-hidden relative ${
                   isFlipping ? 'scale-95 opacity-70' : 'scale-100 opacity-100'
                 }`}>
-                  <div className="absolute inset-0 bg-gradient-to-br from-blue-100 to-indigo-100 flex flex-col items-center justify-center p-8">
+                    <div className="w-64 h-64 border-2 border-dashed border-gray-300 rounded-lg mb-4 flex items-center justify-center overflow-hidden bg-gray-50 p-1">
                     {newBook.coverImage ? (
                       <img
                         src={newBook.coverImage}
                         alt="Book cover"
-                        className="w-full h-full object-cover absolute inset-0"
+                        className="max-w-full max-h-full object-contain"
                       />
                     ) : (
                       <div className="text-center z-10">
@@ -5194,7 +5198,7 @@ const WellSaidApp = () => {
         unit: 'px',
         x: 0,
         y: 0,
-        width: 300,
+        width: 200,
         height: 200
       });
       const imgRef = useRef(null);
@@ -5210,7 +5214,7 @@ const WellSaidApp = () => {
             unit: 'px',
             x: 0,
             y: 0,
-            width: 300,
+            width: 200,
             height: 200
           });
         }
@@ -5243,68 +5247,52 @@ const WellSaidApp = () => {
       };
 
       const getCroppedImg = async () => {
-        if (!imgRef.current) {
-          console.error("No image reference found");
-          return null;
-        }
+        if (!imgRef.current) return null;
 
         try {
-          const canvas = document.createElement('canvas');
-          canvas.width = crop.width;
-          canvas.height = crop.height;
-          const ctx = canvas.getContext('2d');
-          if (!ctx) throw new Error("Could not get canvas context");
+          const scaleX = imgRef.current.naturalWidth / imgRef.current.width;
+          const scaleY = imgRef.current.naturalHeight / imgRef.current.height;
 
+          const canvasSize = 256;
+          const canvas = document.createElement('canvas');
+          canvas.width = canvasSize;
+          canvas.height = canvasSize;
+          const ctx = canvas.getContext('2d');
+
+          // Draw cropped area scaled down to 256x256
           ctx.drawImage(
             imgRef.current,
-            crop.x,
-            crop.y,
-            crop.width,
-            crop.height,
+            crop.x * scaleX,
+            crop.y * scaleY,
+            crop.width * scaleX,
+            crop.height * scaleY,
             0,
             0,
-            crop.width,
-            crop.height
+            canvasSize,
+            canvasSize
           );
 
           return new Promise((resolve) => {
-            canvas.toBlob(
-              (blob) => {
-                if (!blob) throw new Error("Canvas returned null blob");
-                resolve(URL.createObjectURL(blob));
-              },
-              'image/jpeg',
-              0.9
-            );
+            canvas.toBlob((blob) => {
+              if (!blob) return resolve(null);
+              const reader = new FileReader();
+              reader.onloadend = () => resolve(reader.result); // Return base64 image
+              reader.readAsDataURL(blob);
+            }, 'image/jpeg', 0.9);
           });
-        } catch (error) {
-          console.error("Error in getCroppedImg:", error);
+        } catch (err) {
+          console.error("getCroppedImg error:", err);
           return null;
         }
       };
 
       const handleSave = async (e) => {
-        console.log("✅ Save button clicked");
-        e.preventDefault(); // Prevent any default form behavior
-        e.stopPropagation(); // Stop event bubbling
+        e.preventDefault();
+        e.stopPropagation();
 
-        console.log('Attempting to save crop:', crop); // Debug log
-
-        if (!imgRef.current || !crop.width || !crop.height) {
-          console.warn('Cannot save - missing image reference or invalid crop dimensions');
-          return;
-        }
-
-        try {
-          const croppedImage = await getCroppedImg();
-          if (croppedImage) {
-            console.log('Successfully cropped image');
-            onCropComplete(croppedImage);
-          } else {
-            console.error('Cropping failed - no image returned');
-          }
-        } catch (error) {
-          console.error('Error during cropping:', error);
+        const croppedImage = await getCroppedImg();
+        if (croppedImage) {
+          onCropComplete(croppedImage); // already resized
         }
       };
 
@@ -5326,7 +5314,7 @@ const WellSaidApp = () => {
             </div>
 
             {/* Image container */}
-            <div className="relative h-64 w-full bg-gray-100 rounded-lg overflow-hidden">
+            <div className="relative w-full bg-gray-100 rounded-lg overflow-hidden max-h-[75vh]">
               {!isLoaded && !hasError && (
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
@@ -5355,6 +5343,7 @@ const WellSaidApp = () => {
                 <ReactCrop
                   crop={crop}
                   onChange={setCrop}
+                  aspect={1}
                   onComplete={(c) => setCrop(c)}
                   onImageLoaded={(img) => {
                     imgRef.current = img;
