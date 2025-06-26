@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChevronLeft, ChevronRight, BookOpen, Heart } from 'lucide-react'; // Adjust if using a different icon set
+import { ChevronLeft, ChevronRight, BookOpen, Heart, Palette, Type } from 'lucide-react'; // Adjust if using a different icon set
 
 const Step7Preview = ({ newBook, entryOrder, insights }) => {
   const [currentPreviewPage, setCurrentPreviewPage] = useState(0);
@@ -7,12 +7,24 @@ const Step7Preview = ({ newBook, entryOrder, insights }) => {
 
   // Get all entries in order
   const orderedEntries = entryOrder.map(id => insights.find(e => e.id === id)).filter(Boolean);
+  const [isSerifFont, setIsSerifFont] = useState(true);
+  const fontClass = isSerifFont ? 'font-serif' : 'font-sans';
+  const previewPages = [
+    { type: 'cover' },
+    ...orderedEntries.flatMap(entry => ([
+      { type: 'question', entry },
+      { type: 'answer', entry }
+    ])),
+    { type: 'backCover' }
+  ];
+  const currentPage = previewPages[currentPreviewPage];
+  const [isBlackAndWhite, setIsBlackAndWhite] = useState(false);
 
   const flipPage = (direction) => {
     if (isFlipping) return;
     setIsFlipping(true);
 
-    if (direction === 'next' && currentPreviewPage < orderedEntries.length - 1) {
+    if (direction === 'next' && currentPreviewPage < previewPages.length - 1) {
       setCurrentPreviewPage(currentPreviewPage + 1);
     } else if (direction === 'prev' && currentPreviewPage > 0) {
       setCurrentPreviewPage(currentPreviewPage - 1);
@@ -20,6 +32,9 @@ const Step7Preview = ({ newBook, entryOrder, insights }) => {
 
     setTimeout(() => setIsFlipping(false), 300);
   };
+
+  console.log("Current page index:", currentPreviewPage);
+  console.log("Current page type:", currentPage?.type);
 
   return (
     <div>
@@ -31,104 +46,135 @@ const Step7Preview = ({ newBook, entryOrder, insights }) => {
       <div className="flex justify-center">
         <div className="relative w-full max-w-md">
           {/* Book cover */}
-          {currentPreviewPage === 0 && (
-            <div className={`bg-white rounded-lg shadow-xl border border-gray-200 h-[500px] overflow-hidden relative ${
-              isFlipping ? 'scale-95 opacity-70' : 'scale-100 opacity-100'
-            }`}>
-                <div className="w-64 h-64 border-2 border-dashed border-gray-300 rounded-lg mb-4 flex items-center justify-center overflow-hidden bg-gray-50 p-1">
+          {currentPage.type === 'cover' && (
+            <div
+              className={`bg-white rounded-lg shadow-xl border border-gray-200 overflow-hidden relative flex flex-col items-center ${
+                isFlipping ? 'scale-95 opacity-70' : 'scale-100 opacity-100'
+              }`}
+            >
+              <div className="relative w-full max-w-xs aspect-square mt-2 p-2 flex items-center justify-center">
+                {/* Toggle Icon */}
+                <button
+                  onClick={() => setIsBlackAndWhite((prev) => !prev)}
+                  className="absolute top-3 right-3 z-10 bg-white border border-gray-200 rounded-full p-2 shadow-md hover:bg-gray-100 transition"
+                  title={isBlackAndWhite ? 'Show in Color' : 'Show in B&W'}
+                >
+                  <Palette className="w-5 h-5 text-blue-600" />
+                </button>
+
+                {/* Cover Image */}
                 {newBook.coverImage ? (
                   <img
                     src={newBook.coverImage}
                     alt="Book cover"
-                    className="max-w-full max-h-full object-contain"
+                    className={`w-full h-full object-contain rounded ${isBlackAndWhite ? 'grayscale' : ''}`}
                   />
                 ) : (
-                  <div className="text-center z-10">
-                    <BookOpen className="w-12 h-12 mx-auto text-blue-600 mb-4" />
-                    <h3 className="text-2xl font-bold text-blue-800 mb-2">{newBook.title || 'Untitled Book'}</h3>
-                    <p className="text-blue-600">{newBook.description || 'A collection of wisdom and insights'}</p>
+                  <div className="text-center">
+                    <BookOpen className="w-12 h-12 mx-auto text-blue-600 mb-2" />
+                    <h3 className={`text-gray-800 mb-4 ${fontClass}`}>{newBook.title || 'Untitled Book'}</h3>
+                    <p className={`text-gray-800 mb-4 ${fontClass}`}>
+                      {newBook.description || 'A collection of wisdom and insights'}
+                    </p>
                   </div>
                 )}
               </div>
             </div>
           )}
 
-          {/* Back cover */}
-          {currentPreviewPage === orderedEntries.length + 1 && (
-            <div className={`bg-white rounded-lg shadow-xl border border-gray-200 h-[500px] overflow-hidden relative ${
+          {(currentPage.type === 'question' || currentPage.type === 'answer') && (
+            <div className={`bg-white rounded-lg shadow-xl border border-gray-200 w-full max-w-xs aspect-square mx-auto p-2 flex items-center justify-center ${
               isFlipping ? 'scale-95 opacity-70' : 'scale-100 opacity-100'
             }`}>
-              <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-indigo-50 p-8 flex flex-col">
-                <div className="flex-1 flex items-center justify-center">
-                  <div className="text-center">
-                    <Heart className="w-10 h-10 mx-auto text-pink-500 mb-4" />
-                    <p className="text-gray-700 whitespace-pre-line">
-                      {newBook.backCoverNote || 'With love and care...'}
-                    </p>
-                  </div>
-                </div>
-                <div className="text-center text-sm text-gray-500">
-                  <p>Created with Love</p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Content pages */}
-          {currentPreviewPage > 0 && currentPreviewPage <= orderedEntries.length && (
-            <div className={`bg-white rounded-lg shadow-xl border border-gray-200 h-[500px] overflow-y-auto ${
-              isFlipping ? 'scale-95 opacity-70' : 'scale-100 opacity-100'
-            }`}>
-              <div className="p-8 h-full flex flex-col">
+              {currentPage.type !== 'cover' && (
+                <button
+                  onClick={() => setIsSerifFont((prev) => !prev)}
+                  className="absolute top-3 right-3 z-10 bg-white border border-gray-200 rounded-full p-2 shadow-md hover:bg-gray-100 transition"
+                  title={isSerifFont ? 'Switch to Sans Serif' : 'Switch to Serif'}
+                >
+                  <Type className="w-5 h-5 text-blue-600" />
+                </button>
+              )}
+              <div className="w-full h-full flex flex-col justify-between items-center text-center p-4">
                 <div className="mb-6">
                   <div className="inline-block px-3 py-1 bg-blue-100 rounded-full">
-                    <span className="text-xs font-semibold text-blue-700 uppercase tracking-wider">
-                      {orderedEntries[currentPreviewPage - 1].question ? 'Question' : 'Insight'}
+                    <span className={`text-gray-800 mb-4 ${fontClass}`}>
+                      {currentPage.type === 'question' ? 'Question' : 'Insight'}
                     </span>
                   </div>
                 </div>
 
                 <div className="flex-1 min-h-[300px]">
-                  {orderedEntries[currentPreviewPage - 1].question && (
+                  {currentPage.type === 'question' && (
                     <div className="mb-6">
-                      <p className="text-lg text-blue-800 italic">
-                        {orderedEntries[currentPreviewPage - 1].question}
+                      <p className={`text-gray-800 mb-4 ${fontClass}`}>
+                        {currentPage.entry.question}
                       </p>
                     </div>
                   )}
 
-                  <p className="text-gray-800 mb-4">
-                    {orderedEntries[currentPreviewPage - 1].text || orderedEntries[currentPreviewPage - 1].content}
-                  </p>
-                </div>
-
-                <div className="mt-auto pt-4 text-center">
-                  <span className="text-xs text-gray-400 font-medium">
-                    Page {currentPreviewPage} of {orderedEntries.length}
-                  </span>
+                  {currentPage.type === 'answer' && (
+                    <p className={`text-gray-800 mb-4 ${fontClass}`}>
+                      {currentPage.entry.text || currentPage.entry.content}
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
           )}
 
+          {currentPage.type === 'backCover' && (
+            <div className={`bg-white rounded-lg shadow-xl border border-gray-200 w-full max-w-xs aspect-square mx-auto p-2 flex items-center justify-center ${
+              isFlipping ? 'scale-95 opacity-70' : 'scale-100 opacity-100'
+            }`}>
+            <button
+              onClick={() => setIsSerifFont((prev) => !prev)}
+              className="absolute top-3 right-3 z-10 bg-white border border-gray-200 rounded-full p-2 shadow-md hover:bg-gray-100 transition"
+              title={isSerifFont ? 'Switch to Sans Serif' : 'Switch to Serif'}
+            >
+              <Type className="w-5 h-5 text-blue-600" />
+            </button>
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-indigo-50 p-8 flex flex-col">
+                <div className="flex-1 flex items-center justify-center">
+                  <div className="text-center">
+                    <p className={`text-gray-800 mb-4 ${fontClass}`}>
+                      {newBook.backCoverNote || 'With love and care...'}
+                    </p>
+                  </div>
+                </div>
+                <div className={`text-center text-gray-800 mb-4 ${fontClass}`}>
+                  <p>Created by Brad Blanchard</p>
+                </div>
+              </div>
+            </div>
+          )}
           {/* Navigation arrows */}
-          {currentPreviewPage > 0 && (
+          {/* Page Navigation Controls */}
+          <div className="flex items-center justify-between gap-4 mt-6 w-full max-w-xs mx-auto">
             <button
               onClick={() => flipPage('prev')}
-              className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-white rounded-full shadow-lg hover:shadow-xl flex items-center justify-center text-blue-600 hover:text-blue-800 transition-all duration-200"
+              disabled={currentPreviewPage === 0}
+              className={`flex items-center justify-center w-12 h-12 rounded-full border ${
+                currentPreviewPage === 0 ? 'opacity-30 cursor-default' : 'hover:bg-gray-100'
+              }`}
             >
               <ChevronLeft className="w-5 h-5" />
             </button>
-          )}
 
-          {currentPreviewPage < orderedEntries.length + 1 && (
+            <span className="text-sm font-medium text-gray-600">
+              Page {currentPreviewPage + 1} of {previewPages.length}
+            </span>
+
             <button
               onClick={() => flipPage('next')}
-              className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-white rounded-full shadow-lg hover:shadow-xl flex items-center justify-center text-blue-600 hover:text-blue-800 transition-all duration-200"
+              disabled={currentPreviewPage === previewPages.length - 1}
+              className={`flex items-center justify-center w-12 h-12 rounded-full border ${
+                currentPreviewPage === previewPages.length - 1 ? 'opacity-30 cursor-default' : 'hover:bg-gray-100'
+              }`}
             >
               <ChevronRight className="w-5 h-5" />
             </button>
-          )}
+          </div>
         </div>
       </div>
     </div>
