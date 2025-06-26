@@ -7,7 +7,7 @@ const DraggableEntry = ({ entry, index, moveEntry, onRemove }) => {
 
   const [{ isDragging }, drag] = useDrag({
     type: 'ENTRY',
-    item: { index },
+    item: { index, id: entry.id },
     collect: (monitor) => ({
       isDragging: monitor.isDragging(),
     }),
@@ -46,7 +46,7 @@ const DraggableEntry = ({ entry, index, moveEntry, onRemove }) => {
     <div
       ref={ref}
       style={{ opacity: isDragging ? 0.5 : 1 }}
-      className="p-3 border border-gray-200 rounded-lg bg-white shadow-sm"
+      className="p-3 border border-gray-200 rounded-lg bg-white shadow-sm transition-transform duration-200 ease-in-out"
     >
       <div className="flex items-center">
         <GripVertical className="w-5 h-5 text-gray-400 mr-3 cursor-move" />

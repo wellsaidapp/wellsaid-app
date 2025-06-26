@@ -4419,7 +4419,7 @@ const WellSaidApp = () => {
           )}
 
           {/* View Mode Toggle */}
-          <div className="flex bg-white rounded-lg p-1 mb-6">
+          <div className="flex bg-white rounded-lg p-1 mb-6 relative z-0">
             <button
               onClick={() => setViewMode('collections')}
               className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${

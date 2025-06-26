@@ -10,7 +10,7 @@ const Step3Arrange = ({ newBook, entryOrder, setEntryOrder, insights, moveEntry 
         Drag and drop to reorder your insights. The first item will be page 1.
       </p>
 
-      <div className="space-y-3">
+      <div className="space-y-3 min-h-[200px]">
         {entryOrder.map((entryId, index) => {
           const entry = insights.find(e => e.id === entryId);
           if (!entry) return null;
