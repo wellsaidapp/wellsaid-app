@@ -45,7 +45,7 @@ const BookCreationModal = ({
     'Choose Insights',
     'Arrange Pages',
     'Upload Cover',
-    'Write Back Cover',
+    'Add Text',
     'Assign Recipient',
     'Preview',
     'Publish'
@@ -115,8 +115,21 @@ const BookCreationModal = ({
                 </button>
               </div>
 
+              {/* Mobile progress bar */}
+              <div className="sm:hidden flex flex-col items-center text-center mt-4">
+                <span className="text-sm text-gray-600 mb-1">
+                  Step {bookCreationStep + 1} of {steps.length}: {steps[bookCreationStep]}
+                </span>
+                <div className="w-full h-2 bg-gray-200 rounded-full">
+                  <div
+                    className="h-full bg-blue-600 rounded-full"
+                    style={{ width: `${((bookCreationStep + 1) / steps.length) * 100}%` }}
+                  ></div>
+                </div>
+              </div>
+
               {/* Progress steps */}
-              <div className="flex justify-between mt-4 relative">
+              <div className="hidden sm:flex justify-between mt-4 relative">
                 {steps.map((step, index) => (
                   <div key={index} className="flex flex-col items-center z-10">
                     <div
