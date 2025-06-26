@@ -8,14 +8,18 @@ const DraggableEntry = ({ entry, index, moveEntry, onRemove }) => {
   const [{ isDragging }, drag] = useDrag({
     type: 'ENTRY',
     item: { index, id: entry.id },
-    collect: (monitor) => ({
-      isDragging: monitor.isDragging(),
-    }),
+    collect: (monitor) => {
+      console.log("Setting up drag for index", index);  // ✅ Add this
+      return {
+        isDragging: monitor.isDragging(),
+      };
+    },
   });
 
   const [, drop] = useDrop({
     accept: 'ENTRY',
     hover(item, monitor) {
+      console.log("Hovering:", item.index, "→", index);
       if (!ref.current) return;
       const dragIndex = item.index;
       const hoverIndex = index;
@@ -46,25 +50,27 @@ const DraggableEntry = ({ entry, index, moveEntry, onRemove }) => {
     <div
       ref={ref}
       style={{ opacity: isDragging ? 0.5 : 1 }}
-      className="p-3 border border-gray-200 rounded-lg bg-white shadow-sm transition-transform duration-200 ease-in-out"
+      className="p-4 border border-gray-200 rounded-xl bg-white shadow-sm transition-transform duration-200 ease-in-out flex flex-col sm:flex-row sm:items-center gap-3 cursor-grab"
     >
-      <div className="flex items-center">
-        <GripVertical className="w-5 h-5 text-gray-400 mr-3 cursor-move" />
-        <div className="flex-1">
-          <div className="text-sm font-medium text-gray-700 mb-1">
-            Page {index + 1}
-          </div>
-          {entry.question && (
-            <div className="text-xs text-gray-600 truncate">{entry.question}</div>
-          )}
+      <GripVertical className="w-5 h-5 text-gray-400 sm:mt-0 mt-1" />
+
+      <div className="flex-1 min-w-0">
+        <div className="text-sm font-semibold text-gray-800 mb-1">
+          Page {index + 1}
         </div>
-        <button
-          onClick={onRemove}
-          className="text-gray-400 hover:text-red-500"
-        >
-          <Trash2 className="w-4 h-4" />
-        </button>
+        {entry.question && (
+          <div className="text-sm text-gray-600 break-words">
+            {entry.question}
+          </div>
+        )}
       </div>
+
+      <button
+        onClick={onRemove}
+        className="text-gray-400 hover:text-red-500 sm:self-auto self-end"
+      >
+        <Trash2 className="w-5 h-5" />
+      </button>
     </div>
   );
 };

@@ -2,7 +2,7 @@
 import React from 'react';
 import DraggableEntry from './DraggableEntry'; // Make sure this path matches your structure
 
-const Step3Arrange = ({ newBook, entryOrder, setEntryOrder, insights, moveEntry }) => {
+const Step3Arrange = ({ newBook, entryOrder, setEntryOrder, insights, moveEntry, setNewBook }) => {
   return (
     <div>
       <h3 className="text-lg font-semibold text-gray-800 mb-4">Arrange your book pages</h3>
