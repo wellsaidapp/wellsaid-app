@@ -107,7 +107,7 @@ const ImageCropperModal = ({ image, onCropComplete, onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 pointer-events-auto">
+    <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 pointer-events-auto overflow-y-auto">
       <div
         className="bg-white rounded-lg p-4 w-full max-w-md relative"
         onClick={(e) => e.stopPropagation()} // Prevent clicks from bubbling

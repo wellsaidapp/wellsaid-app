@@ -79,7 +79,7 @@ const LandingPage = ({ onGetStarted, onShowLogin }) => {
   }, []);
 
   return (
-    <div className="fixed inset-0 bg-gradient-to-br from-blue-50 to-indigo-50 z-50 overflow-hidden flex items-center justify-center p-4">
+    <div className="fixed inset-0 bg-gradient-to-br from-blue-50 to-indigo-50 z-50 overflow-y-auto flex items-center justify-center p-4">
       <div className="max-w-md w-full">
         {/* Logo - using your actual WellSaid logo */}
         <div className={`mb-4 transition-opacity duration-1000 ${showLogo ? 'opacity-100' : 'opacity-0'}`}>

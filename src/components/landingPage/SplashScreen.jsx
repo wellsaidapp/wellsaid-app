@@ -65,7 +65,7 @@ const SplashScreen = ({ onComplete }) => {
   if (showLogin) {
     if (loginStep === 'pin') {
       return (
-        <div className="fixed inset-0 flex items-center justify-center bg-gradient-to-br from-blue-500 to-indigo-600 p-4">
+        <div className="fixed inset-0 flex items-center justify-center bg-gradient-to-br from-blue-500 to-indigo-600 p-4 overflow-y-auto">
           <div className="bg-white rounded-2xl shadow-lg p-6 w-full max-w-md">
             <div className="text-center mb-6">
               <div className="flex justify-center mb-2">
@@ -119,7 +119,7 @@ const SplashScreen = ({ onComplete }) => {
 
     // Default email entry step
     return (
-      <div className="fixed inset-0 flex items-center justify-center bg-gradient-to-br from-blue-500 to-indigo-600 p-4">
+      <div className="fixed inset-0 flex items-center justify-center bg-gradient-to-br from-blue-500 to-indigo-600 p-4 overflow-y-auto">
         <div className="bg-white rounded-2xl shadow-lg p-6 w-full max-w-md">
           <div className="text-center mb-6">
             <div className="flex justify-center mb-2">
@@ -177,7 +177,7 @@ const SplashScreen = ({ onComplete }) => {
   }
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-white z-50 overflow-hidden">
+    <div className="fixed inset-0 flex items-center justify-center bg-white z-50 overflow-y-auto">
       {/* Developer bypass button */}
       <button
         onClick={handleDevLogin}

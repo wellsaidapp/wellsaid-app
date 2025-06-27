@@ -96,11 +96,11 @@ const BookCreationModal = ({
       <DndProvider backend={getBackend()}>
         {/* Backdrop that blocks all pointer events */}
         <div
-          className="fixed inset-0 bg-black bg-opacity-70 z-[100]"
+          className="fixed inset-0 bg-black bg-opacity-70 z-[100] overflow-y-auto"
           onClick={onClose}
           style={{ pointerEvents: 'auto' }}
         />
-        <div className="fixed inset-0 flex items-center justify-center p-4 z-[101] pointer-events-none">
+        <div className="fixed inset-0 flex items-center justify-center p-4 z-[101] pointer-events-none overflow-y-auto">
           {/* Modal content with pointer-events-auto */}
           <div className="bg-white rounded-2xl w-full max-w-4xl max-h-[95vh] overflow-hidden flex flex-col pointer-events-auto">
             {/* Header with progress steps */}
