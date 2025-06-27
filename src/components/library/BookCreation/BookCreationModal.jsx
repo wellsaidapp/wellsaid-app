@@ -22,7 +22,7 @@ import Step7Preview from './Step7Preview';
 import Step8Publish from './Step8Publish';
 import ImageCropperModal from './ImageCropperModal';
 import DraggableEntry from './DraggableEntry';
-import { SYSTEM_COLLECTIONS } from '../../constants/systemCollections';
+import { SYSTEM_COLLECTIONS } from '../../../constants/systemCollections';
 
 const BookCreationModal = ({
   onClose,
