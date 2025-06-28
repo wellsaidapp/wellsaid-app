@@ -1,0 +1,314 @@
+import { useState, useCallback } from 'react';
+import { SYSTEM_COLLECTIONS } from '../../constants/systemCollections';
+import { COLLECTIONS } from '../../constants/collections';
+import { SHARED_BOOKS } from '../../constants/sharedBooks';
+
+// Component imports
+import BookCreationModal from './BookCreation/BookCreationModal';
+import TagEditor from './utils/TagEditor';
+import Header from '../appLayout/Header';
+import SearchAndFilterBar from './utils/SearchAndFilterBar';
+import ViewModeToggle from './utils/ViewModeToggle';
+import CollectionsList from './CollectionsView/CollectionsList';
+import BooksList from './BooksView/BooksList';
+import BookPreviewModal from './BooksView/BookPreviewModal';
+import CreateBook from './BookCreation/CreateBook';
+
+const OrganizeView = ({ insights, individuals, setInsights }) => {
+  // State management
+  const [viewMode, setViewMode] = useState('collections');
+  const [collectionFilter, setCollectionFilter] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [selectedFilters, setSelectedFilters] = useState({
+    topics: [],
+    recipients: [],
+    entryTypes: []
+  });
+  const [expandedCollection, setExpandedCollection] = useState(null);
+  const [selectedBook, setSelectedBook] = useState(null);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [isFlipping, setIsFlipping] = useState(false);
+  const [showBookCreation, setShowBookCreation] = useState(false);
+  const [bookCreationStep, setBookCreationStep] = useState(0); // Add this to your state
+  const [currentView, setCurrentView] = useState('collections');
+  const [showInactiveCollections, setShowInactiveCollections] = useState(false);
+  const [selectedEntry, setSelectedEntry] = useState(null);
+  const [showTagEditor, setShowTagEditor] = useState(false);
+  const [entryOrder, setEntryOrder] = useState([]);
+  const [newBook, setNewBook] = useState({
+    title: '',
+    description: '',
+    selectedCollections: [],
+    selectedEntries: [],
+    coverImage: null,
+    backCoverNote: '',
+    recipient: null,
+    showTags: true,
+    fontStyle: 'serif',
+    isDraft: false
+  });
+
+  const groupedEntries = insights.reduce((acc, entry) => {
+    if (!entry.collections || entry.collections.length === 0) {
+      if (!acc.unorganized) acc.unorganized = [];
+      acc.unorganized.push(entry);
+      return acc;
+    }
+
+    entry.collections.forEach(collectionId => {
+      if (!acc[collectionId]) acc[collectionId] = [];
+      acc[collectionId].push(entry);
+    });
+
+    return acc;
+  }, {});
+
+  // Derived state
+  const filteredSystemCollections = SYSTEM_COLLECTIONS.filter(collection => {
+    const hasEntries = groupedEntries[collection.id]?.length > 0;
+    if (!hasEntries) return false;
+
+    if (collectionFilter === 'person') {
+      return groupedEntries[collection.id].some(entry => entry.recipients?.length > 0);
+    }
+    if (collectionFilter === 'occasion') {
+      return false;
+    }
+    return true;
+  });
+
+  const filteredUserCollections = COLLECTIONS.filter(collection => {
+    const hasEntries = groupedEntries[collection.id]?.length > 0;
+    if (!hasEntries) return false;
+
+    if (collectionFilter === 'person') {
+      return collection.type === 'person' ||
+             groupedEntries[collection.id].some(entry => entry.recipients?.length > 0);
+    }
+    if (collectionFilter === 'occasion') {
+      return collection.type === 'occasion';
+    }
+    return true;
+  });
+
+  // Handlers
+  const performRAGSearch = async (query) => {
+    setIsSearching(true);
+    await new Promise(resolve => setTimeout(resolve, 500));
+    const results = insights.filter(entry => {
+      const matchesText = entry.text?.toLowerCase().includes(query.toLowerCase()) ||
+                        entry.content?.toLowerCase().includes(query.toLowerCase()) ||
+                        entry.question?.toLowerCase().includes(query.toLowerCase());
+      const matchesTopics = selectedFilters.topics.length === 0 ||
+                          entry.topics?.some(topic => selectedFilters.topics.includes(topic));
+      const matchesRecipients = selectedFilters.recipients.length === 0 ||
+                              entry.recipients?.some(id => selectedFilters.recipients.includes(id));
+      const matchesType = selectedFilters.entryTypes.length === 0 ||
+                        (selectedFilters.entryTypes.includes('draft') && entry.isDraft) ||
+                        (selectedFilters.entryTypes.includes('voice') && entry.isVoiceNote) ||
+                        (selectedFilters.entryTypes.includes('insight') && !entry.isDraft && !entry.isVoiceNote);
+
+      return matchesText && matchesTopics && matchesRecipients && matchesType;
+    });
+    setSearchResults(results);
+    setIsSearching(false);
+  };
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    searchQuery.trim() ? performRAGSearch(searchQuery) : setSearchResults([]);
+  };
+
+  const toggleFilter = (filterType, value) => {
+    setSelectedFilters(prev => ({
+      ...prev,
+      [filterType]: prev[filterType].includes(value)
+          ? prev[filterType].filter(item => item !== value)
+          : [...prev[filterType], value]
+    }));
+  };
+
+  const handleStartNewBook = useCallback(() => {
+    if (!showBookCreation) {
+      setNewBook({
+        title: '',
+        description: '',
+        selectedCollections: [],
+        selectedEntries: [],
+        coverImage: null,
+        backCoverNote: '',
+        recipient: null,
+        showTags: true,
+        fontStyle: 'serif',
+        isDraft: false
+      });
+      setEntryOrder([]);
+    }
+    setShowBookCreation(true);
+  }, [showBookCreation]);
+
+  const startQuickCaptureFromCollection = (collection) => {
+    // Your quick capture implementation
+  };
+
+  const updateEntry = (updatedEntry) => {
+    setEntries(prevEntries =>
+      prevEntries.map(entry =>
+        entry.id === updatedEntry.id ? updatedEntry : entry
+      )
+    );
+  };
+
+  // Add these state handlers to your OrganizeView component
+  const handleEntryUpdate = (updatedEntry) => {
+    setInsights(prevInsights =>
+      prevInsights.map(entry =>
+        entry.id === updatedEntry.id ? updatedEntry : entry
+      )
+  );
+  };
+
+  const handleEntryDelete = (entryId) => {
+    setInsights(prevInsights =>
+      prevInsights.filter(entry => entry.id !== entryId)
+    );
+  };
+
+  const handleCollectionToggle = (entryId, collectionId) => {
+    setInsights(prevInsights =>
+      prevInsights.map(entry => {
+        if (entry.id !== entryId) return entry;
+
+        const currentCollections = entry.collections || [];
+        const newCollections = currentCollections.includes(collectionId)
+          ? currentCollections.filter(id => id !== collectionId)
+          : [...currentCollections, collectionId];
+
+        return { ...entry, collections: newCollections };
+      })
+    );
+  };
+
+  const handleRecipientToggle = (entryId, recipientId) => {
+    setInsights(prevInsights =>
+      prevInsights.map(entry => {
+        if (entry.id !== entryId) return entry;
+
+        const currentRecipients = entry.recipients || [];
+        const newRecipients = currentRecipients.includes(recipientId)
+          ? currentRecipients.filter(id => id !== recipientId)
+          : [...currentRecipients, recipientId];
+
+        return { ...entry, recipients: newRecipients };
+      })
+    );
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-blue-50 to-indigo-50 pb-20">
+      <Header />
+      <div className="p-4">
+        <SearchAndFilterBar
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          handleSearch={handleSearch}
+          isSearching={isSearching}
+          selectedFilters={selectedFilters}
+          toggleFilter={toggleFilter}
+          allRecipients={individuals.map(p => p.id)}
+          individuals={individuals}
+        />
+
+        <ViewModeToggle
+          viewMode={viewMode}
+          setViewMode={setViewMode}
+          collectionFilter={collectionFilter}
+          setCollectionFilter={setCollectionFilter}
+        />
+
+        {viewMode === 'collections' ? (
+          <CollectionsList
+            userCollections={filteredUserCollections}
+            groupedEntries={groupedEntries}
+            expandedCollection={expandedCollection}
+            onToggleCollection={(collectionId) => {
+              setExpandedCollection(prev =>
+                prev === collectionId ? null : collectionId
+              );
+            }}
+            onAddToCollection={(collectionId) => {
+              setCurrentCollection(collectionId);
+              setCurrentView('capture');
+            }}
+            showInactiveCollections={showInactiveCollections}
+            onToggleInactiveCollections={() => setShowInactiveCollections(!showInactiveCollections)}
+            inactiveCollections={SYSTEM_COLLECTIONS.filter(c => !groupedEntries[c.id]?.length)}
+            startQuickCaptureFromCollection={startQuickCaptureFromCollection}
+            systemCollections={SYSTEM_COLLECTIONS} // Pass the full system collections
+            onEntryUpdate={handleEntryUpdate}
+            onEntryDelete={handleEntryDelete}
+            onCollectionToggle={handleCollectionToggle}
+            onRecipientToggle={handleRecipientToggle}
+            individuals={individuals}
+            collections={COLLECTIONS}
+            setInsights={setInsights}
+          />
+        ) : (
+          <BooksList
+            books={SHARED_BOOKS}
+            onViewBook={(book) => {
+              setSelectedBook(book);
+              setCurrentPage(0);
+            }}
+            onStartNewBook={handleStartNewBook}
+            isCreating={currentView === 'arrangeBook'}
+            entryOrder={entryOrder}
+            insights={insights}
+          />
+        )}
+      </div>
+
+      {/* Modals */}
+      {selectedBook && (
+        <BookPreviewModal
+          book={selectedBook}
+          onClose={() => setSelectedBook(null)}
+        />
+      )}
+
+      {showBookCreation && (
+        <BookCreationModal
+          onClose={() => setShowBookCreation(false)}
+          newBook={newBook}
+          setNewBook={setNewBook}
+          bookCreationStep={bookCreationStep} // Make sure this is passed
+          setBookCreationStep={setBookCreationStep} // And this
+          entryOrder={entryOrder}
+          setEntryOrder={setEntryOrder}
+          individuals={individuals}
+          insights={insights}
+          collections={COLLECTIONS}
+          groupedEntries={groupedEntries}
+          SYSTEM_COLLECTIONS={SYSTEM_COLLECTIONS}
+          currentView={currentView}
+          setCurrentView={setCurrentView}
+        />
+      )}
+
+      {showTagEditor && selectedEntry && (
+        <TagEditor
+          entry={selectedEntry}
+          onClose={() => {
+            setShowTagEditor(false);
+            setSelectedEntry(null);
+          }}
+          onSave={updateEntry}
+        />
+      )}
+    </div>
+  );
+};
+
+export default OrganizeView;
