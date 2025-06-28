@@ -35,6 +35,7 @@ import HomeView from './components/home/HomeView';
 import CaptureView from './components/capture/CaptureView';
 import OrganizeView from './components/library/OrganizeView';
 import ProfileView from './components/profileView/ProfileView';
+import PeopleView from './components/peopleView/PeopleView';
 
 // Constants
 import { SHARED_BOOKS, getRecentBooks } from './constants/sharedBooks';
@@ -134,7 +135,12 @@ const WellSaidApp = () => {
           setIndividuals={setIndividuals}
         />;
       case 'people':
-        return <LibraryView resetForm={resetForm} />;
+        return <PeopleView
+          insights={insights}
+          individuals={individuals}
+          collections={COLLECTIONS}
+          setCurrentView={setCurrentView}
+        />;
       case 'profile':
         return <ProfileView
           insights={insights}
@@ -202,162 +208,162 @@ const WellSaidApp = () => {
     return <SplashScreen onComplete={() => setShowSplash(false)} />;
   }
 
-  const LibraryView = ({ resetForm }) => {
-    const [searchQuery, setSearchQuery] = useState('');
-    const [isSearching, setIsSearching] = useState(false);
-    const [selectedPerson, setSelectedPerson] = useState(null);
-
-    const handleSearch = (e) => {
-      e.preventDefault();
-      if (searchQuery.trim()) {
-        setIsSearching(true);
-        // Simulate search delay
-        setTimeout(() => setIsSearching(false), 500);
-      }
-    };
-
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-blue-50 to-indigo-50 pb-20">
-        <Header />
-
-        <div className="p-4">
-          {/* Search Bar */}
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 mb-6 shadow-sm border border-white/50">
-            <form onSubmit={handleSearch} className="flex items-center gap-2">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search your people..."
-                  className="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-                />
-              </div>
-              <button
-                type="submit"
-                disabled={isSearching}
-                className="bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600 transition-colors"
-              >
-                {isSearching ? (
-                  <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                ) : (
-                  <Search className="w-4 h-4" />
-                )}
-              </button>
-            </form>
-          </div>
-
-          {/* People Section */}
-          <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-white/50 shadow-sm mb-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-gray-800">Your People</h2>
-              <span className="text-sm text-gray-500">{individuals.length} people</span>
-            </div>
-
-            <div className="space-y-3">
-              {individuals.map(person => (
-                <div
-                  key={person.id}
-                  onClick={() => setSelectedPerson(person)}
-                  className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
-                >
-                  <div className="flex items-center">
-                    <div className={`w-10 h-10 rounded-full ${person.color} flex items-center justify-center mr-3`}>
-                      <span className="text-white text-sm font-medium">{person.avatar}</span>
-                    </div>
-                    <div>
-                      <div className="font-medium text-gray-800">{person.name}</div>
-                      <div className="text-xs text-gray-500">
-                        {insights.filter(i => i.recipients?.includes(person.id)).length} insights shared
-                      </div>
-                    </div>
-                  </div>
-                  <ChevronRight className="text-gray-400" />
-                </div>
-              ))}
-
-              <button className="w-full mt-2 py-2 border border-dashed border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 transition-colors flex items-center justify-center gap-2">
-                <Plus size={16} />
-                Add New Person
-              </button>
-            </div>
-          </div>
-
-          {/* Person Detail View */}
-          {selectedPerson && (
-            <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-white/50 shadow-sm">
-              <div className="flex items-center justify-between mb-4">
-                <button
-                  onClick={() => setSelectedPerson(null)}
-                  className="text-blue-600 flex items-center gap-1"
-                >
-                  <ChevronLeft size={16} />
-                  Back
-                </button>
-                <h2 className="text-lg font-semibold text-gray-800">{selectedPerson.name}</h2>
-                <div className="w-6"></div> {/* Spacer */}
-              </div>
-
-              <div className="space-y-4">
-                <div className="flex items-center justify-center mb-4">
-                  <div className={`w-20 h-20 rounded-full ${selectedPerson.color} flex items-center justify-center`}>
-                    <span className="text-white text-2xl font-medium">{selectedPerson.avatar}</span>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-3 gap-2 text-center mb-6">
-                  <div className="bg-blue-50 rounded-lg p-3">
-                    <div className="font-bold text-blue-600">
-                      {insights.filter(i => i.recipients?.includes(selectedPerson.id)).length}
-                    </div>
-                    <div className="text-xs text-gray-600">Insights</div>
-                  </div>
-                  <div className="bg-green-50 rounded-lg p-3">
-                    <div className="font-bold text-green-600">
-                      {COLLECTIONS.filter(c => c.recipient === selectedPerson.name).length}
-                    </div>
-                    <div className="text-xs text-gray-600">Books</div>
-                  </div>
-                  <div className="bg-purple-50 rounded-lg p-3">
-                    <div className="font-bold text-purple-600">
-                      {new Date().toLocaleDateString()}
-                    </div>
-                    <div className="text-xs text-gray-600">Last shared</div>
-                  </div>
-                </div>
-
-                <h3 className="font-medium text-gray-800">Recent Insights</h3>
-                {insights
-                  .filter(i => i.recipients?.includes(selectedPerson.id))
-                  .slice(0, 3)
-                  .map(insight => (
-                    <div key={insight.id} className="bg-gray-50 rounded-lg p-3">
-                      <div className="text-sm text-gray-800 line-clamp-2">
-                        {insight.question && (
-                          <span className="font-medium">Q: {insight.question}</span>
-                        )}
-                        {insight.text && <p>{insight.text}</p>}
-                      </div>
-                      <div className="text-xs text-gray-500 mt-1">
-                        {new Date(insight.date).toLocaleDateString()}
-                      </div>
-                    </div>
-                  ))}
-
-                <button className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg font-medium hover:bg-blue-700 transition-colors">
-                  Share New Insight
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  };
+  // const LibraryView = ({ resetForm }) => {
+  //   const [searchQuery, setSearchQuery] = useState('');
+  //   const [isSearching, setIsSearching] = useState(false);
+  //   const [selectedPerson, setSelectedPerson] = useState(null);
+  //
+  //   const handleSearch = (e) => {
+  //     e.preventDefault();
+  //     if (searchQuery.trim()) {
+  //       setIsSearching(true);
+  //       // Simulate search delay
+  //       setTimeout(() => setIsSearching(false), 500);
+  //     }
+  //   };
+  //
+  //   return (
+  //     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-blue-50 to-indigo-50 pb-20">
+  //       <Header />
+  //
+  //       <div className="p-4">
+  //         {/* Search Bar */}
+  //         <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 mb-6 shadow-sm border border-white/50">
+  //           <form onSubmit={handleSearch} className="flex items-center gap-2">
+  //             <div className="relative flex-1">
+  //               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+  //               <input
+  //                 type="text"
+  //                 value={searchQuery}
+  //                 onChange={(e) => setSearchQuery(e.target.value)}
+  //                 placeholder="Search your people..."
+  //                 className="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+  //               />
+  //             </div>
+  //             <button
+  //               type="submit"
+  //               disabled={isSearching}
+  //               className="bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600 transition-colors"
+  //             >
+  //               {isSearching ? (
+  //                 <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24">
+  //                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+  //                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+  //                 </svg>
+  //               ) : (
+  //                 <Search className="w-4 h-4" />
+  //               )}
+  //             </button>
+  //           </form>
+  //         </div>
+  //
+  //         {/* People Section */}
+  //         <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-white/50 shadow-sm mb-6">
+  //           <div className="flex items-center justify-between mb-4">
+  //             <h2 className="text-lg font-semibold text-gray-800">Your People</h2>
+  //             <span className="text-sm text-gray-500">{individuals.length} people</span>
+  //           </div>
+  //
+  //           <div className="space-y-3">
+  //             {individuals.map(person => (
+  //               <div
+  //                 key={person.id}
+  //                 onClick={() => setSelectedPerson(person)}
+  //                 className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+  //               >
+  //                 <div className="flex items-center">
+  //                   <div className={`w-10 h-10 rounded-full ${person.color} flex items-center justify-center mr-3`}>
+  //                     <span className="text-white text-sm font-medium">{person.avatar}</span>
+  //                   </div>
+  //                   <div>
+  //                     <div className="font-medium text-gray-800">{person.name}</div>
+  //                     <div className="text-xs text-gray-500">
+  //                       {insights.filter(i => i.recipients?.includes(person.id)).length} insights shared
+  //                     </div>
+  //                   </div>
+  //                 </div>
+  //                 <ChevronRight className="text-gray-400" />
+  //               </div>
+  //             ))}
+  //
+  //             <button className="w-full mt-2 py-2 border border-dashed border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 transition-colors flex items-center justify-center gap-2">
+  //               <Plus size={16} />
+  //               Add New Person
+  //             </button>
+  //           </div>
+  //         </div>
+  //
+  //         {/* Person Detail View */}
+  //         {selectedPerson && (
+  //           <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-white/50 shadow-sm">
+  //             <div className="flex items-center justify-between mb-4">
+  //               <button
+  //                 onClick={() => setSelectedPerson(null)}
+  //                 className="text-blue-600 flex items-center gap-1"
+  //               >
+  //                 <ChevronLeft size={16} />
+  //                 Back
+  //               </button>
+  //               <h2 className="text-lg font-semibold text-gray-800">{selectedPerson.name}</h2>
+  //               <div className="w-6"></div> {/* Spacer */}
+  //             </div>
+  //
+  //             <div className="space-y-4">
+  //               <div className="flex items-center justify-center mb-4">
+  //                 <div className={`w-20 h-20 rounded-full ${selectedPerson.color} flex items-center justify-center`}>
+  //                   <span className="text-white text-2xl font-medium">{selectedPerson.avatar}</span>
+  //                 </div>
+  //               </div>
+  //
+  //               <div className="grid grid-cols-3 gap-2 text-center mb-6">
+  //                 <div className="bg-blue-50 rounded-lg p-3">
+  //                   <div className="font-bold text-blue-600">
+  //                     {insights.filter(i => i.recipients?.includes(selectedPerson.id)).length}
+  //                   </div>
+  //                   <div className="text-xs text-gray-600">Insights</div>
+  //                 </div>
+  //                 <div className="bg-green-50 rounded-lg p-3">
+  //                   <div className="font-bold text-green-600">
+  //                     {COLLECTIONS.filter(c => c.recipient === selectedPerson.name).length}
+  //                   </div>
+  //                   <div className="text-xs text-gray-600">Books</div>
+  //                 </div>
+  //                 <div className="bg-purple-50 rounded-lg p-3">
+  //                   <div className="font-bold text-purple-600">
+  //                     {new Date().toLocaleDateString()}
+  //                   </div>
+  //                   <div className="text-xs text-gray-600">Last shared</div>
+  //                 </div>
+  //               </div>
+  //
+  //               <h3 className="font-medium text-gray-800">Recent Insights</h3>
+  //               {insights
+  //                 .filter(i => i.recipients?.includes(selectedPerson.id))
+  //                 .slice(0, 3)
+  //                 .map(insight => (
+  //                   <div key={insight.id} className="bg-gray-50 rounded-lg p-3">
+  //                     <div className="text-sm text-gray-800 line-clamp-2">
+  //                       {insight.question && (
+  //                         <span className="font-medium">Q: {insight.question}</span>
+  //                       )}
+  //                       {insight.text && <p>{insight.text}</p>}
+  //                     </div>
+  //                     <div className="text-xs text-gray-500 mt-1">
+  //                       {new Date(insight.date).toLocaleDateString()}
+  //                     </div>
+  //                   </div>
+  //                 ))}
+  //
+  //               <button className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg font-medium hover:bg-blue-700 transition-colors">
+  //                 Share New Insight
+  //               </button>
+  //             </div>
+  //           </div>
+  //         )}
+  //       </div>
+  //     </div>
+  //   );
+  // };
   return renderContent();
 };
 

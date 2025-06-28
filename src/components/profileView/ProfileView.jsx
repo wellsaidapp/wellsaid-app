@@ -45,6 +45,7 @@ const ProfileView = ({ user, insights = [], individuals = [], collections = [], 
           insightsCount={insights.filter(i => i.shared).length}
           peopleCount={individuals.length}
           booksCount={collections.length}
+          className="mb-4"
         />
 
         <div className="space-y-3">
