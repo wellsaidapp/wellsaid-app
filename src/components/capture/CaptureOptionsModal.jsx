@@ -14,7 +14,6 @@ const CaptureOptionsModal = ({
   setQuestionSet,
   setCurrentQuestion,
   setCurrentQuestionIndex,
-  resetForm
 }) => (
   <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-[100] flex items-end">
     <div className="w-full bg-white rounded-t-3xl p-6 animate-slide-up">
@@ -102,7 +101,6 @@ const CaptureOptionsModal = ({
             setQuestionSet(questions);
             setCurrentQuestion(questions[0] || '');
             setCurrentQuestionIndex(0);
-            // No need to call resetForm() anymore — already manually resetting
             setCaptureMode('milestone');
             setShowCaptureOptions(false);
             setCurrentView('capture');
