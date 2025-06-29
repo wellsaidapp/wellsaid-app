@@ -35,14 +35,9 @@ const PersonDetail = ({ person, insights, collections, onBack }) => {
       </div>
 
       {/* Stats Cards - Now centered below the avatar text */}
-      <div className="grid grid-cols-3 gap-2 text-center mb-6">
+      <div className="grid grid-cols-2 gap-2 text-center mb-6">
         <StatCard value={personInsights.length} label="Insights" color="blue" />
         <StatCard value={personCollections.length} label="Books" color="green" />
-        <StatCard
-          value={new Date().toLocaleDateString()}
-          label="Last shared"
-          color="purple"
-        />
       </div>
 
       {/* Recent Insights Section */}
