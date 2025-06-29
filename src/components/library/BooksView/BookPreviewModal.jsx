@@ -1,21 +1,22 @@
-import { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, X, Download, Printer, ShoppingCart, BookOpen } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, Share2, ShoppingCart, Edit, MoreHorizontal } from 'lucide-react';
+import { useState } from 'react';
 
-const BookPreviewModal = ({ book, onClose }) => {
-  const [currentPage, setCurrentPage] = useState(0);
-  const [isFlipping, setIsFlipping] = useState(false);
+const BookPreviewModal = ({ book, currentPage = 0, setCurrentPage, onClose }) => {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  // Return null if book is not defined or doesn't have pages
+  if (!book || !book.pages || !Array.isArray(book.pages)) {
+    return null;
+  }
 
   const flipPage = (direction) => {
-    if (isFlipping) return;
-    setIsFlipping(true);
+    if (!book.pages) return;
 
-    if (direction === 'next' && currentPage < book?.pages?.length - 1) {
-      setTimeout(() => setCurrentPage(currentPage + 1), 150);
+    if (direction === 'next' && currentPage < book.pages.length - 1) {
+      setCurrentPage(currentPage + 1);
     } else if (direction === 'prev' && currentPage > 0) {
-      setTimeout(() => setCurrentPage(currentPage - 1), 150);
+      setCurrentPage(currentPage - 1);
     }
-
-    setTimeout(() => setIsFlipping(false), 300);
   };
 
   useEffect(() => {
