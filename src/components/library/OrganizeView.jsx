@@ -209,16 +209,6 @@ const OrganizeView = ({ insights, individuals, setInsights }) => {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-blue-50 to-indigo-50 pb-20">
       <Header />
       <div className="p-4">
-        <SearchAndFilterBar
-          searchQuery={searchQuery}
-          setSearchQuery={setSearchQuery}
-          handleSearch={handleSearch}
-          isSearching={isSearching}
-          selectedFilters={selectedFilters}
-          toggleFilter={toggleFilter}
-          allRecipients={individuals.map(p => p.id)}
-          individuals={individuals}
-        />
 
         <ViewModeToggle
           viewMode={viewMode}
@@ -226,6 +216,20 @@ const OrganizeView = ({ insights, individuals, setInsights }) => {
           collectionFilter={collectionFilter}
           setCollectionFilter={setCollectionFilter}
         />
+
+        {viewMode !== 'books' && (
+          <SearchAndFilterBar
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            handleSearch={handleSearch}
+            isSearching={isSearching}
+            selectedFilters={selectedFilters}
+            toggleFilter={toggleFilter}
+            allRecipients={individuals.map(p => p.id)}
+            individuals={individuals}
+          />
+        )}
+
 
         {viewMode === 'collections' ? (
           <CollectionsList

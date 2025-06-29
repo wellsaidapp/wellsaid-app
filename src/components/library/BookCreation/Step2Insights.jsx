@@ -3,13 +3,13 @@ import React from 'react';
 import {
   Send, Mic, MicOff, ArrowRight, Check, Plus, User, Mail, Hash, Inbox, Trash2, Save, GripVertical, Bookmark, CheckCircle,
   MessageCircle, Wand2, BookOpen, Share2, ChevronLeft, X, Download, ImageIcon,
-  Sparkles, Printer, ShoppingCart, ChevronDown, ChevronUp, Home,
+  Sparkles, Printer, ShoppingCart, ChevronDown, ChevronUp, Home, CircleDot, Circle,
   MessageSquare, Book, FolderOpen, Search, Tag, Clock, ChevronRight,
   Star, Bell, Settings, Users, Edit3, Calendar, Target, Trophy, Zap,
   Heart, ArrowLeft, Cake, Orbit, GraduationCap, Gift, Shuffle, PlusCircle, Library, Lightbulb, Pencil, Lock, Key, KeyRound
 } from 'lucide-react';
 
-const Step2Insights = ({ newBook, setNewBook, insights, setEntryOrder, groupedEntries }) => { 
+const Step2Insights = ({ newBook, setNewBook, insights, setEntryOrder, groupedEntries }) => {
   const allEntries = newBook.selectedCollections.flatMap(collectionId =>
     groupedEntries[collectionId] || []
   );
@@ -55,10 +55,17 @@ const Step2Insights = ({ newBook, setNewBook, insights, setEntryOrder, groupedEn
           >
             <div className="flex items-start">
               <div className="mr-3 mt-1">
-                <Check
-                  checked={newBook.selectedEntries.includes(entry.id)}
-                  onChange={() => toggleEntry(entry.id)}
-                />
+                {newBook.selectedEntries.includes(entry.id) ? (
+                  <CheckCircle
+                    className="w-5 h-5 text-blue-600 cursor-pointer"
+                    onClick={() => toggleEntry(entry.id)}
+                  />
+                ) : (
+                  <Circle
+                    className="w-5 h-5 text-gray-400 cursor-pointer"
+                    onClick={() => toggleEntry(entry.id)}
+                  />
+                )}
               </div>
               <div className="flex-1">
                 {entry.question && (

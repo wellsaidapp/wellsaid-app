@@ -3,7 +3,7 @@ import React from 'react';
 import {
   Send, Mic, MicOff, ArrowRight, Check, Plus, User, Mail, Hash, Inbox, Trash2, Save, GripVertical, Bookmark, CheckCircle,
   MessageCircle, Wand2, BookOpen, Share2, ChevronLeft, X, Download, ImageIcon,
-  Sparkles, Printer, ShoppingCart, ChevronDown, ChevronUp, Home,
+  Sparkles, Printer, ShoppingCart, ChevronDown, ChevronUp, Home, CircleDot, Circle,
   MessageSquare, Book, FolderOpen, Search, Tag, Clock, ChevronRight,
   Star, Bell, Settings, Users, Edit3, Calendar, Target, Trophy, Zap,
   Heart, ArrowLeft, Cake, Orbit, GraduationCap, Gift, Shuffle, PlusCircle, Library, Lightbulb, Pencil, Lock, Key, KeyRound
@@ -50,10 +50,11 @@ const Step1Collections = ({ newBook, setNewBook, SYSTEM_COLLECTIONS, collections
                 </p>
               </div>
               <div className="ml-auto">
-                <Check
-                  checked={newBook.selectedCollections.includes(collection.id)}
-                  onChange={() => toggleCollection(collection.id)}
-                />
+                {newBook.selectedCollections.includes(collection.id) ? (
+                  <CheckCircle className="w-5 h-5 text-blue-600" />
+                ) : (
+                  <Circle className="w-5 h-5 text-gray-400" />
+                )}
               </div>
             </div>
           </div>
