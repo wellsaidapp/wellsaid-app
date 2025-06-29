@@ -11,7 +11,7 @@ import SearchAndFilterBar from './utils/SearchAndFilterBar';
 import ViewModeToggle from './utils/ViewModeToggle';
 import CollectionsList from './CollectionsView/CollectionsList';
 import BooksList from './BooksView/BooksList';
-import BookPreviewModal from './BooksView/BookPreviewModal';
+import BookPreviewModal from '../home/BookPreviewModal';
 import CreateBook from './BookCreation/CreateBook';
 
 const OrganizeView = ({ insights, individuals, setInsights }) => {
@@ -49,7 +49,6 @@ const OrganizeView = ({ insights, individuals, setInsights }) => {
     fontStyle: 'serif',
     isDraft: false
   });
-
   const groupedEntries = insights.reduce((acc, entry) => {
     if (!entry.collections || entry.collections.length === 0) {
       if (!acc.unorganized) acc.unorganized = [];
@@ -274,7 +273,12 @@ const OrganizeView = ({ insights, individuals, setInsights }) => {
       {selectedBook && (
         <BookPreviewModal
           book={selectedBook}
-          onClose={() => setSelectedBook(null)}
+          currentPage={currentPage} // Add this
+          setCurrentPage={setCurrentPage} // Add this
+          onClose={() => {
+            setSelectedBook(null);
+            setCurrentPage(0); // Reset to first page when closing
+          }}
         />
       )}
 
