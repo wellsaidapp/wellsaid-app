@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Lightbulb, ArrowRight, Pencil, Zap, Clock,
   Sparkles, Calendar, Trophy, Book, BookOpen, X, ChevronLeft, ChevronRight,
-  Download, Printer, ShoppingCart, Plus
+  Download, Printer, ShoppingCart, Plus, MoreHorizontal, Share2, Edit
 } from 'lucide-react';
 
 // Constants
@@ -40,7 +40,7 @@ const HomeView = ({
   const [questionSet, setQuestionSet] = useState([]);
   const [currentQuestion, setCurrentQuestion] = useState('');
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const resetForm = () => {
     setSelectedOccasion(null);
     setQuestionSet([]);
@@ -275,142 +275,118 @@ const HomeView = ({
       )}
       {/* NEW: Book Preview Modal */}
       {selectedBook && (
-          <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-[100] backdrop-blur-sm">
-              <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[95vh] overflow-hidden flex flex-col">
-                  {/* Header */}
-                  <div className="relative bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-100">
-                      <div className="flex items-center justify-between p-6">
-                          <div className="flex items-center space-x-3">
-                              <div className={`w-10 h-10 ${selectedBook.color} rounded-lg flex items-center justify-center shadow-lg`}>
-                                  <BookOpen className="w-5 h-5 text-white" />
-                              </div>
-                              <div>
-                                  <h3 className="text-xl font-bold text-blue-800 tracking-wide">
-                                      {selectedBook.name}
-                                  </h3>
-                                  <p className="text-sm text-blue-600 font-medium">
-                                      For {selectedBook.recipient}
-                                  </p>
-                              </div>
-                          </div>
+        <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center p-4 z-[100] backdrop-blur-sm">
+          {/* Book Container */}
+          <div className="relative w-full max-w-md aspect-square">
+            {/* Top Control Bar - New container for perfect alignment */}
+            <div className="absolute -top-12 left-0 right-0 flex justify-between items-center px-4 z-10">
+              {/* 3-dot menu - now using same spacing as close button */}
+              <div className="flex items-center">
+                <button
+                  onClick={() => setIsMenuOpen(!isMenuOpen)}
+                  className="p-1.5 bg-white rounded-full shadow hover:bg-gray-100 transition-all focus:outline-none focus:ring-0"
+                  title="Options"
+                >
+                  <MoreHorizontal className="w-4 h-4 text-gray-800" />
+                </button>
 
-                          <button
-                              onClick={() => setSelectedBook(null)}
-                              className="w-10 h-10 rounded-full bg-white bg-opacity-70 hover:bg-opacity-100 flex items-center justify-center text-blue-600 hover:text-blue-800 transition-all duration-200 shadow-lg hover:shadow-xl"
-                          >
-                              <X className="w-5 h-5" />
-                          </button>
-                      </div>
+                {/* Expanded Actions */}
+                <div className={`flex items-center ml-2 transition-all duration-200 overflow-hidden ${isMenuOpen ? 'max-w-40 opacity-100' : 'max-w-0 opacity-0'}`}>
+                  <div className="flex gap-2 bg-white bg-opacity-90 rounded-full pl-2 pr-3 py-1 shadow-lg backdrop-blur-sm">
+                    <button
+                      className="p-1.5 hover:bg-gray-100 rounded-full focus:outline-none focus:ring-0"
+                      title="Share"
+                    >
+                      <Share2 className="w-4 h-4 text-black-600" />
+                    </button>
+                    <button
+                      className="p-1.5 hover:bg-gray-100 rounded-full focus:outline-none focus:ring-0"
+                      title="Add to Cart"
+                    >
+                      <ShoppingCart className="w-4 h-4 text-black-600" />
+                    </button>
+                    <button
+                      className="p-1.5 hover:bg-gray-100 rounded-full focus:outline-none focus:ring-0"
+                      title="Edit"
+                    >
+                      <Edit className="w-4 h-4 text-black-600" />
+                    </button>
                   </div>
-
-                  {/* Book Content */}
-                  <div className="flex-1 bg-gradient-to-br from-blue-50 to-indigo-50 flex items-center justify-center p-8">
-                      <div className="relative w-full max-w-md h-[500px]">
-                          <div className={`relative bg-white rounded-lg shadow-xl border border-blue-200 h-full overflow-y-auto ${isFlipping ? 'scale-95 opacity-70' : 'scale-100 opacity-100'}`}>
-                              {/* Current Page Content */}
-                              <div className="p-8 h-full flex flex-col">
-                                  {selectedBook.pages[currentPage].type === 'question' ? (
-                                      <>
-                                          <div className="mb-6">
-                                              <div className="inline-block px-3 py-1 bg-blue-100 rounded-full">
-                                                  <span className="text-xs font-semibold text-blue-700 uppercase tracking-wider">
-                                                      Question
-                                                  </span>
-                                              </div>
-                                          </div>
-
-                                          <div className="flex-1 flex items-center justify-center min-h-[300px]">
-                                              <p className="text-lg text-blue-800 text-center italic">
-                                                  {selectedBook.pages[currentPage].content}
-                                              </p>
-                                          </div>
-                                      </>
-                                  ) : (
-                                      <>
-                                          <div className="mb-6">
-                                              <div className="inline-block px-3 py-1 bg-blue-100 rounded-full">
-                                                  <span className="text-xs font-semibold text-blue-700 uppercase tracking-wider">
-                                                      Your Insight
-                                                  </span>
-                                              </div>
-                                          </div>
-
-                                          <div className="flex-1 min-h-[300px]">
-                                              <p className="text-blue-800 mb-4">
-                                                  {selectedBook.pages[currentPage].content.text}
-                                              </p>
-                                              <ul className="space-y-2 text-blue-700">
-                                                  {selectedBook.pages[currentPage].content.points.map((point, i) => (
-                                                      <li key={i} className="flex items-start">
-                                                          <span className="text-blue-500 mr-2">•</span>
-                                                          <span>{point}</span>
-                                                      </li>
-                                                  ))}
-                                              </ul>
-                                          </div>
-                                      </>
-                                  )}
-
-                                  <div className="mt-auto pt-4 text-center">
-                                      <span className="text-xs text-blue-300 font-medium">
-                                          Page {selectedBook.pages[currentPage].pageNumber}
-                                      </span>
-                                  </div>
-                              </div>
-                          </div>
-                      </div>
-
-                      {/* Navigation Arrows */}
-                      {currentPage > 0 && (
-                          <button
-                              onClick={() => flipPage('prev')}
-                              className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-white bg-opacity-80 hover:bg-opacity-100 rounded-full shadow-lg hover:shadow-xl flex items-center justify-center text-blue-600 hover:text-blue-800 transition-all duration-200"
-                          >
-                              <ChevronLeft className="w-5 h-5" />
-                          </button>
-                      )}
-
-                      {currentPage < selectedBook.pages.length - 1 && (
-                          <button
-                              onClick={() => flipPage('next')}
-                              className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-white bg-opacity-80 hover:bg-opacity-100 rounded-full shadow-lg hover:shadow-xl flex items-center justify-center text-blue-600 hover:text-blue-800 transition-all duration-200"
-                          >
-                              <ChevronRight className="w-5 h-5" />
-                          </button>
-                      )}
-                  </div>
-
-                  {/* Page Indicators */}
-                  <div className="flex justify-center py-3 bg-blue-50 border-t border-blue-100">
-                      <div className="flex space-x-2">
-                          {selectedBook.pages.map((_, idx) => (
-                              <button
-                                  key={idx}
-                                  onClick={() => !isFlipping && setCurrentPage(idx)}
-                                  className={`w-2 h-2 rounded-full transition-all duration-200 ${
-                                      idx === currentPage
-                                          ? 'bg-blue-600 scale-125'
-                                          : 'bg-blue-200 hover:bg-blue-300'
-                                  }`}
-                              />
-                          ))}
-                      </div>
-                  </div>
-
-                  {/* Action Buttons */}
-                  <div className="flex justify-center gap-4 p-4 bg-blue-50 border-t border-blue-100">
-                      <button className="p-3 rounded-full bg-blue-100 text-blue-600 hover:bg-blue-200 transition-colors" title="Download PDF">
-                          <Download className="w-5 h-5" />
-                      </button>
-                      <button className="p-3 rounded-full bg-blue-100 text-blue-600 hover:bg-blue-200 transition-colors" title="Print">
-                          <Printer className="w-5 h-5" />
-                      </button>
-                      <button className="p-3 rounded-full bg-blue-100 text-blue-600 hover:bg-blue-200 transition-colors" title="Order">
-                          <ShoppingCart className="w-5 h-5" />
-                      </button>
-                  </div>
+                </div>
               </div>
+
+              {/* Close button - now perfectly aligned with 3-dot menu */}
+              <button
+                onClick={() => setSelectedBook(null)}
+                className="p-1.5 bg-white rounded-full shadow hover:bg-gray-100 transition-all focus:outline-none focus:ring-0"
+                title="Close"
+              >
+                <X className="w-4 h-4 text-gray-800" />
+              </button>
+            </div>
+
+            {/* Book Content with softly rounded corners */}
+            <div className="relative w-full h-full bg-white shadow-2xl overflow-hidden rounded-2xl">
+              {/* Cover/Page Image */}
+              {selectedBook.pages[currentPage].image ? (
+                <div className="w-full h-full p-4 flex items-center justify-center bg-white">
+                  <div className="relative w-full h-full">
+                    <img
+                      src={selectedBook.pages[currentPage].image}
+                      alt={`Page ${currentPage + 1}`}
+                      className="w-full h-full object-contain"
+                    />
+                  </div>
+                </div>
+              ) : (
+                <div className="w-full h-full flex items-center justify-center bg-gray-50 p-8">
+                  {/* Text content fallback */}
+                  <div className="text-center">
+                    {selectedBook.pages[currentPage].type === 'question' ? (
+                      <p className="text-xl italic text-gray-700">
+                        {selectedBook.pages[currentPage].content}
+                      </p>
+                    ) : (
+                      <div>
+                        <p className="text-lg text-gray-800 mb-4">
+                          {selectedBook.pages[currentPage].content.text}
+                        </p>
+                        <ul className="space-y-2 text-gray-700">
+                          {selectedBook.pages[currentPage].content.points.map((point, i) => (
+                            <li key={i}>• {point}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Floating Navigation Buttons (below book in black space) */}
+            <div className="absolute -bottom-12 left-0 right-0 flex justify-center items-center gap-8">
+              <button
+                onClick={() => flipPage('prev')}
+                disabled={currentPage === 0}
+                className={`p-3 text-white rounded-full ${currentPage === 0 ? 'opacity-30 cursor-default' : 'hover:bg-white hover:bg-opacity-10'}`}
+              >
+                <ChevronLeft className="w-6 h-6" />
+              </button>
+
+              <span className="text-sm text-white font-medium">
+                {currentPage + 1} / {selectedBook.pages.length}
+              </span>
+
+              <button
+                onClick={() => flipPage('next')}
+                disabled={currentPage === selectedBook.pages.length - 1}
+                className={`p-3 text-white rounded-full ${currentPage === selectedBook.pages.length - 1 ? 'opacity-30 cursor-default' : 'hover:bg-white hover:bg-opacity-10'}`}
+              >
+                <ChevronRight className="w-6 h-6" />
+              </button>
+            </div>
           </div>
+        </div>
       )}
       <style>{`
         @keyframes slide-up {

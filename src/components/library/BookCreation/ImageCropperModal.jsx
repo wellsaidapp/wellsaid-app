@@ -102,7 +102,27 @@ const ImageCropperModal = ({ image, onCropComplete, onClose }) => {
 
     const croppedImage = await getCroppedImg();
     if (croppedImage) {
-      onCropComplete(croppedImage); // already resized
+      // Log the complete book structure to console for easy copying
+      console.log("=== BOOK DATA STRUCTURE ===");
+      console.log(JSON.stringify({
+        id: Date.now(), // Using timestamp as temporary ID
+        name: "Example Book with Cover",
+        recipient: "Recipient Name",
+        recipientId: 1,
+        description: "Book description",
+        count: 1,
+        color: "bg-blue-500",
+        lastUpdated: "Just now",
+        type: "book",
+        pages: [{
+          type: "cover",
+          image: croppedImage, // This will show the base64 data
+          pageNumber: 1,
+          createdAt: new Date().toISOString()
+        }]
+      }, null, 2));
+
+      onCropComplete(croppedImage);
     }
   };
 
