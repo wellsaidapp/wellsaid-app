@@ -49,7 +49,7 @@ const Step4Cover = ({ newBook, setNewBook, coverImageState, setCoverImageState }
 
       <div className="flex flex-col items-center">
         {/* Changed to square container w-64 h-64 */}
-        <div className="w-64 h-64 border-2 border-dashed border-gray-300 rounded-lg mb-4 flex items-center justify-center overflow-hidden bg-gray-50 relative">
+        <div className="w-full max-w-xs aspect-square border-2 border-dashed border-gray-300 rounded-lg mb-4 flex items-center justify-center overflow-hidden bg-gray-50 relative">
           {newBook.coverImage ? (
             <img
               src={newBook.coverImage}

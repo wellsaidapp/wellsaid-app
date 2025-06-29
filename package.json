@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "antd": "^5.26.2",
+    "dnd-multi-backend": "^9.0.0",
     "framer-motion": "^12.18.1",
     "lottie-react": "^2.4.1",
     "lucide-react": "^0.516.0",
@@ -19,6 +20,7 @@
     "react": "^19.1.0",
     "react-dnd": "^16.0.1",
     "react-dnd-html5-backend": "^16.0.1",
+    "react-dnd-multi-backend": "^9.0.0",
     "react-dnd-touch-backend": "^16.0.1",
     "react-dom": "^19.1.0",
     "react-image-crop": "^11.0.10"

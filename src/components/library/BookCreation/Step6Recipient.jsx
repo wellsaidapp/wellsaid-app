@@ -1,5 +1,5 @@
 import React from 'react';
-import { Check } from 'lucide-react'; // Adjust path if you're not using lucide-react
+import { CheckCircle, Circle } from 'lucide-react';
 
 const Step6Recipient = ({ newBook, setNewBook, individuals }) => {
   return (
@@ -10,36 +10,43 @@ const Step6Recipient = ({ newBook, setNewBook, individuals }) => {
       </p>
 
       <div className="grid grid-cols-2 gap-4">
-        {individuals.map(person => (
-          <div
-            key={person.id}
-            onClick={() => setNewBook(prev => ({ ...prev, recipient: person.id }))}
-            className={`p-4 border rounded-lg cursor-pointer transition-colors ${
-              newBook.recipient === person.id
-                ? 'border-blue-500 bg-blue-50'
-                : 'border-gray-200 hover:bg-gray-50'
-            }`}
-          >
-            <div className="flex items-center">
-              <div className={`w-10 h-10 ${person.color} rounded-full flex items-center justify-center mr-3`}>
-                <span className="text-white font-medium">
+        {individuals.map((person) => {
+          const isSelected = newBook.recipient === person.id;
+
+          return (
+            <div
+              key={person.id}
+              onClick={() => setNewBook((prev) => ({ ...prev, recipient: person.id }))}
+              className={`relative p-4 border rounded-lg cursor-pointer transition-all duration-200 text-center ${
+                isSelected ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:bg-gray-50'
+              }`}
+            >
+              {/* Check in top-right corner */}
+              {isSelected && (
+                <div className="absolute -top-2 -right-2 bg-white rounded-full shadow-sm">
+                  <CheckCircle className="w-5 h-5 text-blue-600" />
+                </div>
+              )}
+
+              {/* Avatar */}
+              <div className={`mx-auto w-10 h-10 ${person.color} rounded-full flex items-center justify-center mb-2`}>
+                <span className="text-white font-semibold text-sm">
                   {person.name.charAt(0).toUpperCase()}
                 </span>
               </div>
-              <div>
-                <h4 className="font-medium text-gray-800">{person.name}</h4>
-                <p className="text-xs text-gray-500">
-                  {person.relationship || 'Family member'}
-                </p>
-              </div>
-              {newBook.recipient === person.id && (
-                <div className="ml-auto text-blue-600">
-                  <Check className="w-5 h-5" />
-                </div>
-              )}
+
+              {/* Name */}
+              <h4 className="font-medium text-gray-800 text-sm truncate">
+                {person.name}
+              </h4>
+
+              {/* Relationship */}
+              <p className="text-xs text-gray-500 truncate">
+                {person.relationship || 'Family member'}
+              </p>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

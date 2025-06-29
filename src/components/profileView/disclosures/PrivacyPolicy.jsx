@@ -38,7 +38,7 @@ const PrivacyPolicy = () => (
     <h3 className="font-semibold mt-4 mb-2">4. User Rights</h3>
     <p className="mb-4">
       You may request to delete your data or account by contacting us at{' '}
-      <a href="mailto:privacy@wellsaid.com" className="text-blue-600 underline">
+      <a href="mailto:hello@wellsaid.com" className="text-blue-600 underline">
         privacy@wellsaid.com
       </a>. We will respond within 30 days.
     </p>
