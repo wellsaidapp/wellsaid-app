@@ -11,7 +11,7 @@ import Header from './components/appLayout/Header';
 import BottomNav from './components/appLayout/BottomNav';
 import HomeView from './components/home/HomeView';
 import CaptureView from './components/capture/CaptureView';
-import OrganizeView from './components/library/OrganizeView';
+import LibraryView from './components/library/LibraryView';
 import ProfileView from './components/profileView/ProfileView';
 import PeopleView from './components/peopleView/PeopleView';
 
@@ -64,7 +64,7 @@ const WellSaidApp = () => {
           setCurrentView={setCurrentView}
         />;
       case 'library':
-        return <OrganizeView
+        return <LibraryView
           insights={insights}
           individuals={individuals}
           setCurrentView={setCurrentView}

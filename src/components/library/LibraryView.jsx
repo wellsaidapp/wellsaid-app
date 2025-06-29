@@ -14,7 +14,7 @@ import BooksList from './BooksView/BooksList';
 import BookPreviewModal from '../home/BookPreviewModal';
 import CreateBook from './BookCreation/CreateBook';
 
-const OrganizeView = ({ insights, individuals, setInsights }) => {
+const LibraryView = ({ insights, individuals, setInsights }) => {
   // State management
   const [viewMode, setViewMode] = useState('collections');
   const [collectionFilter, setCollectionFilter] = useState('all');
@@ -160,7 +160,7 @@ const OrganizeView = ({ insights, individuals, setInsights }) => {
     );
   };
 
-  // Add these state handlers to your OrganizeView component
+  // Add these state handlers to your LibraryView component
   const handleEntryUpdate = (updatedEntry) => {
     setInsights(prevInsights =>
       prevInsights.map(entry =>
@@ -319,4 +319,4 @@ const OrganizeView = ({ insights, individuals, setInsights }) => {
   );
 };
 
-export default OrganizeView;
+export default LibraryView;
