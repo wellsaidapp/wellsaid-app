@@ -14,6 +14,7 @@ const PersonDetail = ({
   onBack,
   setSelectedBook,
   setCurrentPage,
+  onStartNewBook
 }) => {
   const personInsights = insights.filter(i =>
     i.recipients?.includes(person.id)
@@ -86,7 +87,10 @@ const PersonDetail = ({
 
       {/* CTA */}
       <div className="mt-6">
-        <CreateBook defaultRecipient={person.id} />
+        <CreateBook
+          currentView={null} // or 'people' if you'd like to track where it's triggered from
+          onStartNewBook={() => onStartNewBook(person.id)}
+        />
       </div>
     </div>
   );

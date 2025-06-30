@@ -2,17 +2,8 @@ import React from 'react';
 import { BookOpen, Bookmark, CheckCircle } from 'lucide-react';
 import { Switch } from 'antd';
 
-const Step8Publish = ({ newBook, onClose, individuals, entryOrder, setNewBook }) => {
+const Step8Publish = ({ newBook, setNewBook, individuals, entryOrder }) => {
   const recipient = individuals.find(p => p.id === newBook.recipient);
-
-  const handlePublish = () => {
-    // Here you would typically:
-    // 1. Save the book to your database
-    // 2. Maybe trigger a print job or PDF generation
-    // 3. Show a success message
-    alert(`Book "${newBook.title}" published successfully for ${recipient?.name || 'your recipient'}!`);
-    onClose();
-  };
 
   return (
     <div>
@@ -57,20 +48,32 @@ const Step8Publish = ({ newBook, onClose, individuals, entryOrder, setNewBook })
             <span className="font-medium">Save as draft</span>
           </div>
           <Switch
-            checked={!newBook.isDraft}
+            checked={newBook.isDraft}
             onChange={() => setNewBook(prev => ({ ...prev, isDraft: !prev.isDraft }))}
           />
         </div>
 
-        <div className="p-4 bg-green-50 rounded-lg border border-green-200">
-          <div className="flex items-center mb-2">
-            <CheckCircle className="w-5 h-5 text-green-500 mr-2" />
-            <span className="font-medium text-green-800">Ready to publish</span>
+        {newBook.isDraft ? (
+          <div className="p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+            <div className="flex items-center mb-2">
+              <Bookmark className="w-5 h-5 text-yellow-600 mr-2" />
+              <span className="font-medium text-yellow-800">Saving as Draft</span>
+            </div>
+            <p className="text-sm text-yellow-700">
+              This book will be saved as a draft. You can return to it later from your Library view to make edits or publish when you're ready.
+            </p>
           </div>
-          <p className="text-sm text-green-700">
-            Your book meets all requirements for publishing. Click the button below to finalize.
-          </p>
-        </div>
+        ) : (
+          <div className="p-4 bg-green-50 rounded-lg border border-green-200">
+            <div className="flex items-center mb-2">
+              <CheckCircle className="w-5 h-5 text-green-500 mr-2" />
+              <span className="font-medium text-green-800">Ready to publish</span>
+            </div>
+            <p className="text-sm text-green-700">
+              Your book meets all requirements for publishing. Click the button below to finalize.
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );

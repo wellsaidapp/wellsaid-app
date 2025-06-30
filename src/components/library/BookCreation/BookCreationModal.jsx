@@ -232,6 +232,7 @@ const BookCreationModal = ({
                   entryOrder={entryOrder}
                   individuals={individuals}
                   setNewBook={setNewBook}
+                  setBookCreationStep={setBookCreationStep}
                 />
               )}
             </div>
@@ -258,7 +259,7 @@ const BookCreationModal = ({
                 {bookCreationStep < 7 && (
                   <button
                     onClick={() => {
-                      setNewBook(prev => ({ ...prev, isDraft: true }));
+                      setNewBook(prev => ({ ...prev, isDraft: false }));
                       // Save as draft logic here
                       onClose();
                     }}
@@ -273,17 +274,42 @@ const BookCreationModal = ({
                     if (bookCreationStep < 7) {
                       setBookCreationStep(bookCreationStep + 1);
                     } else {
-                      // Publish logic here
-                      onClose();
+                      // ✅ Final step: publish or save draft
+                      const action = newBook.isDraft ? 'Draft saved!' : 'Book published!';
+                      alert(`${action} Title: "${newBook.title}"`);
+
+                      // ✅ Reset book creation state
+                      setNewBook({
+                        title: '',
+                        description: '',
+                        selectedCollections: [],
+                        selectedEntries: [],
+                        coverImage: null,
+                        backCoverNote: '',
+                        recipient: null,
+                        showTags: true,
+                        fontStyle: 'serif',
+                        isDraft: false
+                      });
+
+                      setEntryOrder([]); // Optional reset
+                      setBookCreationStep(0); // ✅ Reset the step
+                      onClose(); // Close modal
                     }
                   }}
                   className={`px-4 py-2 rounded-lg ${
                     bookCreationStep === 7
-                      ? 'bg-green-600 hover:bg-green-700 text-white'
+                      ? newBook.isDraft
+                        ? 'bg-yellow-500 hover:bg-yellow-600 text-white'
+                        : 'bg-green-600 hover:bg-green-700 text-white'
                       : 'bg-blue-600 hover:bg-blue-700 text-white'
                   }`}
                 >
-                  {bookCreationStep === 7 ? 'Publish Book' : 'Next'}
+                  {bookCreationStep === 7
+                    ? newBook.isDraft
+                      ? 'Save Draft'
+                      : 'Publish Book'
+                    : 'Next'}
                 </button>
               </div>
             </div>
