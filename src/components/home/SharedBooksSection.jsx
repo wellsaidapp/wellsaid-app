@@ -1,6 +1,6 @@
 import { Book } from 'lucide-react';
 
-const SharedBooksSection = ({ books, setSelectedBook }) => (
+const SharedBooksSection = ({ books, onView }) => (
   <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-sm border border-white/50 mb-6">
     <h3 className="text-lg font-semibold text-gray-800 mb-4">Your Shared Books</h3>
     <p className="text-sm text-gray-600 mb-4">
@@ -35,7 +35,7 @@ const SharedBooksSection = ({ books, setSelectedBook }) => (
                 </span>
               </div>
               <button
-                onClick={() => setSelectedBook(book)}
+                onClick={() => onView(book)}
                 className="text-xs font-medium text-blue-600 hover:text-blue-800"
               >
                 View Book

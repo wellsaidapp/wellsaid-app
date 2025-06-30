@@ -20,6 +20,7 @@ import { INDIVIDUALS } from './constants/individuals';
 import { INSIGHTS } from './constants/insights';
 import { COLLECTIONS } from './constants/collections';
 import { USER } from './constants/user';
+import { SHARED_BOOKS } from './constants/sharedBooks';
 
 const WellSaidApp = () => {
 
@@ -77,6 +78,7 @@ const WellSaidApp = () => {
           individuals={individuals}
           collections={COLLECTIONS}
           setCurrentView={setCurrentView}
+          sharedBooks={SHARED_BOOKS}
         />;
       case 'profile':
         return <ProfileView

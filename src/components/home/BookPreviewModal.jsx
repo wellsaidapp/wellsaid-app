@@ -1,5 +1,5 @@
 import { X, ChevronLeft, ChevronRight, Share2, ShoppingCart, Edit, MoreHorizontal } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 const BookPreviewModal = ({ book, currentPage = 0, setCurrentPage, onClose }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
