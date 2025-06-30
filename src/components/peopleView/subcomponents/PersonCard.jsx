@@ -11,8 +11,18 @@ const PersonCard = ({ person, insights, onClick }) => {
       className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
     >
       <div className="flex items-center">
-        <div className={`w-10 h-10 rounded-full ${person.color} flex items-center justify-center mr-3`}>
-          <span className="text-white text-sm font-medium">{person.avatar}</span>
+        <div className="w-10 h-10 rounded-full overflow-hidden mr-3">
+          {person.avatarImage ? (
+            <img
+              src={person.avatarImage}
+              alt="Avatar"
+              className="w-10 h-10 object-cover rounded-full"
+            />
+          ) : (
+            <div className={`w-10 h-10 rounded-full ${person.color} flex items-center justify-center`}>
+              <span className="text-white text-sm font-medium">{person.avatar}</span>
+            </div>
+          )}
         </div>
         <div>
           <div className="font-medium text-gray-800">{person.name}</div>

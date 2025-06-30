@@ -6,12 +6,17 @@ import PersonDetail from './subcomponents/PersonDetail';
 import BookPreviewModal from '../home/BookPreviewModal';
 import BookCreationModal from '../library/BookCreation/BookCreationModal';
 import { SYSTEM_COLLECTIONS } from '../../constants/systemCollections';
+import ImageCropperModal from '../library/BookCreation/ImageCropperModal';
 
 const PeopleView = ({ individuals, insights, collections, sharedBooks }) => {
   const [selectedPerson, setSelectedPerson] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedBook, setSelectedBook] = useState(null);
   const [currentPage, setCurrentPage] = useState(0);
+
+  const [avatarUploadTemp, setAvatarUploadTemp] = useState(null); // base64 temp image
+  const [showAvatarCropper, setShowAvatarCropper] = useState(false);
+  const [croppedAvatarImage, setCroppedAvatarImage] = useState(null); // Final cropped avatar image
 
   const [showBookCreation, setShowBookCreation] = useState(false);
   const [bookCreationStep, setBookCreationStep] = useState(0);
@@ -58,6 +63,15 @@ const PeopleView = ({ individuals, insights, collections, sharedBooks }) => {
     return acc;
   }, {});
 
+  const handleAvatarSave = (croppedImage) => {
+    setSelectedPerson((prev) => ({
+      ...prev,
+      avatarImage: croppedImage
+    }));
+    setShowAvatarCropper(false);
+    setAvatarUploadTemp(null);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-blue-50 to-indigo-50 pb-20">
       <Header />
@@ -84,6 +98,11 @@ const PeopleView = ({ individuals, insights, collections, sharedBooks }) => {
             setSelectedBook={setSelectedBook}
             setCurrentPage={setCurrentPage}
             onStartNewBook={handleStartNewBookForPerson}
+            onTempAvatarUpload={(image) => {
+              setAvatarUploadTemp(image);
+              setShowAvatarCropper(true);
+            }}
+            croppedAvatarImage={croppedAvatarImage}
           />
         )}
       </div>
@@ -114,6 +133,16 @@ const PeopleView = ({ individuals, insights, collections, sharedBooks }) => {
           SYSTEM_COLLECTIONS={SYSTEM_COLLECTIONS} // ✅ Safe to import here too
           currentView={'people'}
           setCurrentView={() => {}}
+        />
+      )}
+      {showAvatarCropper && avatarUploadTemp && (
+        <ImageCropperModal
+          image={avatarUploadTemp}
+          onCropComplete={handleAvatarSave}
+          onClose={() => {
+            setShowAvatarCropper(false);
+            setAvatarUploadTemp(null);
+          }}
         />
       )}
     </div>

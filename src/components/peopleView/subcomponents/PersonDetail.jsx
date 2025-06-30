@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { ChevronLeft, Edit3, Camera } from 'lucide-react';
 import InsightCard from './InsightCard';
 import SharedBooksSection from '../../home/SharedBooksSection'; // adjust path as needed
 import BookPreviewModal from '../../home/BookPreviewModal'; // if needed
 import CreateBook from '../../library/BookCreation/CreateBook'; // to show Start New Book CTA
 import { SHARED_BOOKS, getBooksByRecipient } from '../../../constants/sharedBooks';
+import ImageCropperModal from '../../library/BookCreation/ImageCropperModal';
 
 const PersonDetail = ({
   person,
@@ -14,7 +15,9 @@ const PersonDetail = ({
   onBack,
   setSelectedBook,
   setCurrentPage,
-  onStartNewBook
+  onStartNewBook,
+  onTempAvatarUpload,
+  croppedAvatarImage
 }) => {
   const personInsights = insights.filter(i =>
     i.recipients?.includes(person.id)
@@ -24,8 +27,22 @@ const PersonDetail = ({
     b.recipientId === person.id
   );
 
+  const fileInputRef = useRef(null);
+
   const handleEditPerson = () => { /* ... */ };
-  const handleUploadPhoto = () => { /* ... */ };
+  const handleUploadPhoto = () => {
+    if (fileInputRef.current) fileInputRef.current.click();
+  };
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      onTempAvatarUpload(reader.result); // passed from parent
+    };
+    reader.readAsDataURL(file);
+  };
 
   return (
     <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-white/50 shadow-sm">
@@ -40,17 +57,25 @@ const PersonDetail = ({
 
       {/* Avatar and Name */}
       <div className="flex flex-col items-center mb-4 relative">
-        <div className="relative w-20 h-20 mb-3">
+      <div className="relative w-20 h-20 mb-3">
+        {person.avatarImage ? (
+          <img
+            src={person.avatarImage}
+            alt="Avatar"
+            className="w-20 h-20 rounded-full object-cover"
+          />
+        ) : (
           <div className={`w-20 h-20 rounded-full ${person.color} flex items-center justify-center text-white text-2xl font-medium`}>
             {person.avatar}
           </div>
-          <button
-            onClick={handleUploadPhoto}
-            className="absolute bottom-0 right-0 bg-white p-1 rounded-full shadow-sm"
-          >
-            <Camera className="w-4 h-4 text-gray-600" />
-          </button>
-        </div>
+        )}
+        <button
+          onClick={handleUploadPhoto}
+          className="absolute bottom-0 right-0 bg-white p-1 rounded-full shadow-sm"
+        >
+          <Camera className="w-4 h-4 text-gray-600" />
+        </button>
+      </div>
         <div className="text-center">
           <div className="flex items-center gap-2 justify-center">
             <p className="text-gray-800 font-semibold text-lg">{person.name}</p>
@@ -92,6 +117,13 @@ const PersonDetail = ({
           onStartNewBook={() => onStartNewBook(person.id)}
         />
       </div>
+      <input
+        type="file"
+        accept="image/*"
+        ref={fileInputRef}
+        onChange={handleFileChange}
+        className="hidden"
+      />
     </div>
   );
 };
