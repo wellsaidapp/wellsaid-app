@@ -65,7 +65,7 @@ const PersonDetail = ({
       {/* Stats */}
       <div className="grid grid-cols-2 gap-2 text-center mb-6">
         <StatCard value={personInsights.length} label="Insights" color="blue" />
-        <StatCard value={personBooks.length} label="Books" color="green" />
+        <StatCard value={personBooks.length} label="Books" color="blue" />
       </div>
 
       {/* Recent Insights */}

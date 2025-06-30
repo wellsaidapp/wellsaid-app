@@ -81,3 +81,30 @@
   width: auto;
   height: auto;
 }
+
+.palette-slash::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 16px;
+  height: 2px;
+  transform: translate(-50%, -50%) rotate(-45deg);
+  background-color: currentColor; /* Match icon color */
+  opacity: 0.85;
+  border-radius: 1px;
+  pointer-events: none;
+}
+
+.type-slash::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 18px;
+  height: 2px;
+  transform: translate(-50%, -50%) rotate(-45deg);
+  background-color: currentColor;
+  opacity: 0.7;
+  pointer-events: none;
+}

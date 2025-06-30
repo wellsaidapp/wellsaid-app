@@ -55,11 +55,21 @@ const Step7Preview = ({ newBook, entryOrder, insights }) => {
               <div className="relative w-full max-w-xs aspect-square mt-2 p-2 flex items-center justify-center">
                 {/* Toggle Icon */}
                 <button
-                  onClick={() => setIsBlackAndWhite((prev) => !prev)}
+                  onClick={() => setIsBlackAndWhite(prev => !prev)}
                   className="absolute top-3 right-3 z-10 bg-white border border-gray-200 rounded-full p-2 shadow-md hover:bg-gray-100 transition"
                   title={isBlackAndWhite ? 'Show in Color' : 'Show in B&W'}
                 >
-                  <Palette className="w-5 h-5 text-blue-600" />
+                  <span
+                    className={`relative flex items-center justify-center w-5 h-5 ${
+                      isBlackAndWhite ? 'palette-slash' : ''
+                    }`}
+                  >
+                    <Palette
+                      className={`w-5 h-5 transition-colors duration-200 ${
+                        isBlackAndWhite ? 'text-gray-400' : 'text-blue-600'
+                      }`}
+                    />
+                  </span>
                 </button>
 
                 {/* Cover Image */}
@@ -92,7 +102,17 @@ const Step7Preview = ({ newBook, entryOrder, insights }) => {
                   className="absolute top-3 right-3 z-10 bg-white border border-gray-200 rounded-full p-2 shadow-md hover:bg-gray-100 transition"
                   title={isSerifFont ? 'Switch to Sans Serif' : 'Switch to Serif'}
                 >
-                  <Type className="w-5 h-5 text-blue-600" />
+                  <span
+                    className={`relative flex items-center justify-center w-5 h-5 ${
+                      !isSerifFont ? 'type-slash' : ''
+                    }`}
+                  >
+                    <Type
+                      className={`w-5 h-5 transition-colors duration-200 ${
+                        isSerifFont ? 'text-blue-600' : 'text-gray-400'
+                      }`}
+                    />
+                  </span>
                 </button>
               )}
               <div className="w-full h-full flex flex-col justify-between items-center text-center p-4">
@@ -132,7 +152,17 @@ const Step7Preview = ({ newBook, entryOrder, insights }) => {
               className="absolute top-3 right-3 z-10 bg-white border border-gray-200 rounded-full p-2 shadow-md hover:bg-gray-100 transition"
               title={isSerifFont ? 'Switch to Sans Serif' : 'Switch to Serif'}
             >
-              <Type className="w-5 h-5 text-blue-600" />
+              <span
+                className={`relative flex items-center justify-center w-5 h-5 ${
+                  !isSerifFont ? 'type-slash' : ''
+                }`}
+              >
+                <Type
+                  className={`w-5 h-5 transition-colors duration-200 ${
+                    isSerifFont ? 'text-blue-600' : 'text-gray-400'
+                  }`}
+                />
+              </span>
             </button>
               <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-indigo-50 p-8 flex flex-col">
                 <div className="flex-1 flex items-center justify-center">
