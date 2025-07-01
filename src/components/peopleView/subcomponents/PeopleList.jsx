@@ -96,7 +96,8 @@ const PeopleList = ({
     <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-white/50 shadow-sm mb-6">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-semibold text-gray-800">Your People</h2>
-        <div className="flex gap-2 items-center">
+        <div className="flex items-center gap-2 text-sm text-gray-500">
+          <span className="mr-1">Sort by:</span>
           <button onClick={toggleSortField}>{getIconForSortField()}</button>
           <button onClick={toggleSortDirection}>{getIconForSortDirection()}</button>
         </div>
