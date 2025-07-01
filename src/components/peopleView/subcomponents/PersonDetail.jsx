@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { ChevronLeft, Edit3, Camera } from 'lucide-react';
+import { ChevronLeft, Edit3, Camera, Save, X } from 'lucide-react';
 import InsightCard from './InsightCard';
 import SharedBooksSection from '../../home/SharedBooksSection';
 import CreateBook from '../../library/BookCreation/CreateBook';
@@ -26,6 +26,9 @@ const PersonDetail = ({
 }) => {
   const [expandedCollection, setExpandedCollection] = useState(null);
   const [showInactiveCollections, setShowInactiveCollections] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedName, setEditedName] = useState(person.name);
+  const [editedRelationship, setEditedRelationship] = useState(person.relationship);
 
   // Filter insights for this person
   const personInsights = insights.filter(i =>
@@ -67,7 +70,23 @@ const PersonDetail = ({
     !groupedEntries[c.id]?.length
   );
 
-  const handleEditPerson = () => { /* ... */ };
+  const handleEditPerson = () => {
+    setIsEditing(!isEditing);
+    // Reset form fields when entering edit mode
+    if (!isEditing) {
+      setEditedName(person.name);
+      setEditedRelationship(person.relationship);
+    }
+  };
+
+  const handleSaveEdit = () => {
+    // Here you would typically call an API to update the person
+    // For now, we'll just update the local state
+    person.name = editedName;
+    person.relationship = editedRelationship;
+    setIsEditing(false);
+  };
+
   const handleUploadPhoto = () => {
     if (fileInputRef.current) fileInputRef.current.click();
   };
@@ -80,6 +99,10 @@ const PersonDetail = ({
       onTempAvatarUpload(reader.result);
     };
     reader.readAsDataURL(file);
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditing(false);
   };
 
   return (
@@ -116,12 +139,34 @@ const PersonDetail = ({
         </div>
         <div className="text-center">
           <div className="flex items-center gap-2 justify-center">
-            <p className="text-gray-800 font-semibold text-lg">{person.name}</p>
+            {isEditing ? (
+              <input
+                type="text"
+                value={editedName}
+                onChange={(e) => setEditedName(e.target.value)}
+                className="text-gray-800 font-semibold text-lg border-b border-gray-300 px-2 py-1 text-center"
+              />
+            ) : (
+              <p className="text-gray-800 font-semibold text-lg">{person.name}</p>
+            )}
             <button onClick={handleEditPerson}>
-              <Edit3 className="w-4 h-4 text-gray-400 hover:text-blue-600" />
+              {isEditing ? (
+                <Save className="w-4 h-4 text-blue-600" onClick={handleSaveEdit} />
+              ) : (
+                <Edit3 className="w-4 h-4 text-gray-400 hover:text-blue-600" />
+              )}
             </button>
           </div>
-          <p className="text-sm text-gray-500">{person.relationship}</p>
+          {isEditing ? (
+            <input
+              type="text"
+              value={editedRelationship}
+              onChange={(e) => setEditedRelationship(e.target.value)}
+              className="text-sm text-gray-500 border-b border-gray-300 px-2 py-1 text-center w-32"
+            />
+          ) : (
+            <p className="text-sm text-gray-500">{person.relationship}</p>
+          )}
         </div>
       </div>
 
