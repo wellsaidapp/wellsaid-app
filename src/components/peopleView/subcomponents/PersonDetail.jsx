@@ -1,24 +1,33 @@
 import React, { useRef, useState } from 'react';
 import { ChevronLeft, Edit3, Camera } from 'lucide-react';
 import InsightCard from './InsightCard';
-import SharedBooksSection from '../../home/SharedBooksSection'; // adjust path as needed
-import BookPreviewModal from '../../home/BookPreviewModal'; // if needed
-import CreateBook from '../../library/BookCreation/CreateBook'; // to show Start New Book CTA
-import { SHARED_BOOKS, getBooksByRecipient } from '../../../constants/sharedBooks';
-import ImageCropperModal from '../../library/BookCreation/ImageCropperModal';
+import SharedBooksSection from '../../home/SharedBooksSection';
+import CreateBook from '../../library/BookCreation/CreateBook';
+import CollectionsList from '../../library/CollectionsView/CollectionsList';
+import PropTypes from 'prop-types'; // Add this import
 
 const PersonDetail = ({
   person,
   insights,
-  collections,
+  collections = [], // Default to empty array
   books,
   onBack,
   setSelectedBook,
   setCurrentPage,
   onStartNewBook,
   onTempAvatarUpload,
-  croppedAvatarImage
+  croppedAvatarImage,
+  // New props for CollectionsList functionality:
+  onEntryUpdate,
+  onEntryDelete,
+  onCollectionToggle,
+  onRecipientToggle,
+  onAddToCollection
 }) => {
+  const [expandedCollection, setExpandedCollection] = useState(null);
+  const [showInactiveCollections, setShowInactiveCollections] = useState(false);
+
+  // Filter insights for this person
   const personInsights = insights.filter(i =>
     i.recipients?.includes(person.id)
   );
@@ -28,6 +37,35 @@ const PersonDetail = ({
   );
 
   const fileInputRef = useRef(null);
+
+  // Group entries by collection for this person
+  const groupedEntries = personInsights.reduce((acc, entry) => {
+    if (!entry.collections || entry.collections.length === 0) {
+      if (!acc.unorganized) acc.unorganized = [];
+      acc.unorganized.push(entry);
+      return acc;
+    }
+
+    entry.collections.forEach(collectionId => {
+      if (!acc[collectionId]) acc[collectionId] = [];
+      acc[collectionId].push(entry);
+    });
+
+    return acc;
+  }, {});
+
+  // Filter collections
+  const systemCollections = collections.filter(c =>
+    c.type === 'system' && groupedEntries[c.id]?.length > 0
+  );
+
+  const userCollections = collections.filter(c =>
+    c.type === 'occasion' && groupedEntries[c.id]?.length > 0
+  );
+
+  const inactiveCollections = collections.filter(c =>
+    !groupedEntries[c.id]?.length
+  );
 
   const handleEditPerson = () => { /* ... */ };
   const handleUploadPhoto = () => {
@@ -39,7 +77,7 @@ const PersonDetail = ({
 
     const reader = new FileReader();
     reader.onloadend = () => {
-      onTempAvatarUpload(reader.result); // passed from parent
+      onTempAvatarUpload(reader.result);
     };
     reader.readAsDataURL(file);
   };
@@ -57,25 +95,25 @@ const PersonDetail = ({
 
       {/* Avatar and Name */}
       <div className="flex flex-col items-center mb-4 relative">
-      <div className="relative w-20 h-20 mb-3">
-        {person.avatarImage ? (
-          <img
-            src={person.avatarImage}
-            alt="Avatar"
-            className="w-20 h-20 rounded-full object-cover"
-          />
-        ) : (
-          <div className={`w-20 h-20 rounded-full ${person.color} flex items-center justify-center text-white text-2xl font-medium`}>
-            {person.avatar}
-          </div>
-        )}
-        <button
-          onClick={handleUploadPhoto}
-          className="absolute bottom-0 right-0 bg-white p-1 rounded-full shadow-sm"
-        >
-          <Camera className="w-4 h-4 text-gray-600" />
-        </button>
-      </div>
+        <div className="relative w-20 h-20 mb-3">
+          {person.avatarImage ? (
+            <img
+              src={person.avatarImage}
+              alt="Avatar"
+              className="w-20 h-20 rounded-full object-cover"
+            />
+          ) : (
+            <div className={`w-20 h-20 rounded-full ${person.color} flex items-center justify-center text-white text-2xl font-medium`}>
+              {person.avatar}
+            </div>
+          )}
+          <button
+            onClick={handleUploadPhoto}
+            className="absolute bottom-0 right-0 bg-white p-1 rounded-full shadow-sm"
+          >
+            <Camera className="w-4 h-4 text-gray-600" />
+          </button>
+        </div>
         <div className="text-center">
           <div className="flex items-center gap-2 justify-center">
             <p className="text-gray-800 font-semibold text-lg">{person.name}</p>
@@ -93,15 +131,40 @@ const PersonDetail = ({
         <StatCard value={personBooks.length} label="Books" color="blue" />
       </div>
 
-      {/* Recent Insights */}
-      <h3 className="font-medium text-gray-800 mb-3">Recent Insights</h3>
-      <div className="space-y-3 mb-6">
-        {personInsights.slice(0, 3).map(insight => (
-          <InsightCard key={insight.id} insight={insight} />
-        ))}
+      {/* Collections & Insights Section */}
+      <div className="mb-6 p-6 bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm border border-white/50">
+        <div className="mb-4">
+          <h3 className="text-lg font-semibold text-gray-800">Your Shared Insights</h3>
+          <p className="text-sm text-gray-600 mt-1">
+            Collections of memories and moments you've shared with {person.name}.
+          </p>
+        </div>
+        <CollectionsList
+          systemCollections={systemCollections}
+          userCollections={userCollections}
+          groupedEntries={groupedEntries}
+          expandedCollection={expandedCollection}
+          onToggleCollection={(collectionId) => {
+            setExpandedCollection(prev =>
+              prev === collectionId ? null : collectionId
+            );
+          }}
+          onAddToCollection={onAddToCollection}
+          showInactiveCollections={showInactiveCollections}
+          onToggleInactiveCollections={() =>
+            setShowInactiveCollections(!showInactiveCollections)
+          }
+          inactiveCollections={inactiveCollections}
+          individuals={[person]}
+          collections={collections}
+          onEntryUpdate={onEntryUpdate}
+          onEntryDelete={onEntryDelete}
+          onCollectionToggle={onCollectionToggle}
+          onRecipientToggle={onRecipientToggle}
+        />
       </div>
 
-      {/* Book Section (reusing from HomeView) */}
+      {/* Book Section */}
       <SharedBooksSection
         books={personBooks}
         onView={(book) => {
@@ -113,7 +176,7 @@ const PersonDetail = ({
       {/* CTA */}
       <div className="mt-6">
         <CreateBook
-          currentView={null} // or 'people' if you'd like to track where it's triggered from
+          currentView={null}
           onStartNewBook={() => onStartNewBook(person.id)}
         />
       </div>
@@ -126,6 +189,40 @@ const PersonDetail = ({
       />
     </div>
   );
+};
+
+// Add prop types
+PersonDetail.propTypes = {
+  person: PropTypes.object.isRequired,
+  insights: PropTypes.array.isRequired,
+  collections: PropTypes.array,
+  books: PropTypes.array.isRequired,
+  onBack: PropTypes.func.isRequired,
+  setSelectedBook: PropTypes.func.isRequired,
+  setCurrentPage: PropTypes.func.isRequired,
+  onStartNewBook: PropTypes.func.isRequired,
+  onTempAvatarUpload: PropTypes.func.isRequired,
+  croppedAvatarImage: PropTypes.string,
+  // New prop types
+  expandedCollection: PropTypes.string,
+  onToggleCollection: PropTypes.func,
+  onEntryUpdate: PropTypes.func,
+  onEntryDelete: PropTypes.func,
+  onCollectionToggle: PropTypes.func,
+  onRecipientToggle: PropTypes.func,
+  onAddToCollection: PropTypes.func
+};
+
+// Default props
+PersonDetail.defaultProps = {
+  collections: [],
+  expandedCollection: null,
+  onToggleCollection: () => {},
+  onEntryUpdate: () => {},
+  onEntryDelete: () => {},
+  onCollectionToggle: () => {},
+  onRecipientToggle: () => {},
+  onAddToCollection: () => {}
 };
 
 const StatCard = ({ value, label, color }) => (

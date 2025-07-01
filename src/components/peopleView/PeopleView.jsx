@@ -92,7 +92,7 @@ const PeopleView = ({ individuals, insights, collections, sharedBooks }) => {
           <PersonDetail
             person={selectedPerson}
             insights={insights}
-            collections={collections}
+            collections={[...SYSTEM_COLLECTIONS, ...collections]}
             onBack={() => setSelectedPerson(null)}
             books={sharedBooks}
             setSelectedBook={setSelectedBook}
