@@ -97,29 +97,41 @@ const PersonDetail = ({
     color = 'blue',
     total = null,
     showPercentage = false
-  }) => (
-    <div className={`bg-${color}-50 rounded-lg p-3 relative`}>
-      <div className="flex flex-col">
-        <div className={`font-bold text-${color}-600`}>{value}</div>
-        {showPercentage && total && total > 0 && (
-          <>
-            <div className="text-xs text-gray-500 mb-1">
-              {label.includes('Insights')
-                ? `${Math.round((value / total) * 100)}% of your insights`
-                : `${Math.round((value / total) * 100)}% of collections`}
-            </div>
-            <div className="mt-1 h-1.5 w-full bg-gray-200 rounded-full overflow-hidden">
-              <div
-                className={`h-full bg-${color}-400`}
-                style={{ width: `${Math.min(100, Math.round((value / total) * 100))}%` }}
-              ></div>
-            </div>
-          </>
+  }) => {
+    const percentage =
+      total && total > 0 ? Math.round((value / total) * 100) : 0;
+
+    return (
+      <div className={`bg-${color}-50 rounded-lg p-3 text-center`}>
+        {/* Label at top */}
+        <div className="text-sm font-medium text-gray-600 mb-1">{label}</div>
+
+        {/* Value next */}
+        <div className={`text-2xl font-bold text-${color}-600 mb-1`}>
+          {value}
+        </div>
+
+        {/* Optional percentage below value */}
+        {showPercentage && (
+          <div className="text-xs text-gray-500 mb-2">
+            {label.includes('Insights')
+              ? `${percentage}% of your insights`
+              : `${percentage}% of collections`}
+          </div>
         )}
-        <div className="text-xs text-gray-600 mt-1">{label}</div>
+
+        {/* Progress bar last */}
+        {showPercentage && (
+          <div className="h-1.5 w-full bg-gray-200 rounded-full overflow-hidden">
+            <div
+              className={`h-full bg-${color}-400`}
+              style={{ width: `${Math.min(100, percentage)}%` }}
+            ></div>
+          </div>
+        )}
       </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-white/50 shadow-sm">
@@ -197,18 +209,18 @@ const PersonDetail = ({
       {/* Stats */}
       <div className="grid grid-cols-2 gap-2 text-center mb-6">
         <StatCard
-          value={personInsights.length}
           label="Shared Insights"
-          color="blue"
+          value={personInsights.length}
           total={insights.length}
           showPercentage={true}
+          color="blue"
         />
         <StatCard
+          label="Shared Collections"
           value={activeCollectionsCount}
-          label="Active Collections"
-          color="blue"
           total={totalCollections}
           showPercentage={true}
+          color="blue"
         />
       </div>
 
