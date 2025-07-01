@@ -26,7 +26,7 @@ export const INSIGHTS = [
     text: "I know you’re feeling a mix of nerves and excitement — and that’s exactly where growth happens. Trust yourself and let this experience shape you in ways you can’t yet imagine.",
     date: '2025-05-28',
     collections: ['sage-summer-intensive', 'fitness-sports', 'personal-growth'],
-    recipients: [3] // Assuming ID 1 is Sage
+    recipients: [2] // Assuming ID 1 is Sage
   },
   {
     id: 4,

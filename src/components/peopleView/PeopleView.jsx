@@ -72,6 +72,64 @@ const PeopleView = ({ individuals, insights, collections, sharedBooks }) => {
     setAvatarUploadTemp(null);
   };
 
+  const [sortField, setSortField] = useState('name'); // name | insights | collections
+  const [sortDirection, setSortDirection] = useState('asc'); // asc | desc
+
+  const getSortedEnrichedIndividuals = () => {
+    return [...enrichedIndividuals].sort((a, b) => {
+      let aVal, bVal;
+
+      switch (sortField) {
+        case 'name':
+          aVal = a.name.toLowerCase();
+          bVal = b.name.toLowerCase();
+          break;
+        case 'insights':
+          aVal = insights.filter(i => i.recipients?.includes(a.id)).length;
+          bVal = insights.filter(i => i.recipients?.includes(b.id)).length;
+          break;
+        case 'collections':
+          aVal = a.activeCollectionsCount || 0;
+          bVal = b.activeCollectionsCount || 0;
+          break;
+        default:
+          return 0;
+      }
+
+      if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
+      if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
+      return 0;
+    });
+  };
+
+  const enrichedIndividuals = individuals.map(person => {
+    const personInsights = insights.filter(i => i.recipients?.includes(person.id));
+
+    const groupedEntries = personInsights.reduce((acc, entry) => {
+      if (entry.collections?.length > 0) {
+        entry.collections.forEach(collectionId => {
+          if (!acc[collectionId]) acc[collectionId] = [];
+          acc[collectionId].push(entry);
+        });
+      }
+      return acc;
+    }, {});
+
+    const activeCollections = collections.filter(c => groupedEntries[c.id]?.length > 0);
+    return {
+      ...person,
+      activeCollectionsCount: activeCollections.length,
+      totalCollectionsCount: collections.length
+    };
+  });
+
+  console.log('✅ Enriched Individuals:', enrichedIndividuals.map(p => ({
+    name: p.name,
+    id: p.id,
+    activeCollectionsCount: p.activeCollectionsCount,
+    totalCollectionsCount: p.totalCollectionsCount
+  })));
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-blue-50 to-indigo-50 pb-20">
       <Header />
@@ -84,9 +142,13 @@ const PeopleView = ({ individuals, insights, collections, sharedBooks }) => {
 
         {!selectedPerson ? (
           <PeopleList
-            individuals={individuals}
+            individuals={getSortedEnrichedIndividuals()}
             insights={insights}
             onSelectPerson={setSelectedPerson}
+            sortField={sortField}
+            setSortField={setSortField}
+            sortDirection={sortDirection}
+            setSortDirection={setSortDirection}
           />
         ) : (
           <PersonDetail

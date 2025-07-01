@@ -5,6 +5,15 @@ const PersonCard = ({ person, insights, onClick }) => {
     i.recipients?.includes(person.id)
   ).length;
 
+  const totalInsights = insights.length;
+  const insightPercentage = totalInsights
+    ? Math.round((sharedInsightsCount / totalInsights) * 100)
+    : 0;
+
+  const activeCollections = person.activeCollectionsCount ?? 0;
+  const totalCollections = person.totalCollectionsCount ?? 1;
+  const collectionPercentage = Math.round((activeCollections / totalCollections) * 100);
+
   return (
     <div
       onClick={onClick}
@@ -24,10 +33,24 @@ const PersonCard = ({ person, insights, onClick }) => {
             </div>
           )}
         </div>
+
         <div>
           <div className="font-medium text-gray-800">{person.name}</div>
-          <div className="text-xs text-gray-500">
-            {sharedInsightsCount} insights shared
+
+          {/* Insight Progress Bar */}
+          <div className="w-32 h-1.5 bg-gray-200 rounded-full mt-1 overflow-hidden">
+            <div
+              className="h-full bg-blue-500"
+              style={{ width: `${insightPercentage}%` }}
+            />
+          </div>
+
+          {/* Collection Progress Bar */}
+          <div className="w-32 h-1.5 bg-gray-200 rounded-full mt-1 overflow-hidden">
+            <div
+              className="h-full bg-indigo-400"
+              style={{ width: `${collectionPercentage}%` }}
+            />
           </div>
         </div>
       </div>
