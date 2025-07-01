@@ -1,15 +1,14 @@
 import React, { useRef, useState } from 'react';
 import { ChevronLeft, Edit3, Camera, Save, X } from 'lucide-react';
-import InsightCard from './InsightCard';
 import SharedBooksSection from '../../home/SharedBooksSection';
 import CreateBook from '../../library/BookCreation/CreateBook';
 import CollectionsList from '../../library/CollectionsView/CollectionsList';
-import PropTypes from 'prop-types'; // Add this import
+import PropTypes from 'prop-types';
 
 const PersonDetail = ({
   person,
   insights,
-  collections = [], // Default to empty array
+  collections = [],
   books,
   onBack,
   setSelectedBook,
@@ -17,7 +16,6 @@ const PersonDetail = ({
   onStartNewBook,
   onTempAvatarUpload,
   croppedAvatarImage,
-  // New props for CollectionsList functionality:
   onEntryUpdate,
   onEntryDelete,
   onCollectionToggle,
@@ -31,48 +29,37 @@ const PersonDetail = ({
   const [editedRelationship, setEditedRelationship] = useState(person.relationship);
 
   // Filter insights for this person
-  const personInsights = insights.filter(i =>
-    i.recipients?.includes(person.id)
-  );
-
-  const personBooks = books.filter(b =>
-    b.recipientId === person.id
-  );
+  const personInsights = insights.filter(i => i.recipients?.includes(person.id));
+  const personBooks = books.filter(b => b.recipientId === person.id);
 
   const fileInputRef = useRef(null);
 
   // Group entries by collection for this person
   const groupedEntries = personInsights.reduce((acc, entry) => {
-    if (!entry.collections || entry.collections.length === 0) {
-      if (!acc.unorganized) acc.unorganized = [];
-      acc.unorganized.push(entry);
-      return acc;
+    if (entry.collections?.length > 0) {
+      entry.collections.forEach(collectionId => {
+        if (!acc[collectionId]) acc[collectionId] = [];
+        acc[collectionId].push(entry);
+      });
     }
-
-    entry.collections.forEach(collectionId => {
-      if (!acc[collectionId]) acc[collectionId] = [];
-      acc[collectionId].push(entry);
-    });
-
     return acc;
   }, {});
 
-  // Filter collections
+  // Filter and calculate collection stats
   const systemCollections = collections.filter(c =>
     c.type === 'system' && groupedEntries[c.id]?.length > 0
   );
-
   const userCollections = collections.filter(c =>
     c.type === 'occasion' && groupedEntries[c.id]?.length > 0
   );
-
   const inactiveCollections = collections.filter(c =>
     !groupedEntries[c.id]?.length
   );
+  const totalCollections = collections.length;
+  const activeCollectionsCount = systemCollections.length + userCollections.length;
 
   const handleEditPerson = () => {
     setIsEditing(!isEditing);
-    // Reset form fields when entering edit mode
     if (!isEditing) {
       setEditedName(person.name);
       setEditedRelationship(person.relationship);
@@ -80,8 +67,6 @@ const PersonDetail = ({
   };
 
   const handleSaveEdit = () => {
-    // Here you would typically call an API to update the person
-    // For now, we'll just update the local state
     person.name = editedName;
     person.relationship = editedRelationship;
     setIsEditing(false);
@@ -90,6 +75,7 @@ const PersonDetail = ({
   const handleUploadPhoto = () => {
     if (fileInputRef.current) fileInputRef.current.click();
   };
+
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -105,6 +91,36 @@ const PersonDetail = ({
     setIsEditing(false);
   };
 
+  const StatCard = ({
+    value,
+    label,
+    color = 'blue',
+    total = null,
+    showPercentage = false
+  }) => (
+    <div className={`bg-${color}-50 rounded-lg p-3 relative`}>
+      <div className="flex flex-col">
+        <div className={`font-bold text-${color}-600`}>{value}</div>
+        {showPercentage && total && total > 0 && (
+          <>
+            <div className="text-xs text-gray-500 mb-1">
+              {label.includes('Insights')
+                ? `${Math.round((value / total) * 100)}% of your insights`
+                : `${Math.round((value / total) * 100)}% of collections`}
+            </div>
+            <div className="mt-1 h-1.5 w-full bg-gray-200 rounded-full overflow-hidden">
+              <div
+                className={`h-full bg-${color}-400`}
+                style={{ width: `${Math.min(100, Math.round((value / total) * 100))}%` }}
+              ></div>
+            </div>
+          </>
+        )}
+        <div className="text-xs text-gray-600 mt-1">{label}</div>
+      </div>
+    </div>
+  );
+
   return (
     <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-white/50 shadow-sm">
       {/* Back Button */}
@@ -113,7 +129,7 @@ const PersonDetail = ({
           <ChevronLeft size={16} />
           Back
         </button>
-        <div className="w-6" /> {/* spacer */}
+        <div className="w-6" />
       </div>
 
       {/* Avatar and Name */}
@@ -149,13 +165,21 @@ const PersonDetail = ({
             ) : (
               <p className="text-gray-800 font-semibold text-lg">{person.name}</p>
             )}
-            <button onClick={handleEditPerson}>
-              {isEditing ? (
-                <Save className="w-4 h-4 text-blue-600" onClick={handleSaveEdit} />
-              ) : (
-                <Edit3 className="w-4 h-4 text-gray-400 hover:text-blue-600" />
+            <div className="flex items-center">
+              <button onClick={isEditing ? handleSaveEdit : handleEditPerson}>
+                {isEditing ? (
+                  <Save className="w-4 h-4 text-blue-600" />
+                ) : (
+                  <Edit3 className="w-4 h-4 text-gray-400 hover:text-blue-600" />
+                )}
+              </button>
+              {isEditing && (
+                <X
+                  className="w-4 h-4 text-gray-400 hover:text-red-600 ml-1"
+                  onClick={handleCancelEdit}
+                />
               )}
-            </button>
+            </div>
           </div>
           {isEditing ? (
             <input
@@ -172,8 +196,20 @@ const PersonDetail = ({
 
       {/* Stats */}
       <div className="grid grid-cols-2 gap-2 text-center mb-6">
-        <StatCard value={personInsights.length} label="Insights" color="blue" />
-        <StatCard value={personBooks.length} label="Books" color="blue" />
+        <StatCard
+          value={personInsights.length}
+          label="Shared Insights"
+          color="blue"
+          total={insights.length}
+          showPercentage={true}
+        />
+        <StatCard
+          value={activeCollectionsCount}
+          label="Active Collections"
+          color="blue"
+          total={totalCollections}
+          showPercentage={true}
+        />
       </div>
 
       {/* Collections & Insights Section */}
@@ -236,7 +272,6 @@ const PersonDetail = ({
   );
 };
 
-// Add prop types
 PersonDetail.propTypes = {
   person: PropTypes.object.isRequired,
   insights: PropTypes.array.isRequired,
@@ -248,7 +283,6 @@ PersonDetail.propTypes = {
   onStartNewBook: PropTypes.func.isRequired,
   onTempAvatarUpload: PropTypes.func.isRequired,
   croppedAvatarImage: PropTypes.string,
-  // New prop types
   expandedCollection: PropTypes.string,
   onToggleCollection: PropTypes.func,
   onEntryUpdate: PropTypes.func,
@@ -258,7 +292,6 @@ PersonDetail.propTypes = {
   onAddToCollection: PropTypes.func
 };
 
-// Default props
 PersonDetail.defaultProps = {
   collections: [],
   expandedCollection: null,
@@ -269,12 +302,5 @@ PersonDetail.defaultProps = {
   onRecipientToggle: () => {},
   onAddToCollection: () => {}
 };
-
-const StatCard = ({ value, label, color }) => (
-  <div className={`bg-${color}-50 rounded-lg p-3`}>
-    <div className={`font-bold text-${color}-600`}>{value}</div>
-    <div className="text-xs text-gray-600">{label}</div>
-  </div>
-);
 
 export default PersonDetail;
