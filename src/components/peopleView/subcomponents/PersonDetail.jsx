@@ -29,8 +29,8 @@ const PersonDetail = ({
   const [editedRelationship, setEditedRelationship] = useState(person.relationship);
 
   // Filter insights for this person
-  const personInsights = insights.filter(i => i.recipients?.includes(person.id));
-  const personBooks = books.filter(b => b.recipientId === person.id);
+  const personInsights = insights.filter(i => i.personIds?.includes(person.id));
+  const personBooks = books.filter(b => b.personId === person.id);
 
   const fileInputRef = useRef(null);
 

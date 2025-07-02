@@ -23,7 +23,7 @@ const LibraryView = ({ insights, individuals, setInsights }) => {
   const [isSearching, setIsSearching] = useState(false);
   const [selectedFilters, setSelectedFilters] = useState({
     topics: [],
-    recipients: [],
+    personIds: [],
     entryTypes: []
   });
   const [expandedCollection, setExpandedCollection] = useState(null);
@@ -70,7 +70,7 @@ const LibraryView = ({ insights, individuals, setInsights }) => {
     if (!hasEntries) return false;
 
     if (collectionFilter === 'person') {
-      return groupedEntries[collection.id].some(entry => entry.recipients?.length > 0);
+      return groupedEntries[collection.id].some(entry => entry.personIds?.length > 0);
     }
     if (collectionFilter === 'occasion') {
       return false;
@@ -102,14 +102,14 @@ const LibraryView = ({ insights, individuals, setInsights }) => {
                         entry.question?.toLowerCase().includes(query.toLowerCase());
       const matchesTopics = selectedFilters.topics.length === 0 ||
                           entry.topics?.some(topic => selectedFilters.topics.includes(topic));
-      const matchesRecipients = selectedFilters.recipients.length === 0 ||
-                              entry.recipients?.some(id => selectedFilters.recipients.includes(id));
+      const matchesPersons = selectedFilters.personIds.length === 0 ||
+                          entry.personIds?.some(id => selectedFilters.personIds.includes(id));
       const matchesType = selectedFilters.entryTypes.length === 0 ||
                         (selectedFilters.entryTypes.includes('draft') && entry.isDraft) ||
                         (selectedFilters.entryTypes.includes('voice') && entry.isVoiceNote) ||
                         (selectedFilters.entryTypes.includes('insight') && !entry.isDraft && !entry.isVoiceNote);
 
-      return matchesText && matchesTopics && matchesRecipients && matchesType;
+      return matchesText && matchesTopics && matchesPersons && matchesType;
     });
     setSearchResults(results);
     setIsSearching(false);
@@ -190,17 +190,17 @@ const LibraryView = ({ insights, individuals, setInsights }) => {
     );
   };
 
-  const handleRecipientToggle = (entryId, recipientId) => {
+  const handlePersonToggle = (entryId, personId) => {
     setInsights(prevInsights =>
       prevInsights.map(entry => {
         if (entry.id !== entryId) return entry;
 
-        const currentRecipients = entry.recipients || [];
-        const newRecipients = currentRecipients.includes(recipientId)
-          ? currentRecipients.filter(id => id !== recipientId)
-          : [...currentRecipients, recipientId];
+        const currentPersonIds = entry.personIds || [];
+        const newPersonIds = currentPersonIds.includes(personId)
+          ? currentPersonIds.filter(id => id !== personId)
+          : [...currentPersonIds, personId];
 
-        return { ...entry, recipients: newRecipients };
+        return { ...entry, personIds: newPersonIds };
       })
     );
   };
@@ -225,7 +225,7 @@ const LibraryView = ({ insights, individuals, setInsights }) => {
             isSearching={isSearching}
             selectedFilters={selectedFilters}
             toggleFilter={toggleFilter}
-            allRecipients={individuals.map(p => p.id)}
+            allPersonIds={individuals.map(p => p.id)}
             individuals={individuals}
           />
         )}
@@ -253,7 +253,7 @@ const LibraryView = ({ insights, individuals, setInsights }) => {
             onEntryUpdate={handleEntryUpdate}
             onEntryDelete={handleEntryDelete}
             onCollectionToggle={handleCollectionToggle}
-            onRecipientToggle={handleRecipientToggle}
+            onPersonToggle={handlePersonToggle}
             individuals={individuals}
             collections={CUSTOM_COLLECTIONS}
             setInsights={setInsights}

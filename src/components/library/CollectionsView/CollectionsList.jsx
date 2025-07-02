@@ -17,7 +17,7 @@ const CollectionsList = ({
   onEntryUpdate,
   onEntryDelete,
   onCollectionToggle,
-  onRecipientToggle
+  onPersonToggle
 }) => {
   // Filter active system collections that have entries
   const activeSystemCollections = systemCollections.filter(
@@ -51,7 +51,7 @@ const CollectionsList = ({
                 onEntryUpdate={onEntryUpdate}
                 onEntryDelete={onEntryDelete}
                 onCollectionToggle={onCollectionToggle}
-                onRecipientToggle={onRecipientToggle}
+                onPersonToggle={onPersonToggle}
               />
             ))}
           </div>
@@ -79,7 +79,7 @@ const CollectionsList = ({
                 onEntryUpdate={onEntryUpdate}
                 onEntryDelete={onEntryDelete}
                 onCollectionToggle={onCollectionToggle}
-                onRecipientToggle={onRecipientToggle}
+                onPersonToggle={onPersonToggle}
               />
             ))}
           </div>

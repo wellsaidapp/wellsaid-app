@@ -16,6 +16,7 @@ const CollectionItem = ({
   onEntryUpdate,
   onEntryDelete,
   onCollectionToggle,
+  onPersonToggle
 }) => {
   return (
     <div className={`relative z-0 ${!isActive ? 'opacity-70' : ''}`}>
@@ -44,7 +45,7 @@ const CollectionItem = ({
               </div>
               <div className="text-sm text-gray-500">
                 {entries.length} insights
-                {showRecipient && collection.recipient && ` • For ${collection.recipient}`}
+                {showRecipient && collection.metadata?.personName && ` • For ${collection.metadata.personName}`}
               </div>
             </div>
           </div>
@@ -97,7 +98,7 @@ const CollectionItem = ({
                   onCollectionToggle(entry.id, collectionId);
                 }
               }}
-              onRecipientToggle={(recipientId) => onRecipientToggle(entry.id, recipientId)}
+              onPersonToggle={(recipientId) => onPersonToggle(entry.id, recipientId)}
             />
           ))}
         </div>

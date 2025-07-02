@@ -9,7 +9,7 @@ const CaptureCard = ({
   onEdit,
   onDelete,
   onCollectionToggle,
-  onRecipientToggle
+  onPersonToggle
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editedEntry, setEditedEntry] = useState(entry);
@@ -45,19 +45,18 @@ const CaptureCard = ({
     }
   };
 
-  const handleRecipientToggle = (recipientId) => {
+  const handlePersonToggle = (personId) => {
     setEditedEntry(prev => {
-      const currentRecipients = prev.recipients || [];
-      const newRecipients = currentRecipients.includes(recipientId)
-        ? currentRecipients.filter(id => id !== recipientId)
-        : [...currentRecipients, recipientId];
+      const currentPersonIds = prev.personIds || [];
+      const newPersonIds = currentPersonIds.includes(personId)
+        ? currentPersonIds.filter(id => id !== personId)
+        : [...currentPersonIds, personId];
 
-      return { ...prev, recipients: newRecipients };
+      return { ...prev, personIds: newPersonIds };
     });
 
-    // Propagate the change up if needed
-    if (onRecipientToggle) {
-      onRecipientToggle(recipientId);
+    if (onPersonToggle) {
+      onPersonToggle(personId);
     }
   };
 
@@ -269,13 +268,10 @@ const CaptureCard = ({
         <div>
           {!isEditing ? (
             <div className="flex flex-wrap gap-2">
-              {currentEntry.recipients?.map(id => {
+              {currentEntry.personIds?.map(id => {
                 const person = individuals.find(p => p.id === id);
                 return person ? (
-                  <span
-                    key={`view-recipient-${id}`}
-                    className="inline-flex items-center px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-full"
-                  >
+                  <span key={`view-person-${id}`} className="inline-flex items-center px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-full">
                     <span className="w-2 h-2 rounded-full bg-gray-500 mr-1"></span>
                     {person.name}
                   </span>
@@ -311,10 +307,10 @@ const CaptureCard = ({
                 <div className="flex flex-wrap gap-2">
                   {individuals.map(person => (
                     <button
-                      key={`edit-recipient-${person.id}`}
-                      onClick={() => handleRecipientToggle(person.id)}
+                      key={`edit-person-${person.id}`}
+                      onClick={() => handlePersonToggle(person.id)}
                       className={`inline-flex items-center px-2 py-1 text-xs rounded-full ${
-                        currentEntry.recipients?.includes(person.id)
+                        currentEntry.personIds?.includes(person.id)
                           ? "bg-gray-800 text-white"
                           : "bg-gray-100 text-gray-700"
                       }`}

@@ -18,6 +18,7 @@ const PeopleView = ({ individuals, insights, collections, sharedBooks }) => {
   const [showAvatarCropper, setShowAvatarCropper] = useState(false);
   const [croppedAvatarImage, setCroppedAvatarImage] = useState(null); // Final cropped avatar image
 
+  const systemCollectionIds = new Set(SYSTEM_COLLECTIONS.map(c => c.id));
   const [showBookCreation, setShowBookCreation] = useState(false);
   const [bookCreationStep, setBookCreationStep] = useState(0);
   const [newBook, setNewBook] = useState({
@@ -42,7 +43,7 @@ const PeopleView = ({ individuals, insights, collections, sharedBooks }) => {
       selectedEntries: [],
       coverImage: null,
       backCoverNote: '',
-      recipient: id,
+      personId: id,
       showTags: true,
       fontStyle: 'serif',
       isDraft: false
@@ -85,8 +86,8 @@ const PeopleView = ({ individuals, insights, collections, sharedBooks }) => {
           bVal = b.name.toLowerCase();
           break;
         case 'insights':
-          aVal = insights.filter(i => i.recipients?.includes(a.id)).length;
-          bVal = insights.filter(i => i.recipients?.includes(b.id)).length;
+          aVal = insights.filter(i => i.personIds?.includes(a.id)).length;
+          bVal = insights.filter(i => i.personIds?.includes(b.id)).length;
           break;
         case 'collections':
           aVal = a.activeCollectionsCount || 0;
@@ -103,23 +104,25 @@ const PeopleView = ({ individuals, insights, collections, sharedBooks }) => {
   };
 
   const enrichedIndividuals = individuals.map(person => {
-    const personInsights = insights.filter(i => i.recipients?.includes(person.id));
+    const sharedSystemCollectionIds = new Set();
 
-    const groupedEntries = personInsights.reduce((acc, entry) => {
-      if (entry.collections?.length > 0) {
-        entry.collections.forEach(collectionId => {
-          if (!acc[collectionId]) acc[collectionId] = [];
-          acc[collectionId].push(entry);
+    // Loop over all insights
+    insights.forEach(insight => {
+      // Only consider insights explicitly shared with this person
+      if (insight.personIds?.includes(person.id)) {
+        // For each collection on the insight, if it's a system collection, count it
+        insight.collections?.forEach(colId => {
+          if (systemCollectionIds.has(colId)) {
+            sharedSystemCollectionIds.add(colId);
+          }
         });
       }
-      return acc;
-    }, {});
+    });
 
-    const activeCollections = collections.filter(c => groupedEntries[c.id]?.length > 0);
     return {
       ...person,
-      activeCollectionsCount: activeCollections.length,
-      totalCollectionsCount: collections.length
+      activeCollectionsCount: sharedSystemCollectionIds.size,
+      totalCollectionsCount: systemCollectionIds.size
     };
   });
 

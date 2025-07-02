@@ -32,11 +32,11 @@ const SharedBooksSection = ({ books, onView }) => (
                 <div className="flex items-center gap-2">
                   <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
                     <span className="text-xs font-medium text-blue-600">
-                      {book.recipient.charAt(0)}
+                      {book.personName.charAt(0)}
                     </span>
                   </div>
                   <span className="text-xs text-gray-600">
-                    Shared with {book.recipient}
+                    Shared with {book.personName}
                   </span>
                 </div>
                 <button

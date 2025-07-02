@@ -2,7 +2,7 @@ import { ChevronRight } from 'lucide-react';
 
 const PersonCard = ({ person, insights, onClick }) => {
   const sharedInsightsCount = insights.filter(i =>
-    i.recipients?.includes(person.id)
+    i.personIds?.includes(person.id)
   ).length;
 
   const totalInsights = insights.length;

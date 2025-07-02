@@ -168,7 +168,7 @@ const CaptureView = ({ captureMode, setCurrentView }) => {
             typeMessage(`Great! ${newPersonData.name} has been added to your circle.`, true);
             typeMessage("Now, let's continue with the special occasion.", true, 1000);
 
-            // Set this person as the occasion recipient
+            // Assign this person to the occasion
             setOccasion(prev => ({
                 ...prev,
                 person: newPerson

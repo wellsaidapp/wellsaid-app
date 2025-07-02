@@ -5,8 +5,8 @@ export const CUSTOM_COLLECTIONS = [
     type: 'custom',
     color: 'bg-purple-500',
     metadata: {
-      recipientId: '1',
-      recipientName: 'Sage',
+      personId: '1',
+      personName: 'Sage',
       created: '2025-05-01'
     }
   },
@@ -16,8 +16,8 @@ export const CUSTOM_COLLECTIONS = [
     type: 'custom',
     color: 'bg-blue-500',
     metadata: {
-      recipientId: '2',
-      recipientName: 'Cohen',
+      personId: '2',
+      personName: 'Cohen',
       created: '2025-10-01'
     }
   }
