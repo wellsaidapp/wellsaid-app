@@ -8,7 +8,7 @@ const SearchAndFilterBar = ({
   isSearching,
   selectedFilters,
   toggleFilter,
-  allRecipients,
+  allPersonIds,
   individuals,
 }) => {
   const [showFilters, setShowFilters] = useState(false);
@@ -71,15 +71,15 @@ const SearchAndFilterBar = ({
             <span className="text-xs font-medium text-gray-500">FILTER BY:</span>
 
             {/* Recipient Filters */}
-            {allRecipients.map((id) => {
+            {allPersonIds.map((id) => {
               const person = individuals.find((p) => p.id === id);
               return (
                 <button
                   key={id}
                   type="button"
-                  onClick={() => toggleFilter('recipients', id)}
+                  onClick={() => toggleFilter('personIds', id)}
                   className={`px-2.5 py-1 rounded-full text-xs flex items-center gap-1 ${
-                    selectedFilters.recipients.includes(id)
+                    selectedFilters.personIds.includes(id)
                       ? 'bg-blue-600 text-white'
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   }`}

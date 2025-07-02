@@ -13,8 +13,8 @@ const CaptureCard = ({
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editedEntry, setEditedEntry] = useState(entry);
-  const questionRef = useRef(null);
-  const answerRef = useRef(null);
+  const promptRef = useRef(null);
+  const responseRef = useRef(null);
   const handleChange = (field, value) => {
     setEditedEntry(prev => ({ ...prev, [field]: value }));
   };
@@ -74,8 +74,8 @@ const CaptureCard = ({
 
   useEffect(() => {
     if (isEditing) {
-      autoResizeTextarea(questionRef);
-      autoResizeTextarea(answerRef);
+      autoResizeTextarea(promptRef);
+      autoResizeTextarea(responseRef);
     }
   }, [isEditing]);
 
@@ -84,11 +84,6 @@ const CaptureCard = ({
       {/* Header */}
       <div className="flex items-center p-3 border-b border-gray-100 bg-gray-50">
         <div className="flex-1 flex items-center space-x-2">
-          {entry.isVoiceNote && (
-            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800">
-              <Mic className="w-3 h-3 mr-1" /> Voice Note
-            </span>
-          )}
           {entry.isDraft && (
             <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-orange-100 text-orange-800">
               Draft
@@ -141,46 +136,46 @@ const CaptureCard = ({
 
       {/* Content */}
       <div className="p-4">
-        {/* Question */}
-        {currentEntry.question && (
+        {/* Prompt */}
+        {currentEntry.prompt && (
           <div className="mb-4">
             <div className="flex items-center mb-1">
               <span className="text-xs font-semibold text-blue-600 uppercase tracking-wider">
-                Question
+                Prompt
               </span>
             </div>
             {isEditing ? (
               <textarea
-                ref={questionRef}
-                value={currentEntry.question}
+                ref={promptRef}
+                value={currentEntry.prompt}
                 onChange={(e) => {
-                  handleChange('question', e.target.value);
-                  autoResizeTextarea(questionRef);
+                  handleChange('prompt', e.target.value);
+                  autoResizeTextarea(promptRef);
                 }}
                 className="w-full bg-blue-50 rounded-lg p-3 text-sm text-gray-800 border border-blue-200 resize-none overflow-hidden"
               />
             ) : (
               <div className="bg-blue-50 rounded-lg p-3 text-sm text-gray-800">
-                {currentEntry.question}
+                {currentEntry.prompt}
               </div>
             )}
           </div>
         )}
 
-        {/* Answer */}
+        {/* Response */}
         <div>
           <div className="flex items-center mb-1">
             <span className="text-xs font-semibold text-green-600 uppercase tracking-wider">
-              {currentEntry.isDraft ? "Draft Content" : "Answer"}
+              {currentEntry.isDraft ? "Draft Content" : "Response"}
             </span>
           </div>
           {isEditing ? (
             <textarea
-              ref={answerRef}
-              value={currentEntry.text || currentEntry.content || ""}
+              ref={responseRef}
+              value={currentEntry.response || currentEntry.content || ""}
               onChange={(e) => {
-                handleChange(entry.text ? 'text' : 'content', e.target.value);
-                autoResizeTextarea(answerRef);
+                handleChange(entry.response ? 'text' : 'content', e.target.value);
+                autoResizeTextarea(responseRef);
               }}
               className={`w-full rounded-lg p-3 text-sm resize-none overflow-hidden ${
                 currentEntry.isDraft || currentEntry.isVoiceNote
@@ -194,7 +189,7 @@ const CaptureCard = ({
                 ? "bg-gray-50 italic text-gray-600"
                 : "bg-green-50 text-gray-800"
             }`}>
-              {currentEntry.text || currentEntry.content || "No content yet"}
+              {currentEntry.response || currentEntry.content || "No content yet"}
             </div>
           )}
         </div>

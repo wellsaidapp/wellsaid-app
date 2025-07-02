@@ -27,16 +27,20 @@ const BookItem = ({
 
         <div className="px-4 pb-3 border-t border-gray-100">
           <div className="flex items-center justify-between pt-3">
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
-                <span className="text-xs font-medium text-blue-600">
-                  {book.recipient?.charAt(0).toUpperCase() || 'B'}
+            {book.personId ? (
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
+                  <span className="text-xs font-medium text-blue-600">
+                    {book.personName?.charAt(0).toUpperCase() || 'B'}
+                  </span>
+                </div>
+                <span className="text-xs text-gray-600">
+                  Shared with {book.personName}
                 </span>
               </div>
-              <span className="text-xs text-gray-600">
-                {book.recipient ? `Shared with ${book.recipient}` : 'No recipient'}
-              </span>
-            </div>
+            ) : (
+              <div /> // empty spacer to keep alignment
+            )}
             <button
               onClick={() => onViewBook(book)}
               className="text-xs font-medium text-blue-600 hover:text-blue-800"

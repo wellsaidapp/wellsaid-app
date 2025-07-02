@@ -84,7 +84,7 @@ const LibraryView = ({ insights, individuals, setInsights }) => {
 
     if (collectionFilter === 'person') {
       return collection.type === 'person' ||
-             groupedEntries[collection.id].some(entry => entry.recipients?.length > 0);
+             groupedEntries[collection.id].some(entry => entry.personIds?.length > 0);
     }
     if (collectionFilter === 'occasion') {
       return collection.type === 'occasion';
