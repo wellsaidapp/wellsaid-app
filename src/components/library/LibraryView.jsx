@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { SYSTEM_COLLECTIONS } from '../../constants/systemCollections';
-import { COLLECTIONS } from '../../constants/collections';
+import { CUSTOM_COLLECTIONS } from '../../constants/collections';
 import { SHARED_BOOKS } from '../../constants/sharedBooks';
 
 // Component imports
@@ -78,7 +78,7 @@ const LibraryView = ({ insights, individuals, setInsights }) => {
     return true;
   });
 
-  const filteredUserCollections = COLLECTIONS.filter(collection => {
+  const filteredUserCollections = CUSTOM_COLLECTIONS.filter(collection => {
     const hasEntries = groupedEntries[collection.id]?.length > 0;
     if (!hasEntries) return false;
 
@@ -255,7 +255,7 @@ const LibraryView = ({ insights, individuals, setInsights }) => {
             onCollectionToggle={handleCollectionToggle}
             onRecipientToggle={handleRecipientToggle}
             individuals={individuals}
-            collections={COLLECTIONS}
+            collections={CUSTOM_COLLECTIONS}
             setInsights={setInsights}
           />
         ) : (
@@ -297,7 +297,7 @@ const LibraryView = ({ insights, individuals, setInsights }) => {
           setEntryOrder={setEntryOrder}
           individuals={individuals}
           insights={insights}
-          collections={COLLECTIONS}
+          collections={CUSTOM_COLLECTIONS}
           groupedEntries={groupedEntries}
           SYSTEM_COLLECTIONS={SYSTEM_COLLECTIONS}
           currentView={currentView}

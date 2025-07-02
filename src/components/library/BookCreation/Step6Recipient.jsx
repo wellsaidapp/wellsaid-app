@@ -29,7 +29,7 @@ const Step6Recipient = ({ newBook, setNewBook, individuals }) => {
               )}
 
               {/* Avatar */}
-              <div className={`mx-auto w-10 h-10 ${person.color} rounded-full flex items-center justify-center mb-2`}>
+              <div className={`mx-auto w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center mb-2`}>
                 <span className="text-white font-semibold text-sm">
                   {person.name.charAt(0).toUpperCase()}
                 </span>

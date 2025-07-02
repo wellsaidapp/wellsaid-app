@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Pencil, Trash2, Save, X, Mic, GripVertical } from 'lucide-react';
 
 const CaptureCard = ({
@@ -13,7 +13,8 @@ const CaptureCard = ({
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editedEntry, setEditedEntry] = useState(entry);
-
+  const questionRef = useRef(null);
+  const answerRef = useRef(null);
   const handleChange = (field, value) => {
     setEditedEntry(prev => ({ ...prev, [field]: value }));
   };
@@ -60,7 +61,24 @@ const CaptureCard = ({
     }
   };
 
+  const [showRecipients, setShowRecipients] = useState(false);
+  const [showCollections, setShowCollections] = useState(false);
+
   const currentEntry = isEditing ? editedEntry : entry;
+
+  const autoResizeTextarea = (ref) => {
+    if (ref?.current) {
+      ref.current.style.height = 'auto'; // Reset height
+      ref.current.style.height = `${ref.current.scrollHeight}px`;
+    }
+  };
+
+  useEffect(() => {
+    if (isEditing) {
+      autoResizeTextarea(questionRef);
+      autoResizeTextarea(answerRef);
+    }
+  }, [isEditing]);
 
   return (
     <div className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100 mb-4">
@@ -134,9 +152,13 @@ const CaptureCard = ({
             </div>
             {isEditing ? (
               <textarea
+                ref={questionRef}
                 value={currentEntry.question}
-                onChange={(e) => handleChange('question', e.target.value)}
-                className="w-full bg-blue-50 rounded-lg p-3 text-sm text-gray-800 border border-blue-200"
+                onChange={(e) => {
+                  handleChange('question', e.target.value);
+                  autoResizeTextarea(questionRef);
+                }}
+                className="w-full bg-blue-50 rounded-lg p-3 text-sm text-gray-800 border border-blue-200 resize-none overflow-hidden"
               />
             ) : (
               <div className="bg-blue-50 rounded-lg p-3 text-sm text-gray-800">
@@ -155,9 +177,13 @@ const CaptureCard = ({
           </div>
           {isEditing ? (
             <textarea
+              ref={answerRef}
               value={currentEntry.text || currentEntry.content || ""}
-              onChange={(e) => handleChange(entry.text ? 'text' : 'content', e.target.value)}
-              className={`w-full rounded-lg p-3 text-sm ${
+              onChange={(e) => {
+                handleChange(entry.text ? 'text' : 'content', e.target.value);
+                autoResizeTextarea(answerRef);
+              }}
+              className={`w-full rounded-lg p-3 text-sm resize-none overflow-hidden ${
                 currentEntry.isDraft || currentEntry.isVoiceNote
                   ? "bg-gray-50 italic text-gray-600 border border-gray-200"
                   : "bg-green-50 text-gray-800 border border-green-200"
@@ -177,69 +203,129 @@ const CaptureCard = ({
 
       {/* Footer */}
       <div className="px-4 pb-3 pt-2 border-t border-gray-100">
-        {/* Collections */}
-        <div className="flex flex-wrap gap-2 mb-2">
-          {isEditing ? (
-            [...new Map([...systemCollections, ...collections].map(c => [c.id, c])).values()]
-              .map(collection => (
-                <button
-                  key={`edit-col-${collection.id}`}
-                  onClick={() => handleCollectionToggle(collection.id)}  // Changed from onCollectionToggle
-                  className={`px-2 py-1 text-xs rounded-full ${
-                    currentEntry.collections?.includes(collection.id)
-                      ? "bg-gray-800 text-white"
-                      : "bg-gray-100 text-gray-700"
-                  }`}
-                >
-                  {collection.name}
-                </button>
-              ))
+      {/* Collections */}
+        <div className="mb-2">
+          {!isEditing ? (
+            // Normal display of tagged collections
+            <div className="flex flex-wrap gap-2">
+              {currentEntry.collections?.map(collectionId => {
+                const collection = [...systemCollections, ...collections].find(c => c.id === collectionId);
+                return collection ? (
+                  <span
+                    key={`view-col-${collectionId}`}
+                    className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-full"
+                  >
+                    {collection.name}
+                  </span>
+                ) : null;
+              })}
+            </div>
           ) : (
-            currentEntry.collections?.map(collectionId => {
-              const collection = [...systemCollections, ...collections]
-                .find(c => c.id === collectionId);
-              return collection ? (
-                <span
-                  key={`view-col-${collectionId}`}
-                  className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-full"
-                >
-                  {collection.name}
-                </span>
-              ) : null;
-            })
+            <>
+              {/* Show currently tagged collections */}
+              <div className="flex flex-wrap gap-2 mb-2">
+                {currentEntry.collections?.map(collectionId => {
+                  const collection = [...systemCollections, ...collections].find(c => c.id === collectionId);
+                  return collection ? (
+                    <span
+                      key={`edit-col-preview-${collectionId}`}
+                      className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-full"
+                    >
+                      {collection.name}
+                    </span>
+                  ) : null;
+                })}
+              </div>
+
+              <button
+                onClick={() => setShowCollections(!showCollections)}
+                className="text-xs text-gray-500 underline mb-2"
+              >
+                {showCollections ? "Hide Collections" : "Edit Collections"}
+              </button>
+
+              {showCollections && (
+                <div className="flex flex-wrap gap-2">
+                  {[...new Map([...systemCollections, ...collections].map(c => [c.id, c])).values()].map(collection => (
+                    <button
+                      key={`edit-col-${collection.id}`}
+                      onClick={() => handleCollectionToggle(collection.id)}
+                      className={`px-2 py-1 text-xs rounded-full ${
+                        currentEntry.collections?.includes(collection.id)
+                          ? "bg-gray-800 text-white"
+                          : "bg-gray-100 text-gray-700"
+                      }`}
+                    >
+                      {collection.name}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </>
           )}
         </div>
 
         {/* Recipients */}
-        <div className="flex flex-wrap gap-2">
-          {isEditing ? (
-            individuals.map(person => (
-              <button
-                key={`edit-recipient-${person.id}`}
-                onClick={() => handleRecipientToggle(person.id)}  // Changed from onRecipientToggle
-                className={`inline-flex items-center px-2 py-1 text-xs rounded-full ${
-                  currentEntry.recipients?.includes(person.id)
-                    ? "bg-blue-800 text-white"
-                    : "bg-blue-100 text-blue-700"
-                }`}
-              >
-                <span className={`w-2 h-2 rounded-full ${person.color} mr-1`}></span>
-                {person.name}
-              </button>
-            ))
+        <div>
+          {!isEditing ? (
+            <div className="flex flex-wrap gap-2">
+              {currentEntry.recipients?.map(id => {
+                const person = individuals.find(p => p.id === id);
+                return person ? (
+                  <span
+                    key={`view-recipient-${id}`}
+                    className="inline-flex items-center px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-full"
+                  >
+                    <span className="w-2 h-2 rounded-full bg-gray-500 mr-1"></span>
+                    {person.name}
+                  </span>
+                ) : null;
+              })}
+            </div>
           ) : (
-            currentEntry.recipients?.map(id => {
-              const person = individuals.find(p => p.id === id);
-              return person ? (
-                <span
-                  key={`view-recipient-${id}`}
-                  className="inline-flex items-center px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full"
-                >
-                  <span className={`w-2 h-2 rounded-full ${person.color} mr-1`}></span>
-                  {person.name}
-                </span>
-              ) : null;
-            })
+            <>
+              {/* Show currently tagged people */}
+              <div className="flex flex-wrap gap-2 mb-2">
+                {currentEntry.recipients?.map(id => {
+                  const person = individuals.find(p => p.id === id);
+                  return person ? (
+                    <span
+                      key={`edit-recipient-preview-${id}`}
+                      className="inline-flex items-center px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-full"
+                    >
+                      <span className="w-2 h-2 rounded-full bg-gray-500 mr-1"></span>
+                      {person.name}
+                    </span>
+                  ) : null;
+                })}
+              </div>
+
+              <button
+                onClick={() => setShowRecipients(!showRecipients)}
+                className="text-xs text-gray-500 underline mb-2"
+              >
+                {showRecipients ? "Hide Tagged People" : "Edit Tagged People"}
+              </button>
+
+              {showRecipients && (
+                <div className="flex flex-wrap gap-2">
+                  {individuals.map(person => (
+                    <button
+                      key={`edit-recipient-${person.id}`}
+                      onClick={() => handleRecipientToggle(person.id)}
+                      className={`inline-flex items-center px-2 py-1 text-xs rounded-full ${
+                        currentEntry.recipients?.includes(person.id)
+                          ? "bg-gray-800 text-white"
+                          : "bg-gray-100 text-gray-700"
+                      }`}
+                    >
+                      <span className="w-2 h-2 rounded-full bg-gray-500 mr-1"></span>
+                      {person.name}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>

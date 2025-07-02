@@ -5,7 +5,7 @@ import { INSIGHTS } from '../../constants/insights';
 import { USER } from '../../constants/user';
 import { UPCOMING_EVENTS } from '../../constants/upcomingEvents';
 import { INDIVIDUALS } from '../../constants/individuals';
-import { COLLECTIONS } from '../../constants/collections';
+import { CUSTOM_COLLECTIONS } from '../../constants/collections';
 import { OCCASION_QUESTIONS } from '../../constants/occasionQuestions';
 import Header from '../appLayout/Header';
 import CaptureOptionsModal from '../capture/CaptureOptionsModal';
@@ -94,7 +94,7 @@ const HomeView = ({
         <LegacyStats
           insightsCount={insights.filter(i => i.shared).length}
           individualsCount={INDIVIDUALS.length}
-          collectionsCount={COLLECTIONS.length}
+          collectionsCount={CUSTOM_COLLECTIONS.length}
         />
       </div>
 

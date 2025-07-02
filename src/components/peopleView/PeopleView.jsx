@@ -34,7 +34,7 @@ const PeopleView = ({ individuals, insights, collections, sharedBooks }) => {
   });
   const [entryOrder, setEntryOrder] = useState([]);
 
-  const handleStartNewBookForPerson = (personId) => {
+  const handleStartNewBookForPerson = (id) => {
     setNewBook({
       title: '',
       description: '',
@@ -42,7 +42,7 @@ const PeopleView = ({ individuals, insights, collections, sharedBooks }) => {
       selectedEntries: [],
       coverImage: null,
       backCoverNote: '',
-      recipient: personId,
+      recipient: id,
       showTags: true,
       fontStyle: 'serif',
       isDraft: false
@@ -127,7 +127,9 @@ const PeopleView = ({ individuals, insights, collections, sharedBooks }) => {
     name: p.name,
     id: p.id,
     activeCollectionsCount: p.activeCollectionsCount,
-    totalCollectionsCount: p.totalCollectionsCount
+    totalCollectionsCount: p.totalCollectionsCount,
+    avatarImage: p.avatarImage,
+    isImageUsed: Boolean(p.avatarImage?.trim?.())
   })));
 
   return (

@@ -84,8 +84,8 @@ const SearchAndFilterBar = ({
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   }`}
                 >
-                  <span className={`w-2 h-2 rounded-full ${person.color}`}></span>
-                  {person.name}
+                  <span className="w-2 h-2 rounded-full bg-gray-300"></span>
+                  {person?.name || 'Unknown'}
                 </button>
               );
             })}

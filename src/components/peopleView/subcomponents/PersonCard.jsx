@@ -21,14 +21,14 @@ const PersonCard = ({ person, insights, onClick }) => {
     >
       <div className="flex items-start">
         <div className="w-20 h-20 rounded-full overflow-hidden mr-4 self-center">
-          {person.avatarImage ? (
+          {person.avatarImage?.trim?.() ? (
             <img
               src={person.avatarImage}
               alt="Avatar"
               className="w-20 h-20 object-cover rounded-full"
             />
           ) : (
-            <div className={`w-20 h-20 rounded-full ${person.color} flex items-center justify-center`}>
+            <div className={`w-20 h-20 rounded-full bg-gray-400 flex items-center justify-center`}>
               <span className="text-white text-2xl font-medium">{person.avatar}</span>
             </div>
           )}

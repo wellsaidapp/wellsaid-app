@@ -147,14 +147,14 @@ const PersonDetail = ({
       {/* Avatar and Name */}
       <div className="flex flex-col items-center mb-4 relative">
         <div className="relative w-20 h-20 mb-3">
-          {person.avatarImage ? (
+          {person.avatarImage?.trim?.() ? (
             <img
               src={person.avatarImage}
               alt="Avatar"
               className="w-20 h-20 rounded-full object-cover"
             />
           ) : (
-            <div className={`w-20 h-20 rounded-full ${person.color} flex items-center justify-center text-white text-2xl font-medium`}>
+            <div className={`w-20 h-20 rounded-full bg-gray-400 flex items-center justify-center text-white text-2xl font-medium`}>
               {person.avatar}
             </div>
           )}

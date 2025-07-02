@@ -1,18 +1,24 @@
-export const COLLECTIONS = [
+export const CUSTOM_COLLECTIONS = [
   {
     id: 'sage-summer-intensive',
     name: "Sage's Summer Intensive",
+    type: 'custom',
     color: 'bg-purple-500',
-    type: 'occasion',
-    recipient: 'Sage',
-    created: '2025-05-01'
+    metadata: {
+      recipientId: '1',
+      recipientName: 'Sage',
+      created: '2025-05-01'
+    }
   },
   {
     id: 'cohens-birthday',
     name: "Cohen's 17th Birthday",
+    type: 'custom',
     color: 'bg-blue-500',
-    type: 'occasion',
-    recipient: 'Cohen',
-    created: '2025-10-01'
+    metadata: {
+      recipientId: '2',
+      recipientName: 'Cohen',
+      created: '2025-10-01'
+    }
   }
 ];

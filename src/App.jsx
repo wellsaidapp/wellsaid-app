@@ -18,7 +18,7 @@ import PeopleView from './components/peopleView/PeopleView';
 // Only keep constants you actually use
 import { INDIVIDUALS } from './constants/individuals';
 import { INSIGHTS } from './constants/insights';
-import { COLLECTIONS } from './constants/collections';
+import { CUSTOM_COLLECTIONS } from './constants/collections';
 import { USER } from './constants/user';
 import { SHARED_BOOKS } from './constants/sharedBooks';
 
