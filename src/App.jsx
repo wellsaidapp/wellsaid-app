@@ -76,7 +76,7 @@ const WellSaidApp = () => {
         return <PeopleView
           insights={insights}
           individuals={individuals}
-          collections={COLLECTIONS}
+          collections={CUSTOM_COLLECTIONS}
           setCurrentView={setCurrentView}
           sharedBooks={SHARED_BOOKS}
         />;
@@ -84,7 +84,7 @@ const WellSaidApp = () => {
         return <ProfileView
           insights={insights}
           individuals={individuals}
-          collections={COLLECTIONS}
+          collections={CUSTOM_COLLECTIONS}
           user={USER}
           setCurrentView={setCurrentView}
         />;
