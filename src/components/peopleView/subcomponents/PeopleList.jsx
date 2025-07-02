@@ -28,7 +28,13 @@ const PeopleList = ({
     const currentIndex = sortOptions.indexOf(sortField);
     const nextField = sortOptions[(currentIndex + 1) % sortOptions.length];
     setSortField(nextField);
-    setSortDirection('asc'); // reset direction
+
+    // Default to 'desc' for insights and collections, 'asc' for name
+    if (nextField === 'insights' || nextField === 'collections') {
+      setSortDirection('desc');
+    } else {
+      setSortDirection('asc');
+    }
   };
 
   const toggleSortDirection = () => {
