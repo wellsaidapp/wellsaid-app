@@ -92,9 +92,9 @@ const HomeView = ({
         />
 
         <LegacyStats
-          insightsCount={insights.filter(i => i.shared).length}
+          insightsCount={insights.length}
           individualsCount={INDIVIDUALS.length}
-          collectionsCount={CUSTOM_COLLECTIONS.length}
+          booksCount={SHARED_BOOKS.length}
         />
       </div>
 
