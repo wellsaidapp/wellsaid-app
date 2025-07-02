@@ -110,9 +110,7 @@ const ImageCropperModal = ({ image, onCropComplete, onClose }) => {
         recipient: "Recipient Name",
         recipientId: 1,
         description: "Book description",
-        count: 1,
         color: "bg-blue-500",
-        lastUpdated: "Just now",
         type: "book",
         pages: [{
           type: "cover",
