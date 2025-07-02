@@ -73,14 +73,7 @@ const BookPreviewModal = ({ book, currentPage = 0, setCurrentPage, onClose }) =>
               {book.pages[currentPage].type === 'question' ? (
                 <p className="text-xl italic text-gray-700">{book.pages[currentPage].content}</p>
               ) : (
-                <div>
-                  <p className="text-lg text-gray-800 mb-4">{book.pages[currentPage].content.text}</p>
-                  <ul className="space-y-2 text-gray-700">
-                    {book.pages[currentPage].content.points.map((point, i) => (
-                      <li key={i}>• {point}</li>
-                    ))}
-                  </ul>
-                </div>
+                <p className="text-lg text-gray-800 text-center">{book.pages[currentPage].content.text}</p>
               )}
             </div>
           )}
