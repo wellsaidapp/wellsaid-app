@@ -33,6 +33,8 @@ export const SHARED_BOOKS = [
   {
     id: 1,
     name: "Letters to Sage",
+    status: "Published",
+    savedOn: "2025-06-01",
     personName: "Sage",
     personId: 1,
     description: "Life lessons and letters for my daughter",
@@ -63,6 +65,8 @@ export const SHARED_BOOKS = [
   {
     id: 2,
     name: "First Year Lessons",
+    status: "Published",
+    savedOn: "2025-06-02",
     personName: "Kove",
     personId: 9,
     description: "What I learned in your first year of life",
@@ -93,6 +97,8 @@ export const SHARED_BOOKS = [
   {
     id: 3,
     name: "For When You're Older",
+    status: "Published",
+    savedOn: "2025-06-03",
     personName: "Ellie",
     personId: 3,
     description: "Wisdom for their teenage years and beyond",
@@ -132,6 +138,8 @@ export const SHARED_BOOKS = [
   {
     id: 4,
     name: "Truett's Scofield Graduation",
+    savedOn: "2025-06-04",
+    status: "Published",
     personName: "Truett",
     personId: 4,
     description: "Advice for Truett as he graduates from Scofield",
@@ -153,6 +161,8 @@ export const SHARED_BOOKS = [
   {
     id: 5,
     name: "Cohen's 16th Birthday",
+    savedOn: "2025-06-05",
+    status: "Published",
     personName: "Cohen",
     personId: 2,
     description: "Thoughts and advice for Cohen as he turns 16",
@@ -177,23 +187,23 @@ export const SHARED_BOOKS = [
 export const getBookById = (id) => SHARED_BOOKS.find(book => book.id === id);
 
 export const getBooksByRecipient = (recipientId) =>
-  SHARED_BOOKS.filter(book => book.recipientId === recipientId);
+  SHARED_BOOKS.filter(book => book.personId === recipientId);
 
 export const getRecentBooks = (limit = 3) =>
   [...SHARED_BOOKS]
-    .sort((a, b) => new Date(b.lastUpdated) - new Date(a.lastUpdated))
+    .sort((a, b) => new Date(b.savedOn) - new Date(a.savedOn))
     .slice(0, limit);
 
 /**
  * @typedef {Object} Book
  * @property {number} id
  * @property {string} name
- * @property {string} recipient
- * @property {number} recipientId
+ * @property {string} personName
+ * @property {number} personId
  * @property {string} description
  * @property {number} count
  * @property {string} color - Tailwind color class
- * @property {string} lastUpdated - Relative time string
+ * @property {string} savedOn - Relative time string
  * @property {'book'} type
  * @property {Array<BookPage>} pages
  */
