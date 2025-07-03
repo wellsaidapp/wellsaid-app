@@ -108,3 +108,31 @@
   opacity: 0.7;
   pointer-events: none;
 }
+
+.toast-card {
+  animation: toast-slide-in 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  margin: 1rem;
+  z-index: 9999;
+}
+
+@keyframes toast-slide-in {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.toast-card[data-swipe="end"] {
+  animation: toast-slide-out 0.3s ease-out;
+}
+
+@keyframes toast-slide-out {
+  to {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+}

@@ -1,11 +1,10 @@
 // Imports
 import React, { useState, useEffect } from 'react';
 import {
-  Send, Plus, User, BookOpen, ChevronLeft, ChevronRight,
-  ChevronDown, Home, Bell, Settings, Users, Wand2, Lock
+  Send, Plus, User, BookOpen, ChevronLeft, ChevronRight, Sparkles, Book, X,
+  ChevronDown, Home, Bell, Settings, Users, Wand2, Lock, CheckCircle
 } from 'lucide-react';
-import { ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { Toaster } from 'react-hot-toast';
 
 // Components actually used
 import SplashScreen from './components/landingPage/SplashScreen';
@@ -145,7 +144,32 @@ const WellSaidApp = () => {
   return (
     <>
       {renderContent()}
-      <ToastContainer position="top-right" autoClose={3000} />
+      <Toaster
+        position="top-center"
+        toastOptions={{
+          className: 'toast-card',
+          duration: 4000,
+          style: {
+            padding: '0', // Remove default padding since we'll handle it in the card
+            background: 'transparent',
+            boxShadow: 'none',
+            maxWidth: 'calc(100% - 2rem)', // Account for margin
+            width: 'auto',
+          },
+          success: {
+            icon: null,
+          },
+          error: {
+            icon: null,
+          },
+          loading: {
+            icon: null,
+          },
+          custom: {
+            icon: null,
+          }
+        }}
+      />
     </>
   );
 };

@@ -23,9 +23,9 @@
     "react-dnd-multi-backend": "^9.0.0",
     "react-dnd-touch-backend": "^16.0.1",
     "react-dom": "^19.1.0",
+    "react-hot-toast": "^2.5.2",
     "react-image-crop": "^11.0.10",
-    "react-router-dom": "^7.6.3",
-    "react-toastify": "^11.0.5"
+    "react-router-dom": "^7.6.3"
   },
   "devDependencies": {
     "@eslint/js": "^9.25.0",
