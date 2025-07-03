@@ -12,8 +12,8 @@ const Step7Preview = ({ newBook, entryOrder, insights }) => {
   const previewPages = [
     { type: 'cover' },
     ...orderedEntries.flatMap(entry => ([
-      { type: 'question', entry },
-      { type: 'answer', entry }
+      { type: 'prompt', entry },
+      { type: 'response', entry }
     ])),
     { type: 'backCover' }
   ];
@@ -92,7 +92,7 @@ const Step7Preview = ({ newBook, entryOrder, insights }) => {
             </div>
           )}
 
-          {(currentPage.type === 'question' || currentPage.type === 'answer') && (
+          {(currentPage.type === 'prompt' || currentPage.type === 'response') && (
             <div className={`bg-white rounded-lg shadow-xl border border-gray-200 w-full max-w-xs aspect-square mx-auto p-2 flex items-center justify-center ${
               isFlipping ? 'scale-95 opacity-70' : 'scale-100 opacity-100'
             }`}>
@@ -119,23 +119,23 @@ const Step7Preview = ({ newBook, entryOrder, insights }) => {
                 <div className="mb-6">
                   <div className="inline-block px-3 py-1 bg-blue-100 rounded-full">
                     <span className={`text-gray-800 mb-4 ${fontClass}`}>
-                      {currentPage.type === 'question' ? 'Question' : 'Insight'}
+                      {currentPage.type === 'prompt' ? 'Prompt' : 'Response'}
                     </span>
                   </div>
                 </div>
 
                 <div className="flex-1 min-h-[300px]">
-                  {currentPage.type === 'question' && (
+                  {currentPage.type === 'prompt' && (
                     <div className="mb-6">
                       <p className={`text-gray-800 mb-4 ${fontClass}`}>
-                        {currentPage.entry.question}
+                        {currentPage.entry.prompt}
                       </p>
                     </div>
                   )}
 
-                  {currentPage.type === 'answer' && (
+                  {currentPage.type === 'response' && (
                     <p className={`text-gray-800 mb-4 ${fontClass}`}>
-                      {currentPage.entry.text || currentPage.entry.content}
+                      {currentPage.entry.response || currentPage.entry.content}
                     </p>
                   )}
                 </div>
@@ -178,7 +178,6 @@ const Step7Preview = ({ newBook, entryOrder, insights }) => {
               </div>
             </div>
           )}
-          {/* Navigation arrows */}
           {/* Page Navigation Controls */}
           <div className="flex items-center justify-between gap-4 mt-6 w-full max-w-xs mx-auto">
             <button

@@ -55,7 +55,7 @@ const DraggableEntry = ({ entry, index, moveEntry, onRemove }) => {
 
       <div className="flex-1 min-w-0">
         <div className="text-sm font-semibold text-gray-800 mb-1 whitespace-pre-wrap break-words">
-          {entry.question || 'Untitled'}
+          {entry.prompt || 'Untitled'}
         </div>
       </div>
 

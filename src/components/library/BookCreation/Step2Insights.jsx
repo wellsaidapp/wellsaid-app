@@ -68,16 +68,16 @@ const Step2Insights = ({ newBook, setNewBook, insights, setEntryOrder, groupedEn
                 )}
               </div>
               <div className="flex-1">
-                {entry.question && (
+                {entry.prompt && (
                   <div className="mb-2">
-                    <div className="text-xs font-medium text-blue-600 uppercase tracking-wider mb-1">Question</div>
-                    <p className="text-sm text-gray-800">{entry.question}</p>
+                    <div className="text-xs font-medium text-blue-600 uppercase tracking-wider mb-1">Prompt</div>
+                    <p className="text-sm text-gray-800">{entry.prompt}</p>
                   </div>
                 )}
                 <div>
-                  <div className="text-xs font-medium text-green-600 uppercase tracking-wider mb-1">Answer</div>
+                  <div className="text-xs font-medium text-green-600 uppercase tracking-wider mb-1">Response</div>
                   <p className="text-sm text-gray-800">
-                    {entry.text || entry.content || "No content yet"}
+                    {entry.response || entry.content || "No content yet"}
                   </p>
                 </div>
               </div>
