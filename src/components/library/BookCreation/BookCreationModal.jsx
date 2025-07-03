@@ -52,6 +52,24 @@ const BookCreationModal = ({
     'Publish'
   ], []);
 
+  const resetCreationState = () => {
+    setNewBook({
+      title: '',
+      description: '',
+      selectedCollections: [],
+      selectedEntries: [],
+      coverImage: null,
+      backCoverNote: '',
+      recipient: null,
+      showTags: true,
+      fontStyle: 'serif',
+      isDraft: false
+    });
+    setEntryOrder([]);
+    setBookCreationStep(0);
+    setCoverImageState({ tempImage: null, showCropModal: false });
+  };
+
   const isTouchDevice = () =>
     typeof window !== 'undefined' &&
     ('ontouchstart' in window || navigator.maxTouchPoints > 0);
@@ -92,13 +110,64 @@ const BookCreationModal = ({
       : HTML5Backend;
   };
 
+  const handleComplete = (actionType = 'cancel') => {
+    // Show appropriate toast if not just navigating back
+    if (actionType === 'publish') {
+      toast.success(
+        (t) => (
+          <ToastMessage
+            type="success"
+            title="Book Published"
+            message={`"${newBook.title || 'Untitled Book'}" is now available.`}
+            onDismiss={() => toast.dismiss(t.id)}
+          />
+        ),
+        { duration: 4000 }
+      );
+    }
+    else if (actionType === 'draft') {
+      toast.custom(
+        (t) => (
+          <ToastMessage
+            type="draft"
+            title="Draft Saved"
+            message={`"${newBook.title || 'Untitled Book'}" was saved.`}
+            onDismiss={() => toast.dismiss(t.id)}
+          />
+        ),
+        { duration: 4000 }
+      );
+    }
+    else if (actionType === 'cancel' && bookCreationStep > 0) {
+      toast.custom(
+        (t) => (
+          <ToastMessage
+            type="cancel"
+            title="Book Creation Cancelled"
+            message="Your changes were not saved"
+            onDismiss={() => toast.dismiss(t.id)}
+          />
+        ),
+        { duration: 3000 }
+      );
+    }
+
+    // Reset state (for all cases except back navigation)
+    if (actionType !== 'back') {
+      resetCreationState();
+    }
+
+    // Close modal
+    onClose();
+  };
+
   return (
     <>
       <DndProvider backend={getBackend()}>
         {/* Backdrop that blocks all pointer events */}
         <div
           className="fixed inset-0 bg-black bg-opacity-70 z-[100] overflow-y-auto"
-          onClick={onClose}
+          onClick={() => handleComplete('cancel')}
           style={{ pointerEvents: 'auto' }}
         />
         <div className="fixed inset-0 flex items-center justify-center p-4 z-[101] pointer-events-none overflow-y-auto">
@@ -109,7 +178,7 @@ const BookCreationModal = ({
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-bold text-blue-800">Create New Book</h2>
                 <button
-                  onClick={onClose}
+                  onClick={() => handleComplete('cancel')}
                   className="text-gray-500 hover:text-gray-700"
                 >
                   <X className="w-5 h-5" />
@@ -245,7 +314,7 @@ const BookCreationModal = ({
                   if (bookCreationStep === 2) {
                     // When going back from arrange step, show the compact view
                     setCurrentView('arrangeBook');
-                    onClose();
+                    handleComplete('back');  // Changed from onClose()
                   } else {
                     setBookCreationStep(bookCreationStep - 1);
                   }
@@ -259,10 +328,20 @@ const BookCreationModal = ({
               <div className="flex items-center space-x-2">
                 {bookCreationStep < 7 && (
                   <button
-                    onClick={() => {
-                      setNewBook(prev => ({ ...prev, isDraft: false }));
-                      // Save as draft logic here
-                      onClose();
+                    onClick={async () => {
+                      try {
+                        // First persist the draft
+                        await saveBookToDraft({
+                          ...newBook,
+                          isDraft: true,
+                          entryOrder
+                        });
+
+                        // Then complete the flow
+                        handleComplete('draft');
+                      } catch (error) {
+                        toast.error("Failed to save draft");
+                      }
                     }}
                     className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg"
                   >
@@ -276,57 +355,23 @@ const BookCreationModal = ({
                       setBookCreationStep(bookCreationStep + 1);
                     } else {
                       // Final step: publish or save draft
-                      const isDraft = newBook.isDraft;
-
-                      if (isDraft) {
-                        toast.custom(
-                          (t) => (
-                            <ToastMessage
-                              type="draft"
-                              title="Draft Saved"
-                              message={`"${newBook.title || 'Untitled Book'}" was saved to your drafts.`}
-                              onDismiss={() => toast.dismiss(t.id)}
-                            />
-                          ),
-                          {
-                            duration: 4000,
-                          }
-                        );
-                      } else {
-                        toast.success(
-                          (t) => (
-                            <ToastMessage
-                              type="success"
-                              title="Book Published"
-                              message={`"${newBook.title || 'Untitled Book'}" is now available in your library.`}
-                              onDismiss={() => toast.dismiss(t.id)}
-                            />
-                          ),
-                          {
-                            duration: 4000,
-                          }
-                        );
-                      }
-
-                      // Reset book state
-                      setNewBook({
-                        title: '',
-                        description: '',
-                        selectedCollections: [],
-                        selectedEntries: [],
-                        coverImage: null,
-                        backCoverNote: '',
-                        recipient: null,
-                        showTags: true,
-                        fontStyle: 'serif',
-                        isDraft: false
-                      });
-
-                      setEntryOrder([]);
-                      setBookCreationStep(0);
-                      onClose();
+                      handleComplete(newBook.isDraft ? 'draft' : 'publish');
                     }
                   }}
+                  className={`px-4 py-2 rounded-lg ${
+                    bookCreationStep === 7
+                      ? newBook.isDraft
+                        ? 'bg-yellow-500 hover:bg-yellow-600 text-white'
+                        : 'bg-green-600 hover:bg-green-700 text-white'
+                      : 'bg-blue-600 hover:bg-blue-700 text-white'
+                  }`}
+                >
+                  {bookCreationStep === 7
+                    ? newBook.isDraft
+                      ? 'Save Draft'
+                      : 'Publish Book'
+                    : 'Next'}
+                </button>
                   className={`px-4 py-2 rounded-lg ${
                     bookCreationStep === 7
                       ? newBook.isDraft
