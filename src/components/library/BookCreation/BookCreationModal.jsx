@@ -7,7 +7,7 @@ import {
   Star, Bell, Settings, Users, Edit3, Calendar, Target, Trophy, Zap,
   Heart, ArrowLeft, Cake, Orbit, GraduationCap, Gift, Shuffle, PlusCircle, Library, Lightbulb, Pencil, Lock, Key, KeyRound
 } from 'lucide-react';
-
+import { toast } from 'react-toastify';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { TouchBackend } from 'react-dnd-touch-backend';
@@ -274,11 +274,22 @@ const BookCreationModal = ({
                     if (bookCreationStep < 7) {
                       setBookCreationStep(bookCreationStep + 1);
                     } else {
-                      // ✅ Final step: publish or save draft
-                      const action = newBook.isDraft ? 'Draft saved!' : 'Book published!';
-                      alert(`${action} Title: "${newBook.title}"`);
+                      // Final step: publish or save draft
+                      const isDraft = newBook.isDraft;
 
-                      // ✅ Reset book creation state
+                      if (isDraft) {
+                        toast.info(`Draft saved: "${newBook.title || 'Untitled Book'}"`, {
+                          position: 'top-right',
+                          autoClose: 3000,
+                        });
+                      } else {
+                        toast.success(`Book published: "${newBook.title || 'Untitled Book'}"`, {
+                          position: 'top-right',
+                          autoClose: 3000,
+                        });
+                      }
+
+                      // Reset book state
                       setNewBook({
                         title: '',
                         description: '',
@@ -292,9 +303,9 @@ const BookCreationModal = ({
                         isDraft: false
                       });
 
-                      setEntryOrder([]); // Optional reset
-                      setBookCreationStep(0); // ✅ Reset the step
-                      onClose(); // Close modal
+                      setEntryOrder([]);
+                      setBookCreationStep(0);
+                      onClose();
                     }
                   }}
                   className={`px-4 py-2 rounded-lg ${

@@ -4,6 +4,8 @@ import {
   Send, Plus, User, BookOpen, ChevronLeft, ChevronRight,
   ChevronDown, Home, Bell, Settings, Users, Wand2, Lock
 } from 'lucide-react';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 // Components actually used
 import SplashScreen from './components/landingPage/SplashScreen';
@@ -42,7 +44,7 @@ const WellSaidApp = () => {
   const [showCaptureOptions, setShowCaptureOptions] = useState(false);
   const [showCapture, setShowCapture] = useState(false);
   const [newInsight, setNewInsight] = useState('');
-  const [selectedRecipients, setSelectedRecipients] = useState([]);
+  const [selectedPersons, setSelectedPersons] = useState([]);
   const [selectedTopics, setSelectedTopics] = useState([]);
 
   if (showSplash) {
@@ -140,7 +142,12 @@ const WellSaidApp = () => {
   if (showSplash) {
     return <SplashScreen onComplete={() => setShowSplash(false)} />;
   }
-  return renderContent();
+  return (
+    <>
+      {renderContent()}
+      <ToastContainer position="top-right" autoClose={3000} />
+    </>
+  );
 };
 
 export default WellSaidApp;
