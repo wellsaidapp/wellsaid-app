@@ -115,30 +115,18 @@ const Step7Preview = ({ newBook, entryOrder, insights }) => {
                   </span>
                 </button>
               )}
-              <div className="w-full h-full flex flex-col justify-between items-center text-center p-4">
-                <div className="mb-6">
-                  <div className="inline-block px-3 py-1 bg-blue-100 rounded-full">
-                    <span className={`text-gray-800 mb-4 ${fontClass}`}>
-                      {currentPage.type === 'prompt' ? 'Prompt' : 'Response'}
-                    </span>
-                  </div>
+              <div className="w-full h-full flex flex-col items-center justify-center text-center p-6">
+                <div className="inline-block px-3 py-1 bg-blue-100 rounded-full mb-4">
+                  <span className={`text-gray-800 text-sm ${fontClass}`}>
+                    {currentPage.type === 'prompt' ? 'Prompt' : 'Response'}
+                  </span>
                 </div>
 
-                <div className="flex-1 min-h-[300px]">
-                  {currentPage.type === 'prompt' && (
-                    <div className="mb-6">
-                      <p className={`text-gray-800 mb-4 ${fontClass}`}>
-                        {currentPage.entry.prompt}
-                      </p>
-                    </div>
-                  )}
-
-                  {currentPage.type === 'response' && (
-                    <p className={`text-gray-800 mb-4 ${fontClass}`}>
-                      {currentPage.entry.response || currentPage.entry.content}
-                    </p>
-                  )}
-                </div>
+                <p className={`text-gray-800 text-base ${fontClass}`}>
+                  {currentPage.type === 'prompt'
+                    ? currentPage.entry.prompt
+                    : currentPage.entry.response || currentPage.entry.content}
+                </p>
               </div>
             </div>
           )}
