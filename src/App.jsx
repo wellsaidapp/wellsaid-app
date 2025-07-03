@@ -150,24 +150,16 @@ const WellSaidApp = () => {
           className: 'toast-card',
           duration: 4000,
           style: {
-            padding: '0', // Remove default padding since we'll handle it in the card
+            padding: '0',
             background: 'transparent',
             boxShadow: 'none',
-            maxWidth: 'calc(100% - 2rem)', // Account for margin
+            maxWidth: 'calc(100% - 2rem)',
             width: 'auto',
           },
-          success: {
-            icon: null,
-          },
-          error: {
-            icon: null,
-          },
-          loading: {
-            icon: null,
-          },
-          custom: {
-            icon: null,
-          }
+          success: { icon: null },
+          error: { icon: null },
+          loading: { icon: null },
+          custom: { icon: null }
         }}
       />
     </>

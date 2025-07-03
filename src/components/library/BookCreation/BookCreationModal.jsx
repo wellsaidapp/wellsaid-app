@@ -12,6 +12,7 @@ import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { TouchBackend } from 'react-dnd-touch-backend';
 
+import ToastMessage from './ToastMessage';
 import Step1Collections from './Step1Collections';
 import Step2Insights from './Step2Insights';
 import Step3Arrange from './Step3Arrange';
@@ -280,25 +281,12 @@ const BookCreationModal = ({
                       if (isDraft) {
                         toast.custom(
                           (t) => (
-                            <div className="p-4 bg-yellow-50 rounded-lg border border-yellow-200 shadow-sm">
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center">
-                                  <Bookmark className="w-5 h-5 text-yellow-600 mr-2" />
-                                  <div>
-                                    <span className="font-medium text-yellow-800">Draft Saved</span>
-                                    <p className="text-sm text-yellow-700">
-                                      "{newBook.title || 'Untitled Book'}" was saved to your drafts.
-                                    </p>
-                                  </div>
-                                </div>
-                                <button
-                                  onClick={() => toast.dismiss(t.id)}
-                                  className="text-yellow-400 hover:text-yellow-600 ml-4"
-                                >
-                                  <X className="w-4 h-4" />
-                                </button>
-                              </div>
-                            </div>
+                            <ToastMessage
+                              type="draft"
+                              title="Draft Saved"
+                              message={`"${newBook.title || 'Untitled Book'}" was saved to your drafts.`}
+                              onDismiss={() => toast.dismiss(t.id)}
+                            />
                           ),
                           {
                             duration: 4000,
@@ -307,25 +295,12 @@ const BookCreationModal = ({
                       } else {
                         toast.success(
                           (t) => (
-                            <div className="p-4 bg-green-50 rounded-lg border border-green-200 shadow-sm">
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center">
-                                  <CheckCircle className="w-5 h-5 text-green-500 mr-2" />
-                                  <div>
-                                    <span className="font-medium text-green-800">Book Published</span>
-                                    <p className="text-sm text-green-700">
-                                      "{newBook.title || 'Untitled Book'}" is now available in your library.
-                                    </p>
-                                  </div>
-                                </div>
-                                <button
-                                  onClick={() => toast.dismiss(t.id)}
-                                  className="text-green-400 hover:text-green-600 ml-4"
-                                >
-                                  <X className="w-4 h-4" />
-                                </button>
-                              </div>
-                            </div>
+                            <ToastMessage
+                              type="success"
+                              title="Book Published"
+                              message={`"${newBook.title || 'Untitled Book'}" is now available in your library.`}
+                              onDismiss={() => toast.dismiss(t.id)}
+                            />
                           ),
                           {
                             duration: 4000,
