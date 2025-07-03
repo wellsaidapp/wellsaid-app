@@ -987,10 +987,6 @@ const CaptureView = ({ captureMode, setCurrentView }) => {
           return "Choose 'specific memory' or 'guide me'";
       case 'milestone_guided':
           return "Share your thoughts...";
-      case 'milestone_summary':
-          return "Add final message or say 'done'";
-      case 'milestone_complete':
-          return "Choose 'save', 'share', or 'edit'";
       case 'milestone_sharing':
           return "Select sharing method (message/email/link)";
       case 'milestone_editing':
