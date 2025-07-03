@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   Send, Mic, MicOff, ArrowRight, Check, Plus, User, Mail, Hash, Inbox, Trash2, Save, GripVertical, Bookmark, CheckCircle,
   MessageCircle, Wand2, BookOpen, Share2, ChevronLeft, X, Download, ImageIcon,
-  Sparkles, Printer, ShoppingCart, ChevronDown, ChevronUp, Home,
+  Sparkles, Printer, ShoppingCart, ChevronDown, ChevronUp, Home, XCircle,
   MessageSquare, Book, FolderOpen, Search, Tag, Clock, ChevronRight,
   Star, Bell, Settings, Users, Edit3, Calendar, Target, Trophy, Zap,
   Heart, ArrowLeft, Cake, Orbit, GraduationCap, Gift, Shuffle, PlusCircle, Library, Lightbulb, Pencil, Lock, Key, KeyRound
@@ -328,20 +328,9 @@ const BookCreationModal = ({
               <div className="flex items-center space-x-2">
                 {bookCreationStep < 7 && (
                   <button
-                    onClick={async () => {
-                      try {
-                        // First persist the draft
-                        await saveBookToDraft({
-                          ...newBook,
-                          isDraft: true,
-                          entryOrder
-                        });
-
-                        // Then complete the flow
-                        handleComplete('draft');
-                      } catch (error) {
-                        toast.error("Failed to save draft");
-                      }
+                    onClick={() => {
+                      // Immediately show draft saved toast
+                      handleComplete('draft');
                     }}
                     className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg"
                   >
@@ -358,20 +347,6 @@ const BookCreationModal = ({
                       handleComplete(newBook.isDraft ? 'draft' : 'publish');
                     }
                   }}
-                  className={`px-4 py-2 rounded-lg ${
-                    bookCreationStep === 7
-                      ? newBook.isDraft
-                        ? 'bg-yellow-500 hover:bg-yellow-600 text-white'
-                        : 'bg-green-600 hover:bg-green-700 text-white'
-                      : 'bg-blue-600 hover:bg-blue-700 text-white'
-                  }`}
-                >
-                  {bookCreationStep === 7
-                    ? newBook.isDraft
-                      ? 'Save Draft'
-                      : 'Publish Book'
-                    : 'Next'}
-                </button>
                   className={`px-4 py-2 rounded-lg ${
                     bookCreationStep === 7
                       ? newBook.isDraft
