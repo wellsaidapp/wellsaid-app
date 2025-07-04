@@ -63,18 +63,21 @@ const CollectionsList = ({
 
   return (
     <>
-      {(selectedFilters.personIds.length > 0 ||
-        selectedFilters.entryTypes.length > 0 ||
-        selectedFilters.topics.length > 0) && (
+      {(selectedFilters.personIds?.length > 0 ||
+        selectedFilters.entryTypes?.length > 0 ||
+        selectedFilters.topics?.length > 0) && (
         <div className="flex items-center justify-between mb-3 text-sm text-gray-600">
           <div className="flex items-center gap-2">
             <span className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full text-xs font-medium">
-              {selectedFilters.personIds.length +
-                selectedFilters.entryTypes.length +
-                selectedFilters.topics.length}{' '}
-              filter{(selectedFilters.personIds.length +
-                selectedFilters.entryTypes.length +
-                selectedFilters.topics.length) > 1 ? 's' : ''}
+              {(selectedFilters.personIds?.length || 0) +
+                (selectedFilters.entryTypes?.length || 0) +
+                (selectedFilters.topics?.length || 0)}{' '}
+              filter
+              {((selectedFilters.personIds?.length || 0) +
+                (selectedFilters.entryTypes?.length || 0) +
+                (selectedFilters.topics?.length || 0)) > 1
+                ? 's'
+                : ''}
             </span>
           </div>
           <button

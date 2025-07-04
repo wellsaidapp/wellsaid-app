@@ -10,6 +10,7 @@ import UseDisclosureToggle from './utils/UseDisclosureToggle';
 import TermsOfUse from './disclosures/TermsOfUse';
 import PrivacyPolicy from './disclosures/PrivacyPolicy';
 import AIDisclosure from './disclosures/AIDisclosure';
+import { SHARED_BOOKS, getRecentBooks } from '../../constants/sharedBooks';
 
 const ProfileView = ({ user, insights = [], individuals = [], collections = [], setCurrentView }) => {
   const { expandedId, toggleDisclosure } = UseDisclosureToggle();
@@ -42,9 +43,9 @@ const ProfileView = ({ user, insights = [], individuals = [], collections = [], 
       <div className="p-4">
         <UserProfileCard
           user={user}
-          insightsCount={insights.filter(i => i.shared).length}
+          insightsCount={insights.length}
           peopleCount={individuals.length}
-          booksCount={collections.length}
+          booksCount={SHARED_BOOKS.length}
           className="mb-4"
         />
 
