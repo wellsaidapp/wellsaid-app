@@ -11,6 +11,9 @@ import {
   Book
 } from 'lucide-react';
 
+import { SYSTEM_COLLECTIONS } from '../../../constants/systemCollections';
+import { CUSTOM_COLLECTIONS } from '../../../constants/collections';
+
 const BooksList = ({
   books,
   onViewBook,
@@ -174,9 +177,16 @@ const BooksList = ({
                   className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="">All collections</option>
-                  {[...new Set(books.flatMap(b => b.collections || []))].map(collection => (
-                    <option key={collection} value={collection}>{collection}</option>
-                  ))}
+                  {[...new Set(books.flatMap(b => b.collections || []))]
+                    .map(collectionId => {
+                      const allCollections = [...SYSTEM_COLLECTIONS, ...CUSTOM_COLLECTIONS];
+                      const collection = allCollections.find(c => c.id === collectionId);
+                      return collection ? (
+                        <option key={collection.id} value={collection.id}>
+                          {collection.name}
+                        </option>
+                      ) : null;
+                    })}
                 </select>
                 <ChevronDown className="absolute right-2 top-2.5 w-4 h-4 text-gray-400 pointer-events-none" />
               </div>
@@ -204,14 +214,18 @@ const BooksList = ({
               </button>
             </span>
           )}
-          {collectionFilter && (
-            <span className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm">
-              Collection: {collectionFilter}
-              <button onClick={() => setCollectionFilter('')} className="text-blue-600 hover:text-blue-800">
-                <X className="w-3 h-3" />
-              </button>
-            </span>
-          )}
+          {collectionFilter && (() => {
+            const allCollections = [...SYSTEM_COLLECTIONS, ...CUSTOM_COLLECTIONS];
+            const collection = allCollections.find(c => c.id === collectionFilter);
+            return (
+              <span className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm">
+                Collection: {collection?.name || collectionFilter}
+                <button onClick={() => setCollectionFilter('')} className="text-blue-600 hover:text-blue-800">
+                  <X className="w-3 h-3" />
+                </button>
+              </span>
+            );
+          })()}
         </div>
       )}
 
