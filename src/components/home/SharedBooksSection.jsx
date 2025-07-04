@@ -1,5 +1,5 @@
 import { Book } from 'lucide-react';
-import BookItem from '../Library/BooksView/BookItem';
+import BookItem from '../library/BooksView/BookItem';
 
 const SharedBooksSection = ({ books, onViewBook }) => (
   <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-sm border border-white/50 mb-6">
