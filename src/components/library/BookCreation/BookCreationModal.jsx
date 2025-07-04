@@ -89,13 +89,6 @@ const BookCreationModal = ({
     showCropModal: false
   });
 
-  // Add this effect to handle when we come from the arrange view
-  useEffect(() => {
-    if (currentView === 'arrangeBook' && bookCreationStep < 2) {
-      setBookCreationStep(2);
-    }
-  }, [currentView]);
-
   useEffect(() => {
     document.body.classList.add('modal-open');
     return () => {
@@ -311,13 +304,7 @@ const BookCreationModal = ({
             <div className="flex justify-between p-4 border-t border-gray-200">
               <button
                 onClick={() => {
-                  if (bookCreationStep === 2) {
-                    // When going back from arrange step, show the compact view
-                    setCurrentView('arrangeBook');
-                    handleComplete('back');  // Changed from onClose()
-                  } else {
-                    setBookCreationStep(bookCreationStep - 1);
-                  }
+                  setBookCreationStep(bookCreationStep - 1);
                 }}
                 disabled={bookCreationStep === 0}
                 className={`px-4 py-2 rounded-lg ${bookCreationStep === 0 ? 'text-gray-400 bg-gray-100' : 'text-blue-600 hover:bg-blue-50'}`}
