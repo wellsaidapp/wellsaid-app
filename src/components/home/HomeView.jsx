@@ -23,7 +23,8 @@ const HomeView = ({
   setShowCaptureOptions,
   setCurrentView,
   setCaptureMode,
-  currentView
+  currentView,
+  setLibraryDefaultViewMode
 }) => {
   const [insights] = useState(INSIGHTS);
   const weekInsights = insights.filter(i => isThisWeek(parseISO(i.date))).length;
@@ -90,6 +91,8 @@ const HomeView = ({
         <SharedBooksSection
           books={recentBooks}
           onViewBook={(book) => setSelectedBook(book)}
+          setCurrentView={setCurrentView}
+          setLibraryDefaultViewMode={setLibraryDefaultViewMode}
         />
 
         <LegacyStats

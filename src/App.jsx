@@ -32,7 +32,7 @@ const WellSaidApp = () => {
   const [captureMode, setCaptureMode] = useState('quick');
   const [individuals, setIndividuals] = useState(INDIVIDUALS);
   const [insights, setInsights] = useState(INSIGHTS);
-
+  const [libraryDefaultViewMode, setLibraryDefaultViewMode] = useState('collections');
   // Simulate checking auth status - in a real app this would check Cognito
   useEffect(() => {
     // For demo purposes, we'll use localStorage to simulate auth states
@@ -59,6 +59,7 @@ const WellSaidApp = () => {
           setCurrentView={setCurrentView}
           setCaptureMode={setCaptureMode}
           currentView={currentView}
+          setLibraryDefaultViewMode={setLibraryDefaultViewMode}
         />;
       case 'capture':
         return <CaptureView
@@ -72,6 +73,7 @@ const WellSaidApp = () => {
           setCurrentView={setCurrentView}
           setInsights={setInsights}
           setIndividuals={setIndividuals}
+          defaultViewMode={libraryDefaultViewMode}
         />;
       case 'people':
         return <PeopleView

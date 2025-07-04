@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { useLocation } from 'react-router-dom';
 import { SYSTEM_COLLECTIONS } from '../../constants/systemCollections';
 import { CUSTOM_COLLECTIONS } from '../../constants/collections';
 import { SHARED_BOOKS } from '../../constants/sharedBooks';
@@ -14,9 +15,17 @@ import BooksList from './BooksView/BooksList';
 import BookPreviewModal from '../home/BookPreviewModal';
 import CreateBook from './BookCreation/CreateBook';
 
-const LibraryView = ({ insights, individuals, setInsights }) => {
-  // State management
-  const [viewMode, setViewMode] = useState('collections');
+const LibraryView = ({
+  insights,
+  individuals,
+  setInsights,
+  currentView,
+  setCurrentView,
+  setIndividuals,
+  defaultViewMode = 'collections'
+}) => {
+  const [viewMode, setViewMode] = useState(defaultViewMode);
+
   const [collectionFilter, setCollectionFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
@@ -32,7 +41,7 @@ const LibraryView = ({ insights, individuals, setInsights }) => {
   const [isFlipping, setIsFlipping] = useState(false);
   const [showBookCreation, setShowBookCreation] = useState(false);
   const [bookCreationStep, setBookCreationStep] = useState(0); // Add this to your state
-  const [currentView, setCurrentView] = useState('collections');
+  //const [currentView, setCurrentView] = useState('collections');
   const [showInactiveCollections, setShowInactiveCollections] = useState(false);
   const [selectedEntry, setSelectedEntry] = useState(null);
   const [showTagEditor, setShowTagEditor] = useState(false);
