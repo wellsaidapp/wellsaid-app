@@ -16,6 +16,7 @@ import WeeklyProgress from './WeeklyProgress';
 import SharedBooksSection from './SharedBooksSection';
 import LegacyStats from './LegacyStats';
 import BookPreviewModal from './BookPreviewModal';
+import { isThisWeek, parseISO } from 'date-fns';
 
 const HomeView = ({
   showCaptureOptions,
@@ -25,7 +26,7 @@ const HomeView = ({
   currentView
 }) => {
   const [insights] = useState(INSIGHTS);
-  const weekInsights = insights.filter(i => i.shared).length;
+  const weekInsights = insights.filter(i => isThisWeek(parseISO(i.date))).length;
   const weeklyGoal = 5;
   const [selectedBook, setSelectedBook] = useState(null);
   const [currentPage, setCurrentPage] = useState(0);
