@@ -89,7 +89,7 @@ const HomeView = ({
 
         <SharedBooksSection
           books={recentBooks}
-          onView={(book) => setSelectedBook(book)}
+          onViewBook={(book) => setSelectedBook(book)}
         />
 
         <LegacyStats
