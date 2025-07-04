@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Pencil, Trash2, Save, X, Mic, GripVertical } from 'lucide-react';
+import { Pencil, Trash2, Save, X, Mic, GripVertical, Library, User } from 'lucide-react';
 
 const CaptureCard = ({
   entry,
@@ -197,127 +197,93 @@ const CaptureCard = ({
 
       {/* Footer */}
       <div className="px-4 pb-3 pt-2 border-t border-gray-100">
+      {currentEntry.personIds?.length > 0 && (
+        <div className="mb-3 p-3 bg-gray-50 border border-gray-100 rounded-lg shadow-sm">
+          <div className="text-xs text-gray-500 mb-2 font-medium">Shared with:</div>
+          <div className="flex flex-wrap gap-2">
+            {currentEntry.personIds.map(id => {
+              const person = individuals.find(p => p.id === id);
+              return person ? (
+                <span
+                  key={`readonly-person-${id}`}
+                  className="inline-flex items-center px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-full"
+                >
+                  <User className="w-3 h-3 mr-1" />
+                  {person.name}
+                </span>
+              ) : null;
+            })}
+          </div>
+        </div>
+      )}
+
       {/* Collections */}
         <div className="mb-2">
-          {!isEditing ? (
-            // Normal display of tagged collections
-            <div className="flex flex-wrap gap-2">
-              {currentEntry.collections?.map(collectionId => {
-                const collection = [...systemCollections, ...collections].find(c => c.id === collectionId);
-                return collection ? (
-                  <span
-                    key={`view-col-${collectionId}`}
-                    className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-full"
-                  >
-                    {collection.name}
-                  </span>
-                ) : null;
-              })}
-            </div>
-          ) : (
-            <>
-              {/* Show currently tagged collections */}
-              <div className="flex flex-wrap gap-2 mb-2">
-                {currentEntry.collections?.map(collectionId => {
+        {currentEntry.collections?.length > 0 && (
+          <div className="p-3 bg-gray-50 border border-gray-100 rounded-lg shadow-sm">
+            <div className="text-xs text-gray-500 mb-2 font-medium">Collections tagged:</div>
+
+            {!isEditing ? (
+              <div className="flex flex-wrap gap-2">
+                {currentEntry.collections.map(collectionId => {
                   const collection = [...systemCollections, ...collections].find(c => c.id === collectionId);
                   return collection ? (
                     <span
-                      key={`edit-col-preview-${collectionId}`}
-                      className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-full"
-                    >
-                      {collection.name}
-                    </span>
-                  ) : null;
-                })}
-              </div>
-
-              <button
-                onClick={() => setShowCollections(!showCollections)}
-                className="text-xs text-gray-500 underline mb-2"
-              >
-                {showCollections ? "Hide Collections" : "Edit Collections"}
-              </button>
-
-              {showCollections && (
-                <div className="flex flex-wrap gap-2">
-                  {[...new Map([...systemCollections, ...collections].map(c => [c.id, c])).values()].map(collection => (
-                    <button
-                      key={`edit-col-${collection.id}`}
-                      onClick={() => handleCollectionToggle(collection.id)}
-                      className={`px-2 py-1 text-xs rounded-full ${
-                        currentEntry.collections?.includes(collection.id)
-                          ? "bg-gray-800 text-white"
-                          : "bg-gray-100 text-gray-700"
-                      }`}
-                    >
-                      {collection.name}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </>
-          )}
-        </div>
-
-        {/* Recipients */}
-        <div>
-          {!isEditing ? (
-            <div className="flex flex-wrap gap-2">
-              {currentEntry.personIds?.map(id => {
-                const person = individuals.find(p => p.id === id);
-                return person ? (
-                  <span key={`view-person-${id}`} className="inline-flex items-center px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-full">
-                    <span className="w-2 h-2 rounded-full bg-gray-500 mr-1"></span>
-                    {person.name}
-                  </span>
-                ) : null;
-              })}
-            </div>
-          ) : (
-            <>
-              {/* Show currently tagged people */}
-              <div className="flex flex-wrap gap-2 mb-2">
-                {currentEntry.recipients?.map(id => {
-                  const person = individuals.find(p => p.id === id);
-                  return person ? (
-                    <span
-                      key={`edit-recipient-preview-${id}`}
+                      key={`view-col-${collectionId}`}
                       className="inline-flex items-center px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-full"
                     >
-                      <span className="w-2 h-2 rounded-full bg-gray-500 mr-1"></span>
-                      {person.name}
+                      <Library className="w-3 h-3 mr-1" />
+                      {collection.name}
                     </span>
                   ) : null;
                 })}
               </div>
-
-              <button
-                onClick={() => setShowRecipients(!showRecipients)}
-                className="text-xs text-gray-500 underline mb-2"
-              >
-                {showRecipients ? "Hide Tagged People" : "Edit Tagged People"}
-              </button>
-
-              {showRecipients && (
-                <div className="flex flex-wrap gap-2">
-                  {individuals.map(person => (
-                    <button
-                      key={`edit-person-${person.id}`}
-                      onClick={() => handlePersonToggle(person.id)}
-                      className={`inline-flex items-center px-2 py-1 text-xs rounded-full ${
-                        currentEntry.personIds?.includes(person.id)
-                          ? "bg-gray-800 text-white"
-                          : "bg-gray-100 text-gray-700"
-                      }`}
-                    >
-                      <span className="w-2 h-2 rounded-full bg-gray-500 mr-1"></span>
-                      {person.name}
-                    </button>
-                  ))}
+            ) : (
+              <>
+                <div className="flex flex-wrap gap-2 mb-2">
+                  {currentEntry.collections.map(collectionId => {
+                    const collection = [...systemCollections, ...collections].find(c => c.id === collectionId);
+                    return collection ? (
+                      <span
+                        key={`edit-col-preview-${collectionId}`}
+                        className="inline-flex items-center px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-full"
+                      >
+                        <Library className="w-3 h-3 mr-1" />
+                        {collection.name}
+                      </span>
+                    ) : null;
+                  })}
                 </div>
-              )}
-            </>
-          )}
+
+                <button
+                  onClick={() => setShowCollections(!showCollections)}
+                  className="text-xs text-gray-500 underline mb-2"
+                >
+                  {showCollections ? "Hide Collections" : "Edit Collections"}
+                </button>
+
+                {showCollections && (
+                  <div className="flex flex-wrap gap-2">
+                    {[...new Map([...systemCollections, ...collections].map(c => [c.id, c])).values()].map(collection => (
+                      <button
+                        key={`edit-col-${collection.id}`}
+                        onClick={() => handleCollectionToggle(collection.id)}
+                        className={`inline-flex items-center px-2 py-1 text-xs rounded-full ${
+                          currentEntry.collections?.includes(collection.id)
+                            ? "bg-gray-800 text-white"
+                            : "bg-gray-100 text-gray-700"
+                        }`}
+                      >
+                        <Library className="w-3 h-3 mr-1" />
+                        {collection.name}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        )}
         </div>
       </div>
     </div>
