@@ -38,11 +38,6 @@ const CaptureCard = ({
 
       return { ...prev, collections: newCollections };
     });
-
-    // Propagate the change up if needed
-    if (onCollectionToggle) {
-      onCollectionToggle(collectionId);
-    }
   };
 
   const handlePersonToggle = (personId) => {
@@ -271,20 +266,31 @@ const CaptureCard = ({
 
               {showCollections && (
                 <div className="flex flex-wrap gap-2">
-                  {[...new Map([...systemCollections, ...collections].map(c => [c.id, c])).values()].map(collection => (
-                    <button
-                      key={`edit-col-${collection.id}`}
-                      onClick={() => handleCollectionToggle(collection.id)}
-                      className={`inline-flex items-center px-2 py-1 text-xs rounded-full ${
-                        currentEntry.collections?.includes(collection.id)
-                          ? "bg-gray-800 text-white"
-                          : "bg-gray-100 text-gray-700"
-                      }`}
-                    >
-                      <Library className="w-3 h-3 mr-1" />
-                      {collection.name}
-                    </button>
-                  ))}
+                  {[...new Map([...systemCollections, ...collections].map(c => [c.id, c])).values()].map(collection => {
+                    const isSystem = systemCollections.some(sc => sc.id === collection.id);
+                    const isSelected = currentEntry.collections?.includes(collection.id);
+
+                    const baseClasses = 'inline-flex items-center px-2 py-1 text-xs rounded-full transition-colors';
+                    const selectedSystem = 'bg-gray-800 text-white';
+                    const unselectedSystem = 'bg-gray-100 text-gray-700 hover:bg-gray-200';
+                    const selectedCustom = 'bg-pink-600 text-white';
+                    const unselectedCustom = 'bg-pink-100 text-pink-800 hover:bg-pink-200';
+
+                    return (
+                      <button
+                        key={`edit-col-${collection.id}`}
+                        onClick={() => handleCollectionToggle(collection.id)}
+                        className={`${baseClasses} ${
+                          isSystem
+                            ? isSelected ? selectedSystem : unselectedSystem
+                            : isSelected ? selectedCustom : unselectedCustom
+                        }`}
+                      >
+                        <Library className="w-3 h-3 mr-1" />
+                        {collection.name}
+                      </button>
+                    );
+                  })}
                 </div>
               )}
             </>
