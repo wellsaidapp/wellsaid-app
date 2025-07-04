@@ -140,10 +140,12 @@ const PeopleView = ({ individuals, insights, collections, sharedBooks }) => {
       <Header />
 
       <div className="p-4">
-        <PeopleSearch
-          searchQuery={searchQuery}
-          setSearchQuery={setSearchQuery}
-        />
+        {!selectedPerson && (
+          <PeopleSearch
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+          />
+        )}
 
         {!selectedPerson ? (
           <PeopleList
