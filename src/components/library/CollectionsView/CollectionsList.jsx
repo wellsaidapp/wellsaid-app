@@ -1,5 +1,6 @@
-import React from 'react';
+import { useState } from 'react';
 import CollectionItem from './CollectionItem';
+import { ArrowDownNarrowWide, ArrowDownWideNarrow } from 'lucide-react';
 
 const CollectionsList = ({
   systemCollections = [],
@@ -19,14 +20,27 @@ const CollectionsList = ({
   onCollectionToggle,
   onPersonToggle
 }) => {
-  // Filter active system collections that have entries
-  const activeSystemCollections = systemCollections.filter(
-    collection => groupedEntries[collection.id]?.length > 0
+
+  const [sortDescending, setSortDescending] = useState(true);
+
+  const sortCollections = (collectionsArray) => {
+    return [...collectionsArray].sort((a, b) => {
+      const countA = groupedEntries[a.id]?.length || 0;
+      const countB = groupedEntries[b.id]?.length || 0;
+      return sortDescending ? countB - countA : countA - countB;
+    });
+  };
+
+  const activeSystemCollections = sortCollections(
+    systemCollections.filter(
+      collection => groupedEntries[collection.id]?.length > 0
+    )
   );
 
-  // Filter user collections that have entries
-  const activeUserCollections = userCollections.filter(
-    collection => groupedEntries[collection.id]?.length > 0
+  const activeUserCollections = sortCollections(
+    userCollections.filter(
+      collection => groupedEntries[collection.id]?.length > 0
+    )
   );
 
   return (
@@ -34,7 +48,20 @@ const CollectionsList = ({
       {/* Active System Collections - Only show if there are any */}
       {activeSystemCollections.length > 0 && (
         <div className="mb-6">
-          <h3 className="text-md font-semibold text-gray-700 mb-3">Active Collections</h3>
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-md font-semibold text-gray-700">Active Collections</h3>
+            <button
+              onClick={() => setSortDescending(prev => !prev)}
+              className="text-gray-400 hover:text-gray-600"
+              title="Sort by number of entries"
+            >
+              {sortDescending ? (
+                <ArrowDownWideNarrow className="w-4 h-4" />
+              ) : (
+                <ArrowDownNarrowWide className="w-4 h-4" />
+              )}
+            </button>
+          </div>
           <div className="space-y-2">
             {activeSystemCollections.map(collection => (
               <CollectionItem
