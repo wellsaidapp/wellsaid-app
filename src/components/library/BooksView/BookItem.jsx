@@ -1,5 +1,9 @@
 import React from 'react';
-import { Book, Heart, FilePen } from 'lucide-react';
+import { Book, Heart, FilePen, Library } from 'lucide-react';
+
+import { SYSTEM_COLLECTIONS } from '../../../constants/systemCollections';
+import { CUSTOM_COLLECTIONS } from '../../../constants/collections';
+
 
 const BookItem = ({
   book,
@@ -9,6 +13,17 @@ const BookItem = ({
   entryOrder = [],
   insights = []
 }) => {
+
+  const formatDate = (dateString) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    });
+  };
+
   return (
     <>
       {/* Book List Item */}
@@ -29,6 +44,31 @@ const BookItem = ({
                 )}
               </h3>
               <p className="text-sm text-gray-600 mb-2">{book.description}</p>
+
+              {/* Collection Pills */}
+              {book.collections?.length > 0 && (
+                <div className="flex flex-wrap gap-2 mb-2">
+                  {book.collections.map(collectionId => {
+                    const collection = [...SYSTEM_COLLECTIONS, ...CUSTOM_COLLECTIONS].find(c => c.id === collectionId);
+                    return collection ? (
+                      <span
+                        key={`book-col-${collectionId}`}
+                        className="inline-flex items-center px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-full"
+                      >
+                        <Library className="w-3 h-3 mr-1" />
+                        {collection.name}
+                      </span>
+                    ) : null;
+                  })}
+                </div>
+              )}
+
+              {/* Date Saved */}
+              {book.savedOn && (
+                <div className="text-xs text-gray-500 mb-2">
+                  Saved {formatDate(book.savedOn)}
+                </div>
+              )}
             </div>
           </div>
         </div>
