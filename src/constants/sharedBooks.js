@@ -33,7 +33,7 @@ export const SHARED_BOOKS = [
   {
     id: 1,
     name: "Letters to Sage",
-    status: "Published",
+    status: "Draft",
     savedOn: "2025-06-01",
     personName: "Sage",
     personId: 1,
@@ -53,7 +53,7 @@ export const SHARED_BOOKS = [
   {
     id: 2,
     name: "First Year Lessons",
-    status: "Published",
+    status: "Draft",
     savedOn: "2025-06-02",
     personName: "Kove",
     personId: 9,

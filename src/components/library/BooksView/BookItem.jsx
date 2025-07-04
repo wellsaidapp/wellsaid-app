@@ -1,5 +1,5 @@
 import React from 'react';
-import { Book, Heart } from 'lucide-react';
+import { Book, Heart, FilePen } from 'lucide-react';
 
 const BookItem = ({
   book,
@@ -19,7 +19,15 @@ const BookItem = ({
               <Book className="w-6 h-6 text-white" />
             </div>
             <div className="flex-1">
-              <h3 className="font-semibold text-gray-800 mb-1">{book.name}</h3>
+              <h3 className="font-semibold text-gray-800 mb-1 flex items-center gap-2">
+                {book.name}
+                {book.status === 'Draft' && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-yellow-100 text-yellow-700 text-xs rounded-full">
+                    <FilePen className="w-3 h-3" />
+                    Draft
+                  </span>
+                )}
+              </h3>
               <p className="text-sm text-gray-600 mb-2">{book.description}</p>
             </div>
           </div>
@@ -45,7 +53,7 @@ const BookItem = ({
               onClick={() => onViewBook(book)}
               className="text-xs font-medium text-blue-600 hover:text-blue-800"
             >
-              View Book
+              {book.status === 'Draft' ? 'Continue Editing' : 'View Book'}
             </button>
           </div>
         </div>
