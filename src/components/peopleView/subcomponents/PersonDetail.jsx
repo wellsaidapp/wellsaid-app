@@ -260,10 +260,11 @@ const PersonDetail = ({
       {/* Book Section */}
       <SharedBooksSection
         books={personBooks}
-        onView={(book) => {
+        onViewBook={(book) => {
           setSelectedBook(book);
           setCurrentPage(0);
         }}
+        showViewAll={false}
       />
 
       {/* CTA */}

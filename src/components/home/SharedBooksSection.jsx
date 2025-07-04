@@ -5,22 +5,25 @@ const SharedBooksSection = ({
   books,
   onViewBook,
   setCurrentView,
-  setLibraryDefaultViewMode
+  setLibraryDefaultViewMode,
+  showViewAll = true
 }) => {
   return (
-    <div className="...">
+    <div className="mb-8">
       <div className="flex justify-between items-center mb-4">
-        <h3 className="...">Your Shared Books</h3>
-        <button
-          onClick={() => {
-            setLibraryDefaultViewMode('books');
-            setCurrentView('library');
-          }}
-          className="inline-flex items-center text-sm text-blue-600 hover:text-blue-800 font-medium"
-        >
-          <BookOpen className="w-4 h-4 mr-1" />
-          View All
-        </button>
+        <h3 className="text-lg font-semibold text-gray-800">Your Shared Books</h3>
+        {showViewAll && (
+          <button
+            onClick={() => {
+              setLibraryDefaultViewMode('books');
+              setCurrentView('library');
+            }}
+            className="inline-flex items-center text-sm text-blue-600 hover:text-blue-800 font-medium"
+          >
+            <BookOpen className="w-4 h-4 mr-1" />
+            View All
+          </button>
+        )}
       </div>
 
       <p className="text-sm text-gray-600 mb-4">

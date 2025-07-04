@@ -172,6 +172,10 @@ const PeopleView = ({ individuals, insights, collections, sharedBooks }) => {
               setShowAvatarCropper(true);
             }}
             croppedAvatarImage={croppedAvatarImage}
+            onViewBook={(book) => {
+              setSelectedBook(book);
+              setCurrentPage(0);
+            }}
           />
         )}
       </div>
