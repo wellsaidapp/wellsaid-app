@@ -269,6 +269,10 @@ const LibraryView = ({ insights, individuals, setInsights }) => {
             individuals={individuals}
             collections={CUSTOM_COLLECTIONS}
             setInsights={setInsights}
+            selectedFilters={selectedFilters}
+            onClearFilters={() =>
+              setSelectedFilters({ personIds: [], topics: [], entryTypes: [] })
+            }
           />
         ) : (
           <BooksList

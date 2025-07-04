@@ -1,4 +1,4 @@
-import { Search, X, Filter } from 'lucide-react';
+import { Search, X, Filter, User } from 'lucide-react';
 import { useState } from 'react';
 
 const SearchAndFilterBar = ({
@@ -78,13 +78,13 @@ const SearchAndFilterBar = ({
                   key={id}
                   type="button"
                   onClick={() => toggleFilter('personIds', id)}
-                  className={`px-2.5 py-1 rounded-full text-xs flex items-center gap-1 ${
+                  className={`px-2.5 py-1 rounded-full text-xs flex items-center ${
                     selectedFilters.personIds.includes(id)
                       ? 'bg-blue-600 text-white'
                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   }`}
                 >
-                  <span className="w-2 h-2 rounded-full bg-gray-300"></span>
+                  <User className="w-3 h-3 mr-1" />
                   {person?.name || 'Unknown'}
                 </button>
               );

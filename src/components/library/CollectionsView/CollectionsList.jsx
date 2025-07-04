@@ -18,7 +18,9 @@ const CollectionsList = ({
   onEntryUpdate,
   onEntryDelete,
   onCollectionToggle,
-  onPersonToggle
+  onPersonToggle,
+  selectedFilters = {},
+  onClearFilters
 }) => {
 
   const [sortDescending, setSortDescending] = useState(true);
@@ -43,10 +45,49 @@ const CollectionsList = ({
     )
   );
 
+  const filterEntries = (entries = []) => {
+    if (!selectedFilters.personIds?.length) return entries;
+
+    return entries.filter(entry =>
+      entry.personIds?.some(id => selectedFilters.personIds.includes(id))
+    );
+  };
+
+  const visibleSystemCollections = activeSystemCollections.filter(
+    collection => filterEntries(groupedEntries[collection.id]).length > 0
+  );
+
+  const visibleUserCollections = activeUserCollections.filter(
+    collection => filterEntries(groupedEntries[collection.id]).length > 0
+  );
+
   return (
     <>
+      {(selectedFilters.personIds.length > 0 ||
+        selectedFilters.entryTypes.length > 0 ||
+        selectedFilters.topics.length > 0) && (
+        <div className="flex items-center justify-between mb-3 text-sm text-gray-600">
+          <div className="flex items-center gap-2">
+            <span className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full text-xs font-medium">
+              {selectedFilters.personIds.length +
+                selectedFilters.entryTypes.length +
+                selectedFilters.topics.length}{' '}
+              filter{(selectedFilters.personIds.length +
+                selectedFilters.entryTypes.length +
+                selectedFilters.topics.length) > 1 ? 's' : ''}
+            </span>
+          </div>
+          <button
+            onClick={onClearFilters}
+            className="text-xs text-blue-600 hover:text-blue-800"
+          >
+            Clear all
+          </button>
+        </div>
+      )}
+
       {/* Active System Collections - Only show if there are any */}
-      {activeSystemCollections.length > 0 && (
+      {visibleSystemCollections.length > 0 && (
         <div className="mb-6">
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-md font-semibold text-gray-700">Active Collections</h3>
@@ -63,52 +104,62 @@ const CollectionsList = ({
             </button>
           </div>
           <div className="space-y-2">
-            {activeSystemCollections.map(collection => (
-              <CollectionItem
-                key={collection.id}
-                collection={collection}
-                entries={groupedEntries[collection.id]}
-                isActive={true}
-                expanded={expandedCollection === collection.id}
-                onToggle={() => onToggleCollection(collection.id)}
-                onAddToCollection={onAddToCollection}
-                individuals={individuals}
-                collections={collections}
-                systemCollections={systemCollections}
-                onEntryUpdate={onEntryUpdate}
-                onEntryDelete={onEntryDelete}
-                onCollectionToggle={onCollectionToggle}
-                onPersonToggle={onPersonToggle}
-              />
-            ))}
+            {activeSystemCollections.map(collection => {
+              const filteredEntries = filterEntries(groupedEntries[collection.id]);
+              if (filteredEntries.length === 0) return null;
+
+              return (
+                <CollectionItem
+                  key={collection.id}
+                  collection={collection}
+                  entries={filteredEntries}
+                  isActive={true}
+                  expanded={expandedCollection === collection.id}
+                  onToggle={() => onToggleCollection(collection.id)}
+                  onAddToCollection={onAddToCollection}
+                  individuals={individuals}
+                  collections={collections}
+                  systemCollections={systemCollections}
+                  onEntryUpdate={onEntryUpdate}
+                  onEntryDelete={onEntryDelete}
+                  onCollectionToggle={onCollectionToggle}
+                  onPersonToggle={onPersonToggle}
+                />
+              );
+            })}
           </div>
         </div>
       )}
 
       {/* User Collections - Only show if there are any */}
-      {activeUserCollections.length > 0 && (
+      {visibleUserCollections.length > 0 && (
         <div className="mb-6">
           <h3 className="text-md font-semibold text-gray-700 mb-3">Special Occasion Collections</h3>
           <div className="space-y-2">
-            {activeUserCollections.map(collection => (
-              <CollectionItem
-                key={collection.id}
-                collection={collection}
-                entries={groupedEntries[collection.id] || []}
-                isActive={true}
-                expanded={expandedCollection === collection.id}
-                onToggle={() => onToggleCollection(collection.id)}
-                showRecipient={true}
-                onAddToCollection={onAddToCollection}
-                individuals={individuals}
-                collections={collections}
-                systemCollections={systemCollections}
-                onEntryUpdate={onEntryUpdate}
-                onEntryDelete={onEntryDelete}
-                onCollectionToggle={onCollectionToggle}
-                onPersonToggle={onPersonToggle}
-              />
-            ))}
+            {activeUserCollections.map(collection => {
+              const filteredEntries = filterEntries(groupedEntries[collection.id]);
+              if (filteredEntries.length === 0) return null;
+
+              return (
+                <CollectionItem
+                  key={collection.id}
+                  collection={collection}
+                  entries={filteredEntries}
+                  isActive={true}
+                  expanded={expandedCollection === collection.id}
+                  showRecipient={true}
+                  onToggle={() => onToggleCollection(collection.id)}
+                  onAddToCollection={onAddToCollection}
+                  individuals={individuals}
+                  collections={collections}
+                  systemCollections={systemCollections}
+                  onEntryUpdate={onEntryUpdate}
+                  onEntryDelete={onEntryDelete}
+                  onCollectionToggle={onCollectionToggle}
+                  onPersonToggle={onPersonToggle}
+                />
+              );
+            })}
           </div>
         </div>
       )}
@@ -141,7 +192,7 @@ const CollectionsList = ({
                 <CollectionItem
                   key={collection.id}
                   collection={collection}
-                  entries={[]}
+                  entries={filterEntries(groupedEntries[collection.id])}
                   isActive={false}
                   expanded={false}
                   onToggle={() => {}}
