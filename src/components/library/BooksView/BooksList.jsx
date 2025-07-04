@@ -1,6 +1,6 @@
 import React from 'react';
 import BookItem from './BookItem';
-import { Book, Heart, Plus } from 'lucide-react';
+import { Book, Heart, Plus, CalendarDays, CalendarArrowDown, CalendarArrowUp } from 'lucide-react';
 
 const BooksList = ({
   books,
@@ -8,7 +8,9 @@ const BooksList = ({
   onStartNewBook,
   isCreating,
   entryOrder,
-  insights
+  insights,
+  sortDirection,
+  onToggleSortDirection
 }) => {
   return (
     <div>
@@ -32,7 +34,20 @@ const BooksList = ({
         </div>
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-lg font-semibold text-gray-800">Living Bookshelf</h2>
-          <span className="text-sm text-gray-500">{books.length} books</span>
+          <div className="flex items-center gap-2 text-sm text-gray-500">
+            <span>{books.length} books</span>
+            <button
+              onClick={onToggleSortDirection}
+              className="text-gray-400 hover:text-gray-600 transition"
+              title="Toggle sort order"
+            >
+              {sortDirection === 'asc' ? (
+                <CalendarArrowUp className="w-4 h-4" />
+              ) : (
+                <CalendarArrowDown className="w-4 h-4" />
+              )}
+            </button>
+          </div>
         </div>
         <p className="text-sm text-gray-600 mb-4">
           Curated collections and books you've created to share with your loved ones.

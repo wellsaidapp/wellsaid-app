@@ -64,6 +64,18 @@ const LibraryView = ({ insights, individuals, setInsights }) => {
     return acc;
   }, {});
 
+  const [sortDirection, setSortDirection] = useState('desc');
+
+  const toggleSortDirection = () => {
+    setSortDirection(prev => (prev === 'desc' ? 'asc' : 'desc'));
+  };
+
+  const sortedBooks = [...SHARED_BOOKS].sort((a, b) => {
+    const dateA = new Date(a.savedOn);
+    const dateB = new Date(b.savedOn);
+    return sortDirection === 'asc' ? dateA - dateB : dateB - dateA;
+  });
+
   // Derived state
   const filteredSystemCollections = SYSTEM_COLLECTIONS.filter(collection => {
     const hasEntries = groupedEntries[collection.id]?.length > 0;
@@ -260,7 +272,7 @@ const LibraryView = ({ insights, individuals, setInsights }) => {
           />
         ) : (
           <BooksList
-            books={SHARED_BOOKS}
+            books={sortedBooks}
             onViewBook={(book) => {
               setSelectedBook(book);
               setCurrentPage(0);
@@ -269,6 +281,8 @@ const LibraryView = ({ insights, individuals, setInsights }) => {
             isCreating={currentView === 'arrangeBook'}
             entryOrder={entryOrder}
             insights={insights}
+            sortDirection={sortDirection}
+            onToggleSortDirection={toggleSortDirection}
           />
         )}
       </div>
