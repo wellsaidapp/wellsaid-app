@@ -1,4 +1,5 @@
 import { jsPDF } from 'jspdf';
+import { USER } from '../../../constants/user';
 
 // Convert inches to points (72 points per inch)
 const inchToPt = (inches) => inches * 72;
@@ -49,7 +50,7 @@ export const generateBookPDF = async (newBook, entryOrder, insights) => {
         renderResponsePage(doc, page.entry, margin, contentWidth, contentHeight, newBook.fontStyle);
         break;
       case 'backCover':
-        renderBackCoverPage(doc, newBook.backCoverNote, margin, contentWidth, contentHeight, newBook.fontStyle);
+        renderBackCoverPage(doc, newBook.backCoverNote, margin, contentWidth, contentHeight, newBook.fontStyle, USER);
         break;
     }
 
@@ -221,7 +222,7 @@ const renderResponsePage = (doc, entry, margin, contentWidth, contentHeight, fon
   renderCenteredText(doc, lines, lineHeight, contentWidth, availableHeight, margin, 50);
 };
 
-const renderBackCoverPage = (doc, backCoverNote, margin, contentWidth, contentHeight, fontStyle) => {
+const renderBackCoverPage = (doc, backCoverNote, margin, contentWidth, contentHeight, fontStyle, USER) => {
   if (!backCoverNote) return;
 
   doc.setFont(fontStyle === 'serif' ? 'times' : 'helvetica', 'italic');
@@ -231,14 +232,23 @@ const renderBackCoverPage = (doc, backCoverNote, margin, contentWidth, contentHe
     doc,
     backCoverNote,
     contentWidth * 0.8, // More padding for back cover
-    contentHeight - 40, // Leave some margin
+    contentHeight - 80, // Leave more margin for user name at bottom
     11
   );
 
   doc.setFontSize(fontSize);
 
   // Render perfectly centered text
-  renderCenteredText(doc, lines, lineHeight, contentWidth, contentHeight, margin);
+  renderCenteredText(doc, lines, lineHeight, contentWidth, contentHeight - 40, margin);
+
+  // Add user name at bottom center if provided
+  if (USER && USER.name) {
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    const centerX = margin + (contentWidth / 2);
+    const bottomY = margin + contentHeight - 15; // 15pt from bottom
+    doc.text(USER.name, centerX, bottomY, { align: 'center' });
+  }
 };
 
 // Optional: Export helpers for testing if needed
