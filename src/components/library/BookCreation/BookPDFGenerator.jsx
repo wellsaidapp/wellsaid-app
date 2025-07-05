@@ -5,11 +5,12 @@ const inchToPt = (inches) => inches * 72;
 
 const addPageNumber = (doc, currentPage, totalPages, margin) => {
   doc.setFontSize(8);
+  const centerX = inchToPt(5) / 2; // Center of the 5" page
   doc.text(
     `Page ${currentPage} of ${totalPages - 1}`,
-    inchToPt(5) - margin,
+    centerX,
     inchToPt(5) - margin + 5,
-    { align: 'right' }
+    { align: 'center' }
   );
 };
 
@@ -20,9 +21,9 @@ export const generateBookPDF = async (newBook, entryOrder, insights) => {
     format: [inchToPt(5), inchToPt(5)]
   });
 
-  const margin = inchToPt(0.25);
-  const contentWidth = inchToPt(4.5);
-  const contentHeight = inchToPt(4.5);
+  const margin = inchToPt(0.5); // Increased margin for better spacing
+  const contentWidth = inchToPt(4); // Adjusted for new margin
+  const contentHeight = inchToPt(4); // Adjusted for new margin
 
   const orderedEntries = entryOrder.map(id => insights.find(e => e.id === id)).filter(Boolean);
   const previewPages = [
@@ -42,22 +43,58 @@ export const generateBookPDF = async (newBook, entryOrder, insights) => {
         renderCoverPage(doc, newBook, margin, contentWidth, contentHeight);
         break;
       case 'prompt':
-        renderPromptPage(doc, page.entry, margin, contentWidth, newBook.fontStyle);
+        renderPromptPage(doc, page.entry, margin, contentWidth, contentHeight, newBook.fontStyle);
         break;
       case 'response':
-        renderResponsePage(doc, page.entry, margin, contentWidth, newBook.fontStyle);
+        renderResponsePage(doc, page.entry, margin, contentWidth, contentHeight, newBook.fontStyle);
         break;
       case 'backCover':
-        renderBackCoverPage(doc, newBook.backCoverNote, margin, contentWidth, newBook.fontStyle);
+        renderBackCoverPage(doc, newBook.backCoverNote, margin, contentWidth, contentHeight, newBook.fontStyle);
         break;
     }
 
-    if (page.type !== 'cover') {
+    if (page.type !== 'cover' && page.type !== 'backCover') {
       addPageNumber(doc, pageIndex, previewPages.length, margin);
     }
   });
 
   return doc.output('blob');
+};
+
+// Helper function to calculate optimal font size and line height
+const calculateOptimalTextLayout = (doc, text, maxWidth, maxHeight, baseFontSize = 12) => {
+  let fontSize = baseFontSize;
+  let lineHeight = fontSize * 1.4; // Better line spacing
+  let lines = [];
+
+  // Try decreasing font sizes until text fits
+  while (fontSize >= 8) {
+    doc.setFontSize(fontSize);
+    lines = doc.splitTextToSize(text, maxWidth);
+    const totalHeight = lines.length * lineHeight;
+
+    if (totalHeight <= maxHeight) {
+      break;
+    }
+
+    fontSize -= 0.5;
+    lineHeight = fontSize * 1.4;
+  }
+
+  return { fontSize, lineHeight, lines };
+};
+
+// Helper function to render centered text block
+const renderCenteredText = (doc, lines, lineHeight, contentWidth, contentHeight, margin, yOffset = 0) => {
+  const totalTextHeight = lines.length * lineHeight;
+  const centerX = margin + (contentWidth / 2);
+  const startY = margin + (contentHeight - totalTextHeight) / 2 + yOffset;
+
+  lines.forEach((line, i) => {
+    doc.text(line, centerX, startY + (i * lineHeight), {
+      align: 'center'
+    });
+  });
 };
 
 // Helper functions (can be used/tested independently if needed)
@@ -121,49 +158,87 @@ const renderCoverPage = (doc, newBook, margin, contentWidth, contentHeight) => {
   });
 };
 
-const renderPromptPage = (doc, entry, margin, contentWidth, fontStyle) => {
+const renderPromptPage = (doc, entry, margin, contentWidth, contentHeight, fontStyle) => {
+  // Header
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(12);
-  doc.text('Prompt:', margin, margin + 15);
+  doc.setFontSize(14);
+  const centerX = margin + (contentWidth / 2);
+  doc.text('Prompt', centerX, margin + 25, { align: 'center' });
 
+  // Decorative line under header
+  const lineY = margin + 35;
+  doc.setLineWidth(1);
+  doc.line(margin + contentWidth * 0.25, lineY, margin + contentWidth * 0.75, lineY);
+
+  // Calculate available space for content (excluding header area and page number area)
+  const availableHeight = contentHeight - 60; // 60pt for header and bottom margin
+
+  // Set font and calculate layout
   doc.setFont(fontStyle === 'serif' ? 'times' : 'helvetica', 'normal');
-  doc.setFontSize(10);
-  const promptLines = doc.splitTextToSize(entry.prompt, contentWidth);
-  doc.text(promptLines, margin, margin + 30);
+  const { fontSize, lineHeight, lines } = calculateOptimalTextLayout(
+    doc,
+    entry.prompt,
+    contentWidth * 0.9, // Leave some padding on sides
+    availableHeight,
+    12
+  );
+
+  doc.setFontSize(fontSize);
+
+  // Render centered text with offset to account for header
+  renderCenteredText(doc, lines, lineHeight, contentWidth, availableHeight, margin, 50);
 };
 
-const renderResponsePage = (doc, entry, margin, contentWidth, fontStyle) => {
+const renderResponsePage = (doc, entry, margin, contentWidth, contentHeight, fontStyle) => {
+  // Header
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(12);
-  doc.text('Response:', margin, margin + 15);
+  doc.setFontSize(14);
+  const centerX = margin + (contentWidth / 2);
+  doc.text('Response', centerX, margin + 25, { align: 'center' });
 
+  // Decorative line under header
+  const lineY = margin + 35;
+  doc.setLineWidth(1);
+  doc.line(margin + contentWidth * 0.25, lineY, margin + contentWidth * 0.75, lineY);
+
+  // Calculate available space for content (excluding header area and page number area)
+  const availableHeight = contentHeight - 60; // 60pt for header and bottom margin
+
+  // Set font and calculate layout
   doc.setFont(fontStyle === 'serif' ? 'times' : 'helvetica', 'normal');
-  doc.setFontSize(10);
   const content = entry.response || entry.content || '';
-  const responseLines = doc.splitTextToSize(content, contentWidth);
-  doc.text(responseLines, margin, margin + 30);
+  const { fontSize, lineHeight, lines } = calculateOptimalTextLayout(
+    doc,
+    content,
+    contentWidth * 0.9, // Leave some padding on sides
+    availableHeight,
+    12
+  );
+
+  doc.setFontSize(fontSize);
+
+  // Render centered text with offset to account for header
+  renderCenteredText(doc, lines, lineHeight, contentWidth, availableHeight, margin, 50);
 };
 
-const renderBackCoverPage = (doc, backCoverNote, margin, contentWidth, fontStyle) => {
+const renderBackCoverPage = (doc, backCoverNote, margin, contentWidth, contentHeight, fontStyle) => {
   if (!backCoverNote) return;
 
   doc.setFont(fontStyle === 'serif' ? 'times' : 'helvetica', 'italic');
-  doc.setFontSize(10);
-  const backCoverLines = doc.splitTextToSize(backCoverNote, contentWidth);
 
-  // Calculate total text height (approx 12pt per line)
-  const textHeight = backCoverLines.length * 12;
+  // Calculate optimal layout for back cover
+  const { fontSize, lineHeight, lines } = calculateOptimalTextLayout(
+    doc,
+    backCoverNote,
+    contentWidth * 0.8, // More padding for back cover
+    contentHeight - 40, // Leave some margin
+    11
+  );
 
-  // Center vertically and horizontally
-  const centerX = inchToPt(5) / 2;
-  const startY = (inchToPt(5) - textHeight) / 2;
+  doc.setFontSize(fontSize);
 
-  // Use doc.text with centered alignment
-  backCoverLines.forEach((line, i) => {
-    doc.text(line, centerX, startY + (i * 12), {
-      align: 'center'
-    });
-  });
+  // Render perfectly centered text
+  renderCenteredText(doc, lines, lineHeight, contentWidth, contentHeight, margin);
 };
 
 // Optional: Export helpers for testing if needed
@@ -173,5 +248,7 @@ export const __testables__ = {
   renderPromptPage,
   renderResponsePage,
   renderBackCoverPage,
-  addPageNumber
+  addPageNumber,
+  calculateOptimalTextLayout,
+  renderCenteredText
 };
