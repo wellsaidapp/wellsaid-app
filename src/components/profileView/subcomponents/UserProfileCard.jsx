@@ -1,4 +1,5 @@
 import PropTypes from 'prop-types';
+import { Camera } from 'lucide-react'; // Add this import
 
 const UserProfileCard = ({
   user,
@@ -7,16 +8,60 @@ const UserProfileCard = ({
   booksCount,
   className = '',
   avatarInitial = null,
-  joinDate = 'June 2025' // Default value
+  joinDate = 'June 2025', // Default value
+  // Add these new props:
+  onAvatarUpload,
+  croppedAvatarImage
 }) => {
   // Use provided initial or first letter of name
   const initial = avatarInitial || user?.name?.charAt(0) || 'U';
 
+  // Add this handler
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (file && onAvatarUpload) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        onAvatarUpload(event.target.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   return (
     <div className={`bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-sm border border-white/50 text-center ${className}`}>
-      {/* Avatar Circle */}
-      <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-3">
-        <span className="text-white text-xl font-bold">{initial}</span>
+      {/* Avatar Circle - Modified to support image */}
+      <div className="relative w-16 h-16 mx-auto mb-3">
+        {croppedAvatarImage || user?.avatarImage ? (
+          <img
+            src={croppedAvatarImage || user.avatarImage}
+            className="w-full h-full rounded-full object-cover border-2 border-white shadow"
+            alt="User avatar"
+          />
+        ) : (
+          <div className="w-full h-full bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center">
+            <span className="text-white text-xl font-bold">{initial}</span>
+          </div>
+        )}
+
+        {/* Updated camera button to match PeopleView style */}
+        <button
+          className="absolute bottom-0 right-0 bg-white p-1 rounded-full shadow-sm hover:bg-gray-100 transition-colors"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            document.getElementById('avatar-upload-input').click();
+          }}
+        >
+          <Camera className="w-4 h-4 text-gray-600" />
+        </button>
+        <input
+          id="avatar-upload-input"
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={handleImageUpload}
+        />
       </div>
 
       {/* User Info */}

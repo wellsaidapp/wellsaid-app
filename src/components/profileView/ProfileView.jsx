@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import {
-  Settings, Bell, Users, BookOpen, Lock, Wand2
+  Settings, Bell, Users, BookOpen, Lock, Wand2, X, XCircle
 } from 'lucide-react';
 import Header from '../appLayout/Header';
 import UserProfileCard from './subcomponents/UserProfileCard';
@@ -11,9 +11,15 @@ import TermsOfUse from './disclosures/TermsOfUse';
 import PrivacyPolicy from './disclosures/PrivacyPolicy';
 import AIDisclosure from './disclosures/AIDisclosure';
 import { SHARED_BOOKS, getRecentBooks } from '../../constants/sharedBooks';
+import ImageCropperModal from '../library/BookCreation/ImageCropperModal';
 
 const ProfileView = ({ user, insights = [], individuals = [], collections = [], setCurrentView }) => {
   const { expandedId, toggleDisclosure } = UseDisclosureToggle();
+
+  // Add these state variables for avatar cropping
+  const [avatarUploadTemp, setAvatarUploadTemp] = useState(null);
+  const [showAvatarCropper, setShowAvatarCropper] = useState(false);
+  const [croppedAvatarImage, setCroppedAvatarImage] = useState(null);
 
   const disclosures = [
     {
@@ -36,6 +42,15 @@ const ProfileView = ({ user, insights = [], individuals = [], collections = [], 
     }
   ];
 
+  // Add this handler for saving the cropped avatar
+  const handleAvatarSave = (croppedImage) => {
+    setCroppedAvatarImage(croppedImage);
+    setShowAvatarCropper(false);
+    setAvatarUploadTemp(null);
+    // Here you would typically also update the user's avatar in your database/state
+    console.log('New avatar image:', croppedImage);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-blue-50 to-indigo-50 pb-20">
       <Header />
@@ -47,6 +62,11 @@ const ProfileView = ({ user, insights = [], individuals = [], collections = [], 
           peopleCount={individuals.length}
           booksCount={SHARED_BOOKS.length}
           className="mb-4"
+          onAvatarUpload={(image) => {
+            setAvatarUploadTemp(image);
+            setShowAvatarCropper(true);
+          }}
+          croppedAvatarImage={croppedAvatarImage}
         />
 
         <div className="space-y-3">
@@ -72,6 +92,17 @@ const ProfileView = ({ user, insights = [], individuals = [], collections = [], 
           </p>
         </div>
       </div>
+      {/* Add the ImageCropperModal at the bottom */}
+      {showAvatarCropper && avatarUploadTemp && (
+        <ImageCropperModal
+          image={avatarUploadTemp}
+          onCropComplete={handleAvatarSave}
+          onClose={() => {
+            setShowAvatarCropper(false);
+            setAvatarUploadTemp(null);
+          }}
+        />
+      )}
     </div>
   );
 };
