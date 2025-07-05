@@ -33,18 +33,15 @@ const Step7Preview = ({ newBook, entryOrder, insights }) => {
     setTimeout(() => setIsFlipping(false), 300);
   };
 
-  console.log("Current page index:", currentPreviewPage);
-  console.log("Current page type:", currentPage?.type);
-
   return (
-    <div>
+    <div className="overflow-y-auto max-h-[90vh] px-4">
       <h3 className="text-lg font-semibold text-gray-800 mb-4">Preview your book</h3>
       <p className="text-sm text-gray-600 mb-6">
         Review how your book will look before publishing.
       </p>
 
       <div className="flex justify-center">
-        <div className="relative w-full max-w-md">
+        <div className="relative w-full max-w-[90vw] sm:max-w-[400px]">
           {/* Book cover */}
           {currentPage.type === 'cover' && (
             <div
@@ -52,42 +49,79 @@ const Step7Preview = ({ newBook, entryOrder, insights }) => {
                 isFlipping ? 'scale-95 opacity-70' : 'scale-100 opacity-100'
               }`}
             >
-              <div className="relative w-full max-w-xs aspect-square mt-2 p-2 flex items-center justify-center">
-                {/* Toggle Icon */}
-                <button
-                  onClick={() => setIsBlackAndWhite(prev => !prev)}
-                  className="absolute top-3 right-3 z-10 bg-white border border-gray-200 rounded-full p-2 shadow-md hover:bg-gray-100 transition"
-                  title={isBlackAndWhite ? 'Show in Color' : 'Show in B&W'}
-                >
-                  <span
-                    className={`relative flex items-center justify-center w-5 h-5 ${
-                      isBlackAndWhite ? 'palette-slash' : ''
-                    }`}
+              {/* Outer 5x5 proportional square */}
+              <div className="relative aspect-square w-full">
+                {/* Toggle Icons */}
+                <div className="absolute top-3 right-3 z-20 flex flex-col gap-2">
+                  {/* Font Toggle */}
+                  <button
+                    onClick={() => setIsSerifFont(prev => !prev)}
+                    className="bg-white border border-gray-200 rounded-full p-2 shadow-md hover:bg-gray-100 transition"
+                    title={isSerifFont ? 'Switch to Sans Serif' : 'Switch to Serif'}
+                  >
+                    <span
+                      className={`relative flex items-center justify-center w-5 h-5 ${
+                        !isSerifFont ? 'type-slash' : ''
+                      }`}
+                    >
+                      <Type
+                        className={`w-5 h-5 transition-colors duration-200 ${
+                          isSerifFont ? 'text-blue-600' : 'text-gray-400'
+                        }`}
+                      />
+                    </span>
+                  </button>
+
+                  {/* B&W Toggle */}
+                  <button
+                    onClick={() => setIsBlackAndWhite(prev => !prev)}
+                    className="bg-white border border-gray-200 rounded-full p-2 shadow-md hover:bg-gray-100 transition"
+                    title={isBlackAndWhite ? 'Show in Color' : 'Show in B&W'}
                   >
                     <Palette
                       className={`w-5 h-5 transition-colors duration-200 ${
                         isBlackAndWhite ? 'text-gray-400' : 'text-blue-600'
                       }`}
                     />
-                  </span>
-                </button>
+                  </button>
+                </div>
 
-                {/* Cover Image */}
-                {newBook.coverImage ? (
-                  <img
-                    src={newBook.coverImage}
-                    alt="Book cover"
-                    className={`w-full h-full object-contain rounded ${isBlackAndWhite ? 'grayscale' : ''}`}
-                  />
-                ) : (
-                  <div className="text-center">
-                    <BookOpen className="w-12 h-12 mx-auto text-blue-600 mb-2" />
-                    <h3 className={`text-gray-800 mb-4 ${fontClass}`}>{newBook.title || 'Untitled Book'}</h3>
-                    <p className={`text-gray-800 mb-4 ${fontClass}`}>
-                      {newBook.description || 'A collection of wisdom and insights'}
-                    </p>
-                  </div>
-                )}
+                {/* Title in top margin - now using fontClass */}
+                <div className="absolute top-[1%] left-[5%] right-[5%] z-10">
+                  <p className={`text-[10px] font-semibold text-gray-800 ${fontClass} text-left truncate`}>
+                    {newBook.title || 'Untitled Book'}
+                  </p>
+                </div>
+
+                {/* Description in bottom margin - now using fontClass */}
+                <div className="absolute bottom-[1%] left-[5%] right-[5%] z-10">
+                  <p className={`text-[9px] text-gray-600 ${fontClass} text-right truncate`}>
+                    {newBook.description || 'A collection of wisdom and insights'}
+                  </p>
+                </div>
+
+                {/* 4.5x4.5 proportional image centered in container */}
+                <div className="absolute top-[5%] left-[5%] w-[90%] h-[90%] flex items-center justify-center">
+                  {newBook.coverImage ? (
+                    <img
+                      src={newBook.coverImage}
+                      alt="Book cover"
+                      className={`w-full h-full object-contain rounded ${isBlackAndWhite ? 'grayscale' : ''}`}
+                    />
+                  ) : (
+                    <div className="flex items-center justify-center w-full h-full bg-gray-100">
+                      <BookOpen className="w-12 h-12 text-gray-400" />
+                      <div className="absolute inset-0 flex flex-col items-center justify-center p-4">
+                        <h3 className={`text-gray-800 text-lg mb-2 ${fontClass}`}>
+                          {newBook.title || 'Untitled Book'}
+                        </h3>
+                        <p className={`text-gray-600 text-sm ${fontClass}`}>
+                          {newBook.description || 'A collection of wisdom and insights'}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           )}

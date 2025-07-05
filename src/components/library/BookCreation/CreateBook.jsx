@@ -25,7 +25,7 @@ const CreateBook = ({
         className="w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white py-2 px-4 rounded-lg font-medium flex items-center justify-center gap-2"
       >
         <Plus size={16} />
-        'Start New Book'
+        Start New Book
       </button>
     </div>
   );
