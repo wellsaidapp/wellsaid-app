@@ -1,4 +1,4 @@
-import { CheckCircle, Bookmark, X, XCircle } from 'lucide-react';
+import { CheckCircle, Bookmark, X, XCircle, Info } from 'lucide-react';
 
 const ToastMessage = ({ type, title, message, onDismiss }) => {
   const styles = {
@@ -29,7 +29,7 @@ const ToastMessage = ({ type, title, message, onDismiss }) => {
     cancel: {
       bg: 'bg-gray-50',
       border: 'border-gray-200',
-      icon: <X className="w-5 h-5 text-gray-500 flex-shrink-0" />,
+      icon: <Info className="w-5 h-5 text-gray-500 flex-shrink-0" />,
       titleColor: 'text-gray-800',
       messageColor: 'text-gray-700',
       buttonColor: 'text-gray-400 hover:text-gray-600'
