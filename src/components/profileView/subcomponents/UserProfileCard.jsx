@@ -31,7 +31,7 @@ const UserProfileCard = ({
   return (
     <div className={`bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-sm border border-white/50 text-center ${className}`}>
       {/* Avatar Circle - Modified to support image */}
-      <div className="relative w-16 h-16 mx-auto mb-3">
+      <div className="relative w-20 h-20 mx-auto mb-3">
         {croppedAvatarImage || user?.avatarImage ? (
           <img
             src={croppedAvatarImage || user.avatarImage}
