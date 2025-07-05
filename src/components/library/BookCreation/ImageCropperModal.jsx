@@ -43,7 +43,7 @@ const ImageCropperModal = ({ image, onCropComplete, onClose }) => {
       x: (img.width - cropSize) / 2,
       y: (img.height - cropSize) / 2,
       width: cropSize,
-      height: cropSize * (2/3)
+      height: cropSize
     });
 
     setIsLoaded(true);
@@ -63,32 +63,39 @@ const ImageCropperModal = ({ image, onCropComplete, onClose }) => {
       const scaleX = imgRef.current.naturalWidth / imgRef.current.width;
       const scaleY = imgRef.current.naturalHeight / imgRef.current.height;
 
-      const canvasSize = 256;
+      // Calculate actual cropped dimensions in original image pixels
+      const originalWidth = crop.width * scaleX;
+      const originalHeight = crop.height * scaleY;
+
+      // Use the larger dimension to determine output size
+      const outputSize = Math.min(1024, Math.max(originalWidth, originalHeight));
+
       const canvas = document.createElement('canvas');
-      canvas.width = canvasSize;
-      canvas.height = canvasSize;
+      canvas.width = outputSize;
+      canvas.height = outputSize;
       const ctx = canvas.getContext('2d');
 
-      // Draw cropped area scaled down to 256x256
+      // Draw cropped area at highest possible quality
+      ctx.imageSmoothingQuality = 'high';
       ctx.drawImage(
         imgRef.current,
         crop.x * scaleX,
         crop.y * scaleY,
-        crop.width * scaleX,
-        crop.height * scaleY,
+        originalWidth,
+        originalHeight,
         0,
         0,
-        canvasSize,
-        canvasSize
+        outputSize,
+        outputSize
       );
 
       return new Promise((resolve) => {
         canvas.toBlob((blob) => {
           if (!blob) return resolve(null);
           const reader = new FileReader();
-          reader.onloadend = () => resolve(reader.result); // Return base64 image
+          reader.onloadend = () => resolve(reader.result);
           reader.readAsDataURL(blob);
-        }, 'image/jpeg', 0.9);
+        }, 'image/jpeg', 0.92); // Increased quality from 0.9 to 0.92
       });
     } catch (err) {
       console.error("getCroppedImg error:", err);
@@ -172,6 +179,7 @@ const ImageCropperModal = ({ image, onCropComplete, onClose }) => {
               crop={crop}
               onChange={setCrop}
               aspect={1}
+              ruleOfThirds
               onComplete={(c) => setCrop(c)}
               onImageLoaded={(img) => {
                 imgRef.current = img;
@@ -179,6 +187,8 @@ const ImageCropperModal = ({ image, onCropComplete, onClose }) => {
               }}
               minWidth={100}
               minHeight={100}
+              style={{ maxHeight: '70vh' }}
+              className="max-h-[70vh]"
             >
               <img
                 ref={imgRef} // Add direct ref here
