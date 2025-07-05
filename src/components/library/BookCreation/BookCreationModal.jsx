@@ -11,6 +11,7 @@ import { toast } from 'react-hot-toast';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { TouchBackend } from 'react-dnd-touch-backend';
+import { generateBookPDF } from './BookPDFGenerator';
 
 import ToastMessage from './ToastMessage';
 import Step1Collections from './Step1Collections';
@@ -23,6 +24,7 @@ import Step7Preview from './Step7Preview';
 import Step8Publish from './Step8Publish';
 import ImageCropperModal from './ImageCropperModal';
 import DraggableEntry from './DraggableEntry';
+
 import { SYSTEM_COLLECTIONS } from '../../../constants/systemCollections';
 
 const BookCreationModal = ({
@@ -103,55 +105,99 @@ const BookCreationModal = ({
       : HTML5Backend;
   };
 
-  const handleComplete = (actionType = 'cancel') => {
-    // Show appropriate toast if not just navigating back
-    if (actionType === 'publish') {
-      toast.success(
-        (t) => (
-          <ToastMessage
-            type="success"
-            title="Book Published"
-            message={`"${newBook.title || 'Untitled Book'}" is now available.`}
-            onDismiss={() => toast.dismiss(t.id)}
-          />
-        ),
-        { duration: 4000 }
-      );
-    }
-    else if (actionType === 'draft') {
-      toast.custom(
-        (t) => (
-          <ToastMessage
-            type="draft"
-            title="Draft Saved"
-            message={`"${newBook.title || 'Untitled Book'}" was saved.`}
-            onDismiss={() => toast.dismiss(t.id)}
-          />
-        ),
-        { duration: 4000 }
-      );
-    }
-    else if (actionType === 'cancel' && bookCreationStep > 0) {
-      toast.custom(
-        (t) => (
-          <ToastMessage
-            type="cancel"
-            title="Book Creation Cancelled"
-            message="Your changes were not saved"
-            onDismiss={() => toast.dismiss(t.id)}
-          />
-        ),
-        { duration: 3000 }
-      );
-    }
+  // Then modify your handleComplete function:
+  const handleComplete = async (actionType = 'cancel') => {
+    try {
+      if (actionType === 'publish') {
+        // Generate the PDF before showing success message
+        const pdfBlob = await generateBookPDF(newBook, entryOrder, insights);
 
-    // Reset state (for all cases except back navigation)
-    if (actionType !== 'back') {
-      resetCreationState();
-    }
+        // Create download link
+        const url = URL.createObjectURL(pdfBlob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${newBook.title || 'Untitled Book'}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
 
-    // Close modal
-    onClose();
+        toast.success(
+          (t) => (
+            <ToastMessage
+              type="success"
+              title="Book Published"
+              message={`"${newBook.title || 'Untitled Book'}" is now available.`}
+              onDismiss={() => toast.dismiss(t.id)}
+            />
+          ),
+          { duration: 4000 }
+        );
+      }
+      else if (actionType === 'draft') {
+        toast.custom(
+          (t) => (
+            <ToastMessage
+              type="draft"
+              title="Draft Saved"
+              message={`"${newBook.title || 'Untitled Book'}" was saved.`}
+              onDismiss={() => toast.dismiss(t.id)}
+            />
+          ),
+          { duration: 4000 }
+        );
+      }
+      else if (actionType === 'cancel' && bookCreationStep > 0) {
+        toast.custom(
+          (t) => (
+            <ToastMessage
+              type="cancel"
+              title="Book Creation Cancelled"
+              message="Your changes were not saved"
+              onDismiss={() => toast.dismiss(t.id)}
+            />
+          ),
+          { duration: 3000 }
+        );
+      }
+
+      // Reset state (for all cases except back navigation)
+      if (actionType !== 'back') {
+        resetCreationState();
+      }
+
+      // Close modal
+      onClose();
+    } catch (error) {
+      console.error('Error during publish:', error);
+      toast.error('Failed to generate PDF');
+    }
+  };
+
+  // Add this inside your BookCreationModal component, before the return statement
+  const handlePublish = async () => {
+    try {
+      const pdfBlob = await generateBookPDF(newBook, entryOrder, insights);
+
+      // Create download link
+      const url = URL.createObjectURL(pdfBlob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${newBook.title || 'Untitled Book'}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      // Show success message
+      toast.success('Book PDF generated successfully!');
+
+      // Close the modal
+      onClose();
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      toast.error('Failed to generate PDF');
+    }
   };
 
   return (

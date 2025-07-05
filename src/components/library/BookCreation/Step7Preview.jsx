@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, BookOpen, Heart, Palette, Type } from 'lucide-react'; // Adjust if using a different icon set
 
 const Step7Preview = ({ newBook, entryOrder, insights }) => {
@@ -19,6 +19,15 @@ const Step7Preview = ({ newBook, entryOrder, insights }) => {
   ];
   const currentPage = previewPages[currentPreviewPage];
   const [isBlackAndWhite, setIsBlackAndWhite] = useState(false);
+
+  // 🔍 Log all book data for inspection
+  useEffect(() => {
+    console.log('🟦 newBook:', newBook);
+    console.log('🟩 entryOrder:', entryOrder);
+    console.log('🟨 insights:', insights);
+    console.log('🟪 orderedEntries:', orderedEntries);
+    console.log('⬜ previewPages:', previewPages);
+  }, [newBook, entryOrder, insights]);
 
   const flipPage = (direction) => {
     if (isFlipping) return;

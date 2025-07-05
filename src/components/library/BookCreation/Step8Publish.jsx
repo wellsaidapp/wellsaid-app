@@ -2,7 +2,7 @@ import React from 'react';
 import { BookOpen, Bookmark, CheckCircle } from 'lucide-react';
 import { Switch } from 'antd';
 
-const Step8Publish = ({ newBook, setNewBook, individuals, entryOrder }) => {
+const Step8Publish = ({ newBook, setNewBook, individuals, entryOrder, setBookCreationStep }) => {
   const recipient = individuals.find(p => p.id === newBook.recipient);
 
   return (
