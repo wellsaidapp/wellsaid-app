@@ -65,6 +65,7 @@ const BookCreationModal = ({
       recipient: null,
       showTags: true,
       fontStyle: 'serif',
+      isBlackAndWhite: false,
       isDraft: false
     });
     setEntryOrder([]);
@@ -329,6 +330,7 @@ const BookCreationModal = ({
               {bookCreationStep === 6 && (
                 <Step7Preview
                   newBook={newBook}
+                  setNewBook={setNewBook}
                   entryOrder={entryOrder}
                   insights={insights}
                 />

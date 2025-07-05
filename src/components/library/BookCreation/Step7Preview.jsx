@@ -1,13 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, BookOpen, Heart, Palette, Type } from 'lucide-react'; // Adjust if using a different icon set
 
-const Step7Preview = ({ newBook, entryOrder, insights }) => {
+const Step7Preview = ({
+  newBook,
+  setNewBook,
+  entryOrder,
+  insights
+}) => {
   const [currentPreviewPage, setCurrentPreviewPage] = useState(0);
   const [isFlipping, setIsFlipping] = useState(false);
-
+  const isSerifFont = newBook.fontStyle === 'serif';
   // Get all entries in order
   const orderedEntries = entryOrder.map(id => insights.find(e => e.id === id)).filter(Boolean);
-  const [isSerifFont, setIsSerifFont] = useState(true);
+
   const fontClass = isSerifFont ? 'font-serif' : 'font-sans';
   const previewPages = [
     { type: 'cover' },
@@ -18,7 +23,7 @@ const Step7Preview = ({ newBook, entryOrder, insights }) => {
     { type: 'backCover' }
   ];
   const currentPage = previewPages[currentPreviewPage];
-  const [isBlackAndWhite, setIsBlackAndWhite] = useState(false);
+
 
   // 🔍 Log all book data for inspection
   useEffect(() => {
@@ -64,7 +69,10 @@ const Step7Preview = ({ newBook, entryOrder, insights }) => {
                 <div className="absolute top-3 right-3 z-20 flex flex-col gap-2">
                   {/* Font Toggle */}
                   <button
-                    onClick={() => setIsSerifFont(prev => !prev)}
+                    onClick={() => setNewBook(prev => ({
+                      ...prev,
+                      fontStyle: prev.fontStyle === 'serif' ? 'sans' : 'serif'
+                    }))}
                     className="bg-white border border-gray-200 rounded-full p-2 shadow-md hover:bg-gray-100 transition"
                     title={isSerifFont ? 'Switch to Sans Serif' : 'Switch to Serif'}
                   >
@@ -83,13 +91,16 @@ const Step7Preview = ({ newBook, entryOrder, insights }) => {
 
                   {/* B&W Toggle */}
                   <button
-                    onClick={() => setIsBlackAndWhite(prev => !prev)}
+                    onClick={() => setNewBook(prev => ({
+                      ...prev,
+                      isBlackAndWhite: !prev.isBlackAndWhite  // Remove "newBook." from here
+                    }))}
                     className="bg-white border border-gray-200 rounded-full p-2 shadow-md hover:bg-gray-100 transition"
-                    title={isBlackAndWhite ? 'Show in Color' : 'Show in B&W'}
+                    title={newBook.isBlackAndWhite ? 'Show in Color' : 'Show in B&W'}
                   >
                     <Palette
                       className={`w-5 h-5 transition-colors duration-200 ${
-                        isBlackAndWhite ? 'text-gray-400' : 'text-blue-600'
+                        newBook.isBlackAndWhite ? 'text-gray-400' : 'text-blue-600'
                       }`}
                     />
                   </button>
@@ -115,7 +126,7 @@ const Step7Preview = ({ newBook, entryOrder, insights }) => {
                     <img
                       src={newBook.coverImage}
                       alt="Book cover"
-                      className={`w-full h-full object-contain rounded ${isBlackAndWhite ? 'grayscale' : ''}`}
+                      className={`w-full h-full object-contain rounded ${newBook.isBlackAndWhite ? 'grayscale' : ''}`}
                     />
                   ) : (
                     <div className="flex items-center justify-center w-full h-full bg-gray-100">

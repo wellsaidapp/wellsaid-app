@@ -5,36 +5,69 @@ import logo from '../../../assets/wellsaid.svg';
 // Convert inches to points (72 points per inch)
 const inchToPt = (inches) => inches * 72;
 
-async function cropImageToCircle(imageSrc, size) {
-  const scaleFactor = 2; // Render at 2x resolution
+// Helper function to convert image to black and white
+async function convertToBlackAndWhite(imageSrc) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.crossOrigin = 'Anonymous';
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext('2d');
+
+      // Draw white background first to preserve transparency
+      ctx.fillStyle = 'white';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Draw image
+      ctx.drawImage(img, 0, 0);
+
+      // Convert to grayscale
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const data = imageData.data;
+      for (let i = 0; i < data.length; i += 4) {
+        const avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
+        data[i] = avg;     // R
+        data[i + 1] = avg; // G
+        data[i + 2] = avg; // B
+      }
+      ctx.putImageData(imageData, 0, 0);
+
+      resolve(canvas.toDataURL('image/jpeg'));
+    };
+    img.onerror = () => resolve(imageSrc); // Fallback to original if conversion fails
+    img.src = imageSrc;
+  });
+}
+
+async function cropImageToCircle(imageSrc, size, isBlackAndWhite = false) {
+  const scaleFactor = 2;
   const canvas = document.createElement('canvas');
   canvas.width = size * scaleFactor;
   canvas.height = size * scaleFactor;
   const ctx = canvas.getContext('2d');
 
-  // Improve rendering quality
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = 'high';
 
   return new Promise((resolve) => {
     const img = new Image();
     img.crossOrigin = 'Anonymous';
-    img.onload = () => {
+    img.onload = async () => {
       try {
-        // Clear with transparent background instead of white
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-        // Create circular clipping path at higher resolution
         ctx.beginPath();
         ctx.arc(canvas.width / 2, canvas.height / 2, canvas.width / 2, 0, Math.PI * 2);
         ctx.closePath();
         ctx.clip();
-
-        // Draw image at higher resolution
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
-        // Convert to PNG to preserve quality
-        const result = canvas.toDataURL('image/png');
+        // Convert to black and white if needed
+        let result = canvas.toDataURL('image/png');
+        if (isBlackAndWhite) {
+          result = await convertToBlackAndWhite(result);
+        }
         resolve(result);
       } catch (e) {
         console.error('Canvas cropping failed:', e);
@@ -58,21 +91,21 @@ const addPageNumber = (doc, currentPage, totalPages, margin) => {
 };
 
 // Helper function to convert SVG to base64 (preserving color)
-const convertSvgToBase64 = async (svgUrl) => {
+const convertSvgToBase64 = async (svgUrl, isBlackAndWhite = false) => {
   return new Promise((resolve, reject) => {
     const img = new Image();
-    img.onload = () => {
+    img.onload = async () => {
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
-
-      // Set canvas size
       canvas.width = img.width;
       canvas.height = img.height;
-
-      // Draw the image (preserving colors)
       ctx.drawImage(img, 0, 0);
 
-      resolve(canvas.toDataURL('image/png'));
+      let result = canvas.toDataURL('image/png');
+      if (isBlackAndWhite) {
+        result = await convertToBlackAndWhite(result);
+      }
+      resolve(result);
     };
     img.onerror = reject;
     img.src = svgUrl;
@@ -80,22 +113,38 @@ const convertSvgToBase64 = async (svgUrl) => {
 };
 
 // Main export - generates the book PDF
-export const generateBookPDF = async (newBook, entryOrder, insights) => {
+export const generateBookPDF = async (
+  newBook,
+  entryOrder,
+  insights,
+  fontStyle = 'serif',
+  isBlackAndWhite = false
+) => {
   const doc = new jsPDF({
     unit: 'pt',
     format: [inchToPt(5), inchToPt(5)]
   });
 
-  const margin = inchToPt(0.5); // Increased margin for better spacing
-  const contentWidth = inchToPt(4); // Adjusted for new margin
-  const contentHeight = inchToPt(4); // Adjusted for new margin
+  const margin = inchToPt(0.5);
+  const contentWidth = inchToPt(4);
+  const contentHeight = inchToPt(4);
 
-  // Convert logo to base64 for PDF use (preserving color)
+  // Convert logo to base64 (with B&W if needed)
   let logoBase64 = null;
   try {
-    logoBase64 = await convertSvgToBase64(logo);
+    logoBase64 = await convertSvgToBase64(logo, newBook.isBlackAndWhite);
   } catch (error) {
     console.warn('Could not convert logo:', error);
+  }
+
+  // Process cover image if exists (convert to B&W if needed)
+  let processedCoverImage = newBook.coverImage;
+  if (newBook.coverImage && newBook.isBlackAndWhite) {
+    try {
+      processedCoverImage = await convertToBlackAndWhite(newBook.coverImage);
+    } catch (error) {
+      console.warn('Could not convert cover image:', error);
+    }
   }
 
   const orderedEntries = entryOrder.map(id => insights.find(e => e.id === id)).filter(Boolean);
@@ -114,7 +163,7 @@ export const generateBookPDF = async (newBook, entryOrder, insights) => {
 
     switch (page.type) {
       case 'cover':
-        renderCoverPage(doc, newBook, margin, contentWidth, contentHeight);
+        renderCoverPage(doc, { ...newBook, coverImage: processedCoverImage }, margin, contentWidth, contentHeight);
         break;
       case 'prompt':
         renderPromptPage(doc, page.entry, margin, contentWidth, contentHeight, newBook.fontStyle);
@@ -123,7 +172,17 @@ export const generateBookPDF = async (newBook, entryOrder, insights) => {
         renderResponsePage(doc, page.entry, margin, contentWidth, contentHeight, newBook.fontStyle);
         break;
       case 'backCover':
-        await renderBackCoverPage(doc, newBook.backCoverNote, margin, contentWidth, contentHeight, newBook.fontStyle, USER, logoBase64);
+        await renderBackCoverPage(
+          doc,
+          newBook.backCoverNote,
+          margin,
+          contentWidth,
+          contentHeight,
+          newBook.fontStyle,
+          USER,
+          logoBase64,
+          newBook.isBlackAndWhite
+        );
         break;
     }
 
@@ -296,37 +355,38 @@ const renderResponsePage = (doc, entry, margin, contentWidth, contentHeight, fon
 };
 
 
-const renderBackCoverPage = async (doc, backCoverNote, margin, contentWidth, contentHeight, fontStyle, USER, logoBase64) => {
+const renderBackCoverPage = async (
+  doc,
+  backCoverNote,
+  margin,
+  contentWidth,
+  contentHeight,
+  fontStyle,
+  USER,
+  logoBase64,
+  isBlackAndWhite = false
+) => {
   if (!backCoverNote) return;
 
   const renderAvatar = (doc, avatarBase64, centerX, avatarY, avatarSize) => {
     const avatarX = centerX - avatarSize / 2;
-
-    // Clip the avatar into a circle
     doc.saveGraphicsState();
     doc.circle(centerX, avatarY + avatarSize / 2, avatarSize / 2);
     doc.clip();
-
     doc.addImage(avatarBase64, 'JPEG', avatarX, avatarY, avatarSize, avatarSize);
     doc.restoreGraphicsState();
-
-    // Optional: Draw a border circle
     doc.setDrawColor(100);
     doc.setLineWidth(0.5);
     doc.circle(centerX, avatarY + avatarSize / 2, avatarSize / 2, 'S');
   };
 
   const centerX = margin + (contentWidth / 2);
-
-  // Calculate space needed for bottom elements (user info and logo)
   const avatarSize = 40;
   const userInfoSpacing = 8;
   const logoMaxHeight = 20;
   const logoSpacing = 15;
   const bottomPadding = 10;
   const noteToUserSpacing = 20;
-
-  // Calculate available space for the back cover note
   const availableHeight = contentHeight - (noteToUserSpacing + avatarSize + userInfoSpacing + 12 + logoSpacing + logoMaxHeight + bottomPadding) - 20;
 
   // Render back cover note
@@ -347,14 +407,12 @@ const renderBackCoverPage = async (doc, backCoverNote, margin, contentWidth, con
     doc.text(line, centerX, textStartY + (i * lineHeight), { align: 'center' });
   });
 
-  // Calculate positions for user info and logo first
   const noteEndY = textStartY + totalTextHeight;
   const userInfoY = noteEndY + noteToUserSpacing;
   const nameY = userInfoY + avatarSize + userInfoSpacing;
   const adjustedNameY = nameY + 4;
   const logoY = margin + contentHeight - logoMaxHeight - bottomPadding;
 
-  // Add WellSaid logo first (so it's behind other elements if needed)
   if (logoBase64) {
     try {
       const imgProps = doc.getImageProperties(logoBase64);
@@ -382,31 +440,25 @@ const renderBackCoverPage = async (doc, backCoverNote, margin, contentWidth, con
     }
   }
 
-  // Add user name (must be before avatar to avoid canvas text bug)
   if (USER && USER.name) {
     doc.setFont(fontStyle === 'serif' ? 'times' : 'helvetica', 'italic');
     doc.setFontSize(10);
     doc.setTextColor(0, 0, 0);
-
-    const testText = USER.name || 'Anonymous';
-    const testWidth = doc.getTextWidth(testText);
-
-    doc.text(testText, centerX, adjustedNameY, { align: 'center' });
+    doc.text(USER.name || 'Anonymous', centerX, adjustedNameY, { align: 'center' });
   }
 
-  // ===== MODIFIED AVATAR SECTION =====
   if (USER && USER.avatarImage) {
-    console.log('Original avatar image:', USER.avatarImage.substring(0, 50) + '...');
-    console.log('Is JPEG?', USER.avatarImage.startsWith('data:image/jpeg'));
-    const avatarX = centerX - (avatarSize / 2);
-    const avatarY = userInfoY;
-
     try {
-      // Step 1: Pre-crop the image to a circle
-      const circularAvatar = await cropImageToCircle(USER.avatarImage, avatarSize);
-      console.log('Cropped avatar result:', circularAvatar.substring(0, 50) + '...');
-      console.log('Is cropped image different?', circularAvatar !== USER.avatarImage);
-      // Step 2: Add the pre-cropped image to PDF
+      // Process avatar image (convert to B&W if needed)
+      let processedAvatar = USER.avatarImage;
+      if (isBlackAndWhite) {
+        processedAvatar = await convertToBlackAndWhite(USER.avatarImage);
+      }
+
+      const circularAvatar = await cropImageToCircle(processedAvatar, avatarSize, isBlackAndWhite);
+      const avatarX = centerX - (avatarSize / 2);
+      const avatarY = userInfoY;
+
       doc.addImage(
         circularAvatar,
         'JPEG',
@@ -415,23 +467,12 @@ const renderBackCoverPage = async (doc, backCoverNote, margin, contentWidth, con
         avatarSize,
         avatarSize
       );
-      console.log('Image added to PDF at:', { avatarX, avatarY, avatarSize });
-      // Step 3: Draw a border circle (optional)
+
       doc.setDrawColor(150, 150, 150);
       doc.setLineWidth(0.4);
       doc.circle(centerX, avatarY + (avatarSize / 2), avatarSize / 2, 'S');
-
     } catch (error) {
-      console.error('Avatar failed to crop:', error);
-      // Fallback: Draw the original image (uncropped)
-      doc.addImage(
-        USER.avatarImage,
-        'JPEG',
-        avatarX,
-        avatarY,
-        avatarSize,
-        avatarSize
-      );
+      console.error('Avatar failed to process:', error);
     }
   }
 };
