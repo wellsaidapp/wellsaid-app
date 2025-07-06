@@ -122,7 +122,7 @@ export default function PDFViewerWrapper({ book, onClose }) {
       <div className="relative w-full max-w-4xl bg-white rounded-lg shadow-xl pointer-events-auto flex flex-col" style={{ maxHeight: '90vh' }}>
 
         {/* Top Control Bar */}
-        <div className="absolute top-4 left-4 right-4 flex justify-between items-center z-10 bg-white bg-opacity-90 backdrop-blur-sm py-2 px-4 rounded-full">
+        <div className="absolute top-4 left-4 right-4 flex justify-between items-center z-10">
           <div className="flex items-center">
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -183,13 +183,20 @@ export default function PDFViewerWrapper({ book, onClose }) {
             loading={<div className="text-center py-20">Loading PDF...</div>}
             onLoadError={(error) => console.error("PDF load error:", error)}
           >
-            <Page
-              pageNumber={pageNumber}
-              width={dimensions.width}
-              loading={<div className="text-center py-20">Loading page...</div>}
-              renderTextLayer={false}
-              renderAnnotationLayer={false}
-            />
+            <div className="p-4 flex justify-center">
+              <div className="relative">
+                {/* Shadow element that will appear on all sides */}
+                <div className="absolute inset-0 shadow-[0_0_15px_rgba(0,0,0,0.1)] -z-10" />
+
+                <Page
+                  pageNumber={pageNumber}
+                  width={dimensions.width - 8} // Reduced width to allow shadow space
+                  loading={<div className="text-center py-20">Loading page...</div>}
+                  renderTextLayer={false}
+                  renderAnnotationLayer={false}
+                />
+              </div>
+            </div>
           </Document>
         </div>
 
