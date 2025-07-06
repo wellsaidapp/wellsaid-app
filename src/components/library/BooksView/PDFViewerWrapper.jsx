@@ -7,14 +7,50 @@ pdfjs.GlobalWorkerOptions.workerSrc =
     ? `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`
     : '/pdf.worker.min.js';
 
-export default function PDFViewerWrapper({ file, name, onClose }) {
+export default function PDFViewerWrapper({ book, onClose }) {
+  const file = book.status === "Published"
+    ? book.publishedState.pdfBase64
+    : null;
+
   const [numPages, setNumPages] = useState(null);
   const [pageNumber, setPageNumber] = useState(1);
+
   const [dimensions, setDimensions] = useState({
     width: 800,
     height: 1000
   });
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  const handleEdit = () => {
+    if (book.status === "Draft") {
+      // Open in editor with draft state
+      openBookEditor(book.id);
+    } else {
+      // Convert published book to draft first
+      if (confirm("Editing will convert this published book to a draft. Continue?")) {
+        convertToDraft(book.id);
+        openBookEditor(book.id);
+      }
+    }
+    onClose();
+  };
+
+  if (book.status === "Draft" && !file) {
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center p-4 z-[100]">
+        <div className="bg-white p-6 rounded-lg max-w-md text-center">
+          <h3 className="text-lg font-medium mb-2">Draft Not Viewable</h3>
+          <p className="mb-4">This book is still in draft mode. Please publish it to view as PDF.</p>
+          <button
+            onClick={onClose}
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   // Handle window resize
   useEffect(() => {
@@ -31,11 +67,11 @@ export default function PDFViewerWrapper({ file, name, onClose }) {
   }, []);
 
   const handleDownload = () => {
-    // Clean the filename by removing special characters
-    const cleanName = name
-      ? name.replace(/[^\w\s-]/g, '') // Remove special chars except spaces and hyphens
-            .replace(/\s+/g, ' ')     // Collapse multiple spaces
-            .trim()                   // Trim whitespace
+    // Use the book's name for the filename
+    const cleanName = book.name
+      ? book.name.replace(/[^\w\s-]/g, '') // Remove special chars
+                .replace(/\s+/g, ' ')     // Collapse spaces
+                .trim()                   // Trim whitespace
       : 'document';
 
     const filename = `${cleanName}.pdf`;
@@ -81,85 +117,99 @@ export default function PDFViewerWrapper({ file, name, onClose }) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center p-4 z-[100]">
-      {/* Top Control Bar */}
-      <div className="absolute top-4 left-4 right-4 flex justify-between items-center z-10">
-        {/* Expandable Menu Button */}
-        <div className="flex items-center">
-          <button
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="p-2 bg-white rounded-full shadow hover:bg-gray-100 transition-all focus:outline-none focus:ring-0"
-            title="Options"
-          >
-            <MoreHorizontal className="w-5 h-5 text-gray-800" />
-          </button>
+    <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center p-4 z-[100] pointer-events-none">
+      {/* Main modal container */}
+      <div className="relative w-full max-w-4xl bg-white rounded-lg shadow-xl pointer-events-auto flex flex-col" style={{ maxHeight: '90vh' }}>
 
-          {/* Expanded Actions */}
-          <div className={`flex items-center ml-2 transition-all duration-200 overflow-hidden ${isMenuOpen ? 'max-w-40 opacity-100' : 'max-w-0 opacity-0'}`}>
-            <div className="flex gap-2 bg-white bg-opacity-90 rounded-full pl-2 pr-3 py-1 shadow-lg backdrop-blur-sm">
-              <button
-                onClick={handleDownload}
-                className="p-1.5 hover:bg-gray-100 rounded-full"
-                title="Download"
-              >
-                <Download className="w-4 h-4 text-gray-600" />
-              </button>
-              <button className="p-1.5 hover:bg-gray-100 rounded-full" title="Add to Cart">
-                <ShoppingCart className="w-4 h-4 text-gray-600" />
-              </button>
-              <button className="p-1.5 hover:bg-gray-100 rounded-full" title="Edit">
-                <Edit className="w-4 h-4 text-gray-600" />
-              </button>
+        {/* Top Control Bar */}
+        <div className="absolute top-4 left-4 right-4 flex justify-between items-center z-10 bg-white bg-opacity-90 backdrop-blur-sm py-2 px-4 rounded-full">
+          <div className="flex items-center">
+            <button
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="p-2 bg-white rounded-full shadow hover:bg-gray-100 transition-all"
+              title="Options"
+            >
+              <MoreHorizontal className="w-5 h-5 text-gray-800" />
+            </button>
+
+            {/* Expanded Actions */}
+            <div className={`flex items-center ml-2 transition-all duration-200 ${isMenuOpen ? 'opacity-100' : 'opacity-0 w-0'}`}>
+              <div className="flex gap-2 bg-white rounded-full pl-2 pr-3 py-1 shadow-lg">
+                <button
+                  onClick={handleDownload}
+                  className="p-1.5 hover:bg-gray-100 rounded-full"
+                  title="Download"
+                >
+                  <Download className="w-4 h-4 text-gray-600" />
+                </button>
+                <button className="p-1.5 hover:bg-gray-100 rounded-full" title="Add to Cart">
+                  <ShoppingCart className="w-4 h-4 text-gray-600" />
+                </button>
+                <button
+                  onClick={handleEdit}
+                  className="p-1.5 hover:bg-gray-100 rounded-full"
+                  title={book.status === "Draft" ? "Continue Editing" : "Convert to Draft & Edit"}
+                >
+                  <Edit className="w-4 h-4 text-gray-600" />
+                </button>
+              </div>
             </div>
           </div>
+
+          <button
+            onClick={() => {
+              onClose();
+              setPageNumber(1);
+            }}
+            className="p-2 bg-white rounded-full shadow hover:bg-gray-100 transition-all"
+            title="Close"
+          >
+            <X className="w-5 h-5 text-gray-800" />
+          </button>
         </div>
 
-        {/* Close Button */}
-        <button
-          onClick={() => {
-            onClose();
-            setPageNumber(1);
+        {/* Scrollable PDF Content */}
+        <div
+          className="flex-1 overflow-auto touch-pan-y overscroll-contain"
+          style={{
+            WebkitOverflowScrolling: 'touch',
+            paddingTop: '60px', // Space for header
+            paddingBottom: '60px' // Space for pagination
           }}
-          className="p-2 bg-white rounded-full shadow hover:bg-gray-100 transition-all focus:outline-none focus:ring-0"
-          title="Close"
         >
-          <X className="w-5 h-5 text-gray-800" />
-        </button>
-      </div>
-
-      {/* PDF Container */}
-      <div className="relative w-full max-w-4xl bg-white rounded-lg shadow-xl mt-12" style={{ maxHeight: 'calc(90vh - 48px)' }}>
-        <div className="overflow-auto rounded-lg" style={{ maxHeight: '80vh' }}>
           <Document
             file={file}
             onLoadSuccess={({ numPages }) => setNumPages(numPages)}
-            loading={<div className="text-center py-8">Loading PDF...</div>}
+            loading={<div className="text-center py-20">Loading PDF...</div>}
+            onLoadError={(error) => console.error("PDF load error:", error)}
           >
             <Page
               pageNumber={pageNumber}
               width={dimensions.width}
-              loading={<div className="text-center py-8">Loading page...</div>}
+              loading={<div className="text-center py-20">Loading page...</div>}
+              renderTextLayer={false}
+              renderAnnotationLayer={false}
             />
           </Document>
         </div>
 
         {/* Pagination */}
         {numPages && (
-          <div className="flex justify-center items-center p-4 border-t sticky bottom-0 bg-white rounded-b-lg">
+          <div className="sticky bottom-0 bg-white border-t p-4 flex justify-center items-center">
             <button
               onClick={() => setPageNumber(p => Math.max(1, p - 1))}
               disabled={pageNumber <= 1}
-              className="px-4 py-2 mx-2 bg-gray-100 rounded disabled:opacity-50"
+              className="px-4 py-2 mx-2 bg-gray-100 rounded-full disabled:opacity-50"
             >
               <ChevronLeft className="w-5 h-5" />
             </button>
-            <span className="mx-4">
+            <span className="mx-4 text-sm font-medium">
               Page {pageNumber} of {numPages}
             </span>
             <button
               onClick={() => setPageNumber(p => Math.min(numPages, p + 1))}
               disabled={pageNumber >= numPages}
-              className="px-4 py-2 mx-2 bg-gray-100 rounded disabled:opacity-50"
+              className="px-4 py-2 mx-2 bg-gray-100 rounded-full disabled:opacity-50"
             >
               <ChevronRight className="w-5 h-5" />
             </button>

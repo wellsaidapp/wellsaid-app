@@ -119,20 +119,26 @@ const HomeView = ({
         />
       )}
 
-      {showPdfViewer && selectedBook?.pdfBase64 && (
-        <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center p-4 z-[100]">
-          <div className="relative w-full max-w-4xl bg-white rounded-lg shadow-xl">
-            <PDFViewerWrapper
-              file={selectedBook.pdfBase64}
-              name={selectedBook.name}
-              onClose={() => {
-                setSelectedBook(null);
-                setShowPdfViewer(false);
-                setCurrentPage(0);
-              }}
-            />
-          </div>
-        </div>
+      {showPdfViewer && selectedBook && (
+        selectedBook.status === "Published" && selectedBook.publishedState?.pdfBase64 ? (
+          <PDFViewerWrapper
+            book={selectedBook}
+            onClose={() => {
+              setSelectedBook(null);
+              setShowPdfViewer(false);
+            }}
+          />
+        ) : (
+          <BookPreviewModal
+            book={selectedBook}
+            currentPage={currentPage}
+            setCurrentPage={setCurrentPage}
+            onClose={() => {
+              setSelectedBook(null);
+              setShowPdfViewer(false);
+            }}
+          />
+        )
       )}
     </div>
   );

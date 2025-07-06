@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { SYSTEM_COLLECTIONS } from '../../constants/systemCollections';
 import { CUSTOM_COLLECTIONS } from '../../constants/collections';
@@ -27,7 +27,6 @@ const LibraryView = ({
   defaultViewMode = 'collections'
 }) => {
   const [viewMode, setViewMode] = useState(defaultViewMode);
-  const [showPDFPreview, setShowPDFPreview] = useState(false);
   const [collectionFilter, setCollectionFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
@@ -228,6 +227,10 @@ const LibraryView = ({
     );
   };
 
+  useEffect(() => {
+    console.log('Selected book changed:', selectedBook);
+  }, [selectedBook]);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-blue-50 to-indigo-50 pb-20">
       <Header />
@@ -289,8 +292,8 @@ const LibraryView = ({
           <BooksList
             books={sortedBooks}
             onViewBook={(book) => {
-              setSelectedBook(book); // No need to modify the book object
-              setCurrentPage(0); // Always start at first page
+              console.log('Book selected:', book.id); // Debug log
+              setSelectedBook(book);
             }}
             onStartNewBook={handleStartNewBook}
             isCreating={currentView === 'arrangeBook'}
@@ -304,28 +307,17 @@ const LibraryView = ({
 
       {/* Modals */}
       {selectedBook && (
-        selectedBook.pdfBase64 ? (
-          <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center p-4 z-[100]">
-            <div className="relative w-full max-w-4xl bg-white rounded-lg shadow-xl">
-              <PDFViewerWrapper
-                file={selectedBook.pdfBase64}
-                name={selectedBook.name}  // Add this line
-                onClose={() => {
-                  setSelectedBook(null);
-                  setCurrentPage(0);
-                }}
-              />
-            </div>
-          </div>
+        selectedBook.status === "Published" ? (
+          <PDFViewerWrapper
+            book={selectedBook}
+            onClose={() => setSelectedBook(null)}
+          />
         ) : (
           <BookPreviewModal
             book={selectedBook}
             currentPage={currentPage}
             setCurrentPage={setCurrentPage}
-            onClose={() => {
-              setSelectedBook(null);
-              setCurrentPage(0);
-            }}
+            onClose={() => setSelectedBook(null)}
           />
         )
       )}
