@@ -191,6 +191,8 @@ export const generateBookPDF = async (
     }
   }
 
+  const pdfBase64 = doc.output('datauristring'); // or 'dataurlstring'
+  console.log('📄 Base64 PDF Preview:', pdfBase64);
   return doc.output('blob');
 };
 

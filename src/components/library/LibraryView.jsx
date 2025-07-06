@@ -3,6 +3,8 @@ import { useLocation } from 'react-router-dom';
 import { SYSTEM_COLLECTIONS } from '../../constants/systemCollections';
 import { CUSTOM_COLLECTIONS } from '../../constants/collections';
 import { SHARED_BOOKS } from '../../constants/sharedBooks';
+import { SAMPLE_BOOK_PDF_BASE64 } from '../../constants/sampleBookPDF';
+import { X } from 'lucide-react';
 
 // Component imports
 import BookCreationModal from './BookCreation/BookCreationModal';
@@ -14,6 +16,7 @@ import CollectionsList from './CollectionsView/CollectionsList';
 import BooksList from './BooksView/BooksList';
 import BookPreviewModal from '../home/BookPreviewModal';
 import CreateBook from './BookCreation/CreateBook';
+import PDFViewerWrapper from './BooksView/PDFViewerWrapper';
 
 const LibraryView = ({
   insights,
@@ -25,7 +28,7 @@ const LibraryView = ({
   defaultViewMode = 'collections'
 }) => {
   const [viewMode, setViewMode] = useState(defaultViewMode);
-
+  const [showPDFPreview, setShowPDFPreview] = useState(false);
   const [collectionFilter, setCollectionFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
@@ -287,8 +290,8 @@ const LibraryView = ({
           <BooksList
             books={sortedBooks}
             onViewBook={(book) => {
-              setSelectedBook(book);
-              setCurrentPage(0);
+              setSelectedBook(book); // No need to modify the book object
+              setCurrentPage(0); // Always start at first page
             }}
             onStartNewBook={handleStartNewBook}
             isCreating={currentView === 'arrangeBook'}
@@ -302,15 +305,29 @@ const LibraryView = ({
 
       {/* Modals */}
       {selectedBook && (
-        <BookPreviewModal
-          book={selectedBook}
-          currentPage={currentPage} // Add this
-          setCurrentPage={setCurrentPage} // Add this
-          onClose={() => {
-            setSelectedBook(null);
-            setCurrentPage(0); // Reset to first page when closing
-          }}
-        />
+        selectedBook.pdfBase64 ? (
+          <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center p-4 z-[100]">
+            <div className="relative w-full max-w-4xl bg-white rounded-lg shadow-xl">
+              <PDFViewerWrapper
+                file={selectedBook.pdfBase64}
+                onClose={() => {
+                  setSelectedBook(null);
+                  setCurrentPage(0);
+                }}
+              />
+            </div>
+          </div>
+        ) : (
+          <BookPreviewModal
+            book={selectedBook}
+            currentPage={currentPage}
+            setCurrentPage={setCurrentPage}
+            onClose={() => {
+              setSelectedBook(null);
+              setCurrentPage(0);
+            }}
+          />
+        )
       )}
 
       {showBookCreation && (
