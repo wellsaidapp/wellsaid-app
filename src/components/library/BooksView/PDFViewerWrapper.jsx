@@ -31,7 +31,8 @@ export default function PDFViewerWrapper({ file, onClose }) {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center p-4 z-[100]">
-      <div className="relative w-full max-w-4xl bg-white rounded-lg shadow-xl"
+      {/* Main container with rounded corners */}
+      <div className="relative w-full max-w-4xl bg-white rounded-lg shadow-xl overflow-hidden"
            style={{ maxHeight: '90vh' }}>
 
         {/* Close Button */}
@@ -45,24 +46,26 @@ export default function PDFViewerWrapper({ file, onClose }) {
           <X className="w-5 h-5 text-gray-800" />
         </button>
 
-        {/* PDF Container with scroll */}
+        {/* PDF Container with scroll - added rounded corners */}
         <div className="overflow-auto" style={{ maxHeight: '80vh' }}>
           <Document
             file={file}
             onLoadSuccess={({ numPages }) => setNumPages(numPages)}
             loading={<div className="text-center py-8">Loading PDF...</div>}
           >
-            <Page
-              pageNumber={pageNumber}
-              width={dimensions.width}
-              loading={<div className="text-center py-8">Loading page...</div>}
-            />
+            <div className="rounded-lg overflow-hidden">
+              <Page
+                pageNumber={pageNumber}
+                width={dimensions.width}
+                loading={<div className="text-center py-8">Loading page...</div>}
+              />
+            </div>
           </Document>
         </div>
 
-        {/* Pagination */}
+        {/* Pagination - added rounded-b-lg */}
         {numPages && (
-          <div className="flex justify-center items-center p-4 border-t sticky bottom-0 bg-white">
+          <div className="flex justify-center items-center p-4 border-t sticky bottom-0 bg-white rounded-b-lg">
             <button
               onClick={() => setPageNumber(p => Math.max(1, p - 1))}
               disabled={pageNumber <= 1}
