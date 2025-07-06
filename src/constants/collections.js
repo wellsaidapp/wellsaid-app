@@ -12,7 +12,7 @@ export const CUSTOM_COLLECTIONS = [
   },
   {
     id: 'cohens-birthday',
-    name: "Cohen's 17th Birthday",
+    name: "Cohen's 16th Birthday",
     type: 'custom',
     color: 'bg-blue-500',
     metadata: {
