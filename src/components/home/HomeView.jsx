@@ -15,7 +15,7 @@ import UpcomingEventsSection from './UpcomingEventsSection';
 import WeeklyProgress from './WeeklyProgress';
 import SharedBooksSection from './SharedBooksSection';
 import LegacyStats from './LegacyStats';
-import BookPreviewModal from './BookPreviewModal';
+import PDFViewerWrapper from '../library/BooksView/PDFViewerWrapper';
 import { isThisWeek, parseISO } from 'date-fns';
 
 const HomeView = ({
@@ -31,6 +31,7 @@ const HomeView = ({
   const weeklyGoal = 5;
   const [selectedBook, setSelectedBook] = useState(null);
   const [currentPage, setCurrentPage] = useState(0);
+  const [showPdfViewer, setShowPdfViewer] = useState(false);
   const [selectedOccasion, setSelectedOccasion] = useState(null);
   const [questionSet, setQuestionSet] = useState([]);
   const [currentQuestion, setCurrentQuestion] = useState('');
@@ -90,7 +91,10 @@ const HomeView = ({
 
         <SharedBooksSection
           books={recentBooks}
-          onViewBook={(book) => setSelectedBook(book)}
+          onViewBook={(book) => {
+            setSelectedBook(book);
+            setShowPdfViewer(true);
+          }}
           setCurrentView={setCurrentView}
           setLibraryDefaultViewMode={setLibraryDefaultViewMode}
         />
@@ -115,13 +119,20 @@ const HomeView = ({
         />
       )}
 
-      {selectedBook && (
-        <BookPreviewModal
-          book={selectedBook}
-          currentPage={currentPage}
-          setCurrentPage={setCurrentPage}
-          onClose={() => setSelectedBook(null)}
-        />
+      {showPdfViewer && selectedBook?.pdfBase64 && (
+        <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center p-4 z-[100]">
+          <div className="relative w-full max-w-4xl bg-white rounded-lg shadow-xl">
+            <PDFViewerWrapper
+              file={selectedBook.pdfBase64}
+              name={selectedBook.name}
+              onClose={() => {
+                setSelectedBook(null);
+                setShowPdfViewer(false);
+                setCurrentPage(0);
+              }}
+            />
+          </div>
+        </div>
       )}
     </div>
   );
