@@ -106,10 +106,11 @@ export const getBookById = (id) => SHARED_BOOKS.find(book => book.id === id);
 export const getBooksByRecipient = (recipientId) =>
   SHARED_BOOKS.filter(book => book.personId === recipientId);
 
-export const getRecentBooks = (limit = 3) =>
-  [...SHARED_BOOKS]
-    .sort((a, b) => new Date(b.savedOn) - new Date(a.savedOn))
-    .slice(0, limit);
+  export const getRecentBooks = (limit = 3) =>
+    [...SHARED_BOOKS]
+      .filter(book => book.status === "Published")  // Only include published books
+      .sort((a, b) => new Date(b.savedOn) - new Date(a.savedOn))
+      .slice(0, limit);
 
 /**
  * @typedef {Object} Book

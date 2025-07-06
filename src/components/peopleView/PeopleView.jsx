@@ -3,10 +3,11 @@ import Header from '../appLayout/Header';
 import PeopleSearch from './subcomponents/PeopleSearch';
 import PeopleList from './subcomponents/PeopleList';
 import PersonDetail from './subcomponents/PersonDetail';
-import BookPreviewModal from '../home/BookPreviewModal';
 import BookCreationModal from '../library/BookCreation/BookCreationModal';
 import { SYSTEM_COLLECTIONS } from '../../constants/systemCollections';
 import ImageCropperModal from '../library/BookCreation/ImageCropperModal';
+import PDFViewerWrapper from '../library/BooksView/PDFViewerWrapper';
+import BookPreviewModal from '../home/BookPreviewModal';
 
 const PeopleView = ({ individuals, insights, collections, sharedBooks }) => {
   const [selectedPerson, setSelectedPerson] = useState(null);
@@ -180,15 +181,30 @@ const PeopleView = ({ individuals, insights, collections, sharedBooks }) => {
         )}
       </div>
       {selectedBook && (
-        <BookPreviewModal
-          book={selectedBook}
-          currentPage={currentPage}
-          setCurrentPage={setCurrentPage}
-          onClose={() => {
-            setSelectedBook(null);
-            setCurrentPage(0);
-          }}
-        />
+        <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center p-4 z-[100]">
+          <div className="relative w-full max-w-4xl bg-white rounded-lg shadow-xl">
+            {selectedBook.pdfBase64 ? (
+              <PDFViewerWrapper
+                file={selectedBook.pdfBase64}
+                name={selectedBook.name}
+                onClose={() => {
+                  setSelectedBook(null);
+                  setCurrentPage(0);
+                }}
+              />
+            ) : (
+              <BookPreviewModal
+                book={selectedBook}
+                currentPage={currentPage}
+                setCurrentPage={setCurrentPage}
+                onClose={() => {
+                  setSelectedBook(null);
+                  setCurrentPage(0);
+                }}
+              />
+            )}
+          </div>
+        </div>
       )}
       {showBookCreation && (
         <BookCreationModal
