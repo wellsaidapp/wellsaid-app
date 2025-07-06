@@ -54,6 +54,34 @@ const PeopleView = ({ individuals, insights, collections, sharedBooks }) => {
     setShowBookCreation(true);
   };
 
+  const handleEditDraftBook = (book) => {
+    const draftInsights = book.draftState.insightIds.map(id =>
+      insights.find(insight => insight.id === id)
+    ).filter(Boolean);
+
+    setNewBook({
+      title: book.name,
+      description: book.description,
+      selectedCollections: book.collections || [],
+      selectedEntries: draftInsights.map(i => i.id),
+      coverImage: book.draftState.coverImage || null,
+      backCoverNote: book.backCoverNote || '',
+      recipient: book.personId || null,
+      recipientName: book.personName || '',
+      showTags: true,
+      fontStyle: book.fontStyle || 'serif',
+      isBlackAndWhite: book.isBlackAndWhite || false,
+      isDraft: true,
+      color: book.color || 'bg-blue-500',
+      existingBookId: book.id,
+      coverMode: book.coverMode || 'color'
+    });
+
+    setEntryOrder(book.draftState.insightIds);
+    setBookCreationStep(0);
+    setShowBookCreation(true);
+  };
+
   // Build groupedEntries based on current insights
   const groupedEntries = insights.reduce((acc, entry) => {
     if (entry.collections && Array.isArray(entry.collections)) {
@@ -168,6 +196,7 @@ const PeopleView = ({ individuals, insights, collections, sharedBooks }) => {
             setSelectedBook={setSelectedBook}
             setCurrentPage={setCurrentPage}
             onStartNewBook={handleStartNewBookForPerson}
+            onEditDraftBook={handleEditDraftBook}
             onTempAvatarUpload={(image) => {
               setAvatarUploadTemp(image);
               setShowAvatarCropper(true);

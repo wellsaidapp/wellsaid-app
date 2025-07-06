@@ -4,6 +4,11 @@ import SharedBooksSection from '../../home/SharedBooksSection';
 import CreateBook from '../../library/BookCreation/CreateBook';
 import CollectionsList from '../../library/CollectionsView/CollectionsList';
 import PropTypes from 'prop-types';
+import BookCreationModal from '../../library/BookCreation/BookCreationModal';
+
+import { SYSTEM_COLLECTIONS } from '../../../constants/systemCollections';
+import { CUSTOM_COLLECTIONS } from '../../../constants/collections';
+import { SHARED_BOOKS } from '../../../constants/sharedBooks';
 
 const PersonDetail = ({
   person,
@@ -20,13 +25,21 @@ const PersonDetail = ({
   onEntryDelete,
   onCollectionToggle,
   onRecipientToggle,
-  onAddToCollection
+  onAddToCollection,
+  currentView,
+  setCurrentView,
+  onEditDraftBook
 }) => {
   const [expandedCollection, setExpandedCollection] = useState(null);
   const [showInactiveCollections, setShowInactiveCollections] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editedName, setEditedName] = useState(person.name);
   const [editedRelationship, setEditedRelationship] = useState(person.relationship);
+
+  const [showBookCreation, setShowBookCreation] = useState(false);
+  const [newBook, setNewBook] = useState(null);
+  const [entryOrder, setEntryOrder] = useState([]);
+  const [bookCreationStep, setBookCreationStep] = useState(0);
 
   // Filter insights for this person
   const personInsights = insights.filter(i => i.personIds?.includes(person.id));
@@ -36,21 +49,26 @@ const PersonDetail = ({
 
   // Group entries by collection for this person
   const groupedEntries = personInsights.reduce((acc, entry) => {
-    if (entry.collections?.length > 0) {
-      entry.collections.forEach(collectionId => {
-        if (!acc[collectionId]) acc[collectionId] = [];
-        acc[collectionId].push(entry);
-      });
+    if (!entry.collections || entry.collections.length === 0) {
+      if (!acc.unorganized) acc.unorganized = [];
+      acc.unorganized.push(entry);
+      return acc;
     }
+
+    entry.collections.forEach(collectionId => {
+      if (!acc[collectionId]) acc[collectionId] = [];
+      acc[collectionId].push(entry);
+    });
+
     return acc;
   }, {});
 
   // Filter and calculate collection stats
-  const systemCollections = collections.filter(c =>
-    c.type === 'system' && groupedEntries[c.id]?.length > 0
+  const systemCollections = SYSTEM_COLLECTIONS.filter(c =>
+    groupedEntries[c.id]?.length > 0
   );
-  const userCollections = collections.filter(c =>
-    c.type === 'occasion' && groupedEntries[c.id]?.length > 0
+  const userCollections = CUSTOM_COLLECTIONS.filter(c =>
+    groupedEntries[c.id]?.length > 0
   );
   const inactiveCollections = collections.filter(c =>
     !groupedEntries[c.id]?.length
@@ -261,11 +279,50 @@ const PersonDetail = ({
       <SharedBooksSection
         books={personBooks}
         onViewBook={(book) => {
-          setSelectedBook(book);
-          setCurrentPage(0);
+          if (book.status === "Draft") {
+            onEditDraftBook(book); // Use the passed handler
+          } else {
+            setSelectedBook(book);
+            setCurrentPage(0);
+          }
         }}
         showViewAll={false}
       />
+
+      {/* Add BookCreationModal */}
+      {showBookCreation && (
+        <BookCreationModal
+          onClose={() => setShowBookCreation(false)}
+          newBook={newBook}
+          setNewBook={setNewBook}
+          bookCreationStep={bookCreationStep}
+          setBookCreationStep={setBookCreationStep}
+          entryOrder={entryOrder}
+          setEntryOrder={setEntryOrder}
+          individuals={[person]}
+          insights={insights} // Make sure this contains ALL insights, not just person-specific ones
+          collections={newBook?.isDraft ? CUSTOM_COLLECTIONS : userCollections}
+          groupedEntries={newBook?.isDraft ?
+            // For drafts, use all insights grouped by collection
+            insights.reduce((acc, entry) => {
+              if (!entry.collections || entry.collections.length === 0) {
+                if (!acc.unorganized) acc.unorganized = [];
+                acc.unorganized.push(entry);
+                return acc;
+              }
+              entry.collections.forEach(collectionId => {
+                if (!acc[collectionId]) acc[collectionId] = [];
+                acc[collectionId].push(entry);
+              });
+              return acc;
+            }, {})
+            : groupedEntries // Otherwise use person-specific grouped entries
+          }
+          SYSTEM_COLLECTIONS={SYSTEM_COLLECTIONS}
+          currentView={currentView}
+          setCurrentView={setCurrentView}
+        />
+      )}
 
       {/* CTA */}
       <div className="mt-6">
@@ -294,6 +351,7 @@ PersonDetail.propTypes = {
   setSelectedBook: PropTypes.func.isRequired,
   setCurrentPage: PropTypes.func.isRequired,
   onStartNewBook: PropTypes.func.isRequired,
+  onEditDraftBook: PropTypes.func.isRequired,
   onTempAvatarUpload: PropTypes.func.isRequired,
   croppedAvatarImage: PropTypes.string,
   expandedCollection: PropTypes.string,
