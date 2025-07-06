@@ -14,6 +14,7 @@ import { SHARED_BOOKS, getRecentBooks, getPublishedBooksCount } from '../../cons
 import ImageCropperModal from '../library/BookCreation/ImageCropperModal';
 import AccountSettings from './subcomponents/AccountSettings';
 import NotificationSettings from './subcomponents/NotificationSettings';
+import HelpAndSupport from './subcomponents/HelpAndSupport';
 
 const ProfileView = ({ user, insights = [], individuals = [], collections = [], setCurrentView }) => {
   const { expandedId, toggleDisclosure } = UseDisclosureToggle();
@@ -23,6 +24,7 @@ const ProfileView = ({ user, insights = [], individuals = [], collections = [], 
   const [showAvatarCropper, setShowAvatarCropper] = useState(false);
   const [croppedAvatarImage, setCroppedAvatarImage] = useState(null);
   const [showNotificationSettings, setShowNotificationSettings] = useState(false);
+  const [showHelpSupport, setShowHelpSupport] = useState(false);
   const disclosures = [
     {
       id: 'terms',
@@ -113,6 +115,10 @@ const ProfileView = ({ user, insights = [], individuals = [], collections = [], 
     );
   }
 
+  if (showHelpSupport) {
+    return <HelpAndSupport onBack={() => setShowHelpSupport(false)} />;
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-blue-50 to-indigo-50 pb-20">
       <Header />
@@ -143,7 +149,11 @@ const ProfileView = ({ user, insights = [], individuals = [], collections = [], 
             label="Notification Preferences"
             onClick={() => setShowNotificationSettings(true)}
           />
-          <ProfileMenuItem icon={<Users size={20} />} label="Help & Support" />
+          <ProfileMenuItem
+            icon={<Users size={20}/>}
+            label="Help & Support"
+            onClick={() => setShowHelpSupport(true)}
+          />
 
           <DisclosureAccordion
             disclosures={disclosures}
