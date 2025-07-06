@@ -10,7 +10,7 @@ import UseDisclosureToggle from './utils/UseDisclosureToggle';
 import TermsOfUse from './disclosures/TermsOfUse';
 import PrivacyPolicy from './disclosures/PrivacyPolicy';
 import AIDisclosure from './disclosures/AIDisclosure';
-import { SHARED_BOOKS, getRecentBooks } from '../../constants/sharedBooks';
+import { SHARED_BOOKS, getRecentBooks, getPublishedBooksCount } from '../../constants/sharedBooks';
 import ImageCropperModal from '../library/BookCreation/ImageCropperModal';
 
 const ProfileView = ({ user, insights = [], individuals = [], collections = [], setCurrentView }) => {
@@ -60,7 +60,7 @@ const ProfileView = ({ user, insights = [], individuals = [], collections = [], 
           user={user}
           insightsCount={insights.length}
           peopleCount={individuals.length}
-          booksCount={SHARED_BOOKS.length}
+          booksCount={getPublishedBooksCount()}
           className="mb-4"
           onAvatarUpload={(image) => {
             setAvatarUploadTemp(image);

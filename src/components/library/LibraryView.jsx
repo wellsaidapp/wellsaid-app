@@ -3,7 +3,6 @@ import { useLocation } from 'react-router-dom';
 import { SYSTEM_COLLECTIONS } from '../../constants/systemCollections';
 import { CUSTOM_COLLECTIONS } from '../../constants/collections';
 import { SHARED_BOOKS } from '../../constants/sharedBooks';
-import { SAMPLE_BOOK_PDF_BASE64 } from '../../constants/sampleBookPDF';
 import { X } from 'lucide-react';
 
 // Component imports

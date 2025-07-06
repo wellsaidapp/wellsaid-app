@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Lightbulb, ArrowRight, Pencil, Zap, Clock, Sparkles, Calendar, Trophy } from 'lucide-react';
-import { SHARED_BOOKS, getRecentBooks } from '../../constants/sharedBooks';
+import { SHARED_BOOKS, getRecentBooks, getPublishedBooksCount } from '../../constants/sharedBooks';
 import { INSIGHTS } from '../../constants/insights';
 import { USER } from '../../constants/user';
 import { UPCOMING_EVENTS } from '../../constants/upcomingEvents';
@@ -102,7 +102,7 @@ const HomeView = ({
         <LegacyStats
           insightsCount={insights.length}
           individualsCount={INDIVIDUALS.length}
-          booksCount={SHARED_BOOKS.length}
+          booksCount={getPublishedBooksCount()}
         />
       </div>
 
