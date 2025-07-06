@@ -73,6 +73,8 @@ const BookCreationModal = ({
     setCoverImageState({ tempImage: null, showCropModal: false });
   };
 
+  const [showExitConfirmation, setShowExitConfirmation] = useState(false);
+
   const isTouchDevice = () =>
     typeof window !== 'undefined' &&
     ('ontouchstart' in window || navigator.maxTouchPoints > 0);
@@ -108,117 +110,120 @@ const BookCreationModal = ({
 
   // Then modify your handleComplete function:
   const handleComplete = async (actionType = 'cancel') => {
-    try {
-      if (actionType === 'publish') {
-        // Only generate PDF for publishing, not for drafts
-        const pdfBlob = await generateBookPDF(newBook, entryOrder, insights);
+    // Skip confirmation for publish/save actions
+    if (actionType === 'publish' || actionType === 'draft') {
+      try {
+        if (actionType === 'publish') {
+          // Only generate PDF for publishing
+          const pdfBlob = await generateBookPDF(newBook, entryOrder, insights);
 
-        // Create download link
-        const url = URL.createObjectURL(pdfBlob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `${newBook.title || 'Untitled Book'}.pdf`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
+          // Create download link
+          const url = URL.createObjectURL(pdfBlob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `${newBook.title || 'Untitled Book'}.pdf`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
 
-        // Prepare the updated book data
-        const updatedBookData = {
-          id: newBook.existingBookId,
-          name: newBook.title,
-          description: newBook.description,
-          collections: newBook.selectedCollections,
-          personId: newBook.recipient?.id,
-          personName: newBook.recipient?.name,
-          color: newBook.color,
-          fontStyle: newBook.fontStyle,
-          status: 'Published', // Hardcoded since we're in publish branch
-          savedOn: new Date().toISOString().split('T')[0],
-          publishedState: {
-            pdfBase64: url, // In a real app, this should be the actual base64 string
-            contentSnapshot: entryOrder.map(id => {
-              const insight = insights.find(i => i.id === id);
-              return insight ? {
-                insightId: insight.id,
-                prompt: insight.prompt,
-                response: insight.response
-              } : null;
-            }).filter(Boolean)
-          }
-        };
+          const updatedBookData = {
+            id: newBook.existingBookId,
+            name: newBook.title,
+            description: newBook.description,
+            collections: newBook.selectedCollections,
+            personId: newBook.recipient?.id,
+            personName: newBook.recipient?.name,
+            color: newBook.color,
+            fontStyle: newBook.fontStyle,
+            status: 'Published',
+            savedOn: new Date().toISOString().split('T')[0],
+            publishedState: {
+              pdfBase64: url,
+              contentSnapshot: entryOrder.map(id => {
+                const insight = insights.find(i => i.id === id);
+                return insight ? {
+                  insightId: insight.id,
+                  prompt: insight.prompt,
+                  response: insight.response
+                } : null;
+              }).filter(Boolean)
+            }
+          };
 
-        console.log('Published book data:', updatedBookData);
+          console.log('Published book data:', updatedBookData);
 
-        toast.success(
-          (t) => (
-            <ToastMessage
-              type="success"
-              title="Book Published"
-              message={`"${newBook.title || 'Untitled Book'}" has been published.`}
-              onDismiss={() => toast.dismiss(t.id)}
-            />
-          ),
-          { duration: 4000 }
-        );
-      }
-      else if (actionType === 'draft') {
-        // Handle draft saving without PDF generation
-        const updatedBookData = {
-          id: newBook.existingBookId,
-          name: newBook.title,
-          description: newBook.description,
-          collections: newBook.selectedCollections,
-          personId: newBook.recipient?.id,
-          personName: newBook.recipient?.name,
-          color: newBook.color,
-          fontStyle: newBook.fontStyle,
-          status: 'Draft',
-          savedOn: new Date().toISOString().split('T')[0],
-          draftState: {
-            insightIds: entryOrder,
-            coverImage: newBook.coverImage
-          }
-        };
+          toast.success(
+            (t) => (
+              <ToastMessage
+                type="success"
+                title="Book Published"
+                message={`"${newBook.title || 'Untitled Book'}" has been published.`}
+                onDismiss={() => toast.dismiss(t.id)}
+              />
+            ),
+            { duration: 4000 }
+          );
+        } else if (actionType === 'draft') {
+          // Handle draft saving without PDF generation
+          const updatedBookData = {
+            id: newBook.existingBookId,
+            name: newBook.title,
+            description: newBook.description,
+            collections: newBook.selectedCollections,
+            personId: newBook.recipient?.id,
+            personName: newBook.recipient?.name,
+            color: newBook.color,
+            fontStyle: newBook.fontStyle,
+            status: 'Draft',
+            savedOn: new Date().toISOString().split('T')[0],
+            draftState: {
+              insightIds: entryOrder,
+              coverImage: newBook.coverImage
+            }
+          };
 
-        console.log('Draft book data:', updatedBookData);
+          console.log('Draft book data:', updatedBookData);
 
-        toast.success(
-          (t) => (
-            <ToastMessage
-              type="draft"
-              title="Draft Saved"
-              message={`"${newBook.title || 'Untitled Book'}" has been saved as draft.`}
-              onDismiss={() => toast.dismiss(t.id)}
-            />
-          ),
-          { duration: 4000 }
-        );
-      }
-      else if (actionType === 'cancel' && bookCreationStep > 0) {
-        toast.custom(
-          (t) => (
-            <ToastMessage
-              type="cancel"
-              title="Book Creation Cancelled"
-              message="Your changes were not saved"
-              onDismiss={() => toast.dismiss(t.id)}
-            />
-          ),
-          { duration: 3000 }
-        );
-      }
+          toast.success(
+            (t) => (
+              <ToastMessage
+                type="draft"
+                title="Draft Saved"
+                message={`"${newBook.title || 'Untitled Book'}" has been saved.`}
+                onDismiss={() => toast.dismiss(t.id)}
+              />
+            ),
+            { duration: 4000 }
+          );
+        }
 
-      // Reset state (for all cases except back navigation)
-      if (actionType !== 'back') {
         resetCreationState();
+        onClose();
+        return;
+      } catch (error) {
+        console.error('Error during book completion:', error);
+        toast.error(`Failed to ${actionType === 'publish' ? 'publish' : 'save'} book`);
+        return;
       }
+    }
 
-      // Close modal
+    // For cancel actions, check if we should show confirmation
+    const hasChanges = (
+      newBook.title ||
+      newBook.description ||
+      newBook.selectedCollections.length > 0 ||
+      newBook.selectedEntries.length > 0 ||
+      newBook.coverImage ||
+      newBook.backCoverNote ||
+      newBook.recipient
+    );
+
+    if (hasChanges) {
+      setShowExitConfirmation(true);
+    } else {
+      resetCreationState();
       onClose();
-    } catch (error) {
-      console.error('Error during book completion:', error);
-      toast.error(`Failed to ${actionType === 'publish' ? 'publish' : 'save'} book`);
     }
   };
 
@@ -254,7 +259,20 @@ const BookCreationModal = ({
         {/* Backdrop that blocks all pointer events */}
         <div
           className="fixed inset-0 bg-black bg-opacity-70 z-[100] overflow-y-auto"
-          onClick={() => handleComplete('cancel')}
+          onClick={() => {
+            // Check if there are any changes
+            const hasChanges = (
+              newBook.title ||
+              newBook.description ||
+              newBook.selectedCollections.length > 0 ||
+              newBook.selectedEntries.length > 0 ||
+              newBook.coverImage ||
+              newBook.backCoverNote ||
+              newBook.recipient
+            );
+
+            hasChanges ? setShowExitConfirmation(true) : handleComplete('cancel');
+          }}
           style={{ pointerEvents: 'auto' }}
         />
         <div className="fixed inset-0 flex items-center justify-center p-4 z-[101] pointer-events-none overflow-y-auto">
@@ -265,7 +283,19 @@ const BookCreationModal = ({
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-bold text-blue-800">Create New Book</h2>
                 <button
-                  onClick={() => handleComplete('cancel')}
+                  onClick={() => {
+                    const hasChanges = (
+                      newBook.title ||
+                      newBook.description ||
+                      newBook.selectedCollections.length > 0 ||
+                      newBook.selectedEntries.length > 0 ||
+                      newBook.coverImage ||
+                      newBook.backCoverNote ||
+                      newBook.recipient
+                    );
+
+                    hasChanges ? setShowExitConfirmation(true) : handleComplete('cancel');
+                  }}
                   className="text-gray-500 hover:text-gray-700"
                 >
                   <X className="w-5 h-5" />
@@ -445,6 +475,51 @@ const BookCreationModal = ({
                 </button>
               </div>
             </div>
+
+            {showExitConfirmation && (
+              <div className="fixed inset-0 flex items-center justify-center z-[102]">
+                <div
+                  className="fixed inset-0 bg-black bg-opacity-70"
+                  onClick={() => setShowExitConfirmation(false)}
+                />
+                <div className="bg-white rounded-xl p-6 z-[103] max-w-sm w-full mx-4">
+                  <h3 className="text-lg font-semibold text-gray-800 mb-4">Discard Changes?</h3>
+                  <p className="text-gray-600 mb-6">
+                    You have unsaved changes. Are you sure you want to exit?
+                  </p>
+                  <div className="flex justify-end space-x-3">
+                    <button
+                      onClick={() => setShowExitConfirmation(false)}
+                      className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg"
+                    >
+                      Continue Editing
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowExitConfirmation(false);
+                        toast.custom(
+                          (t) => (
+                            <ToastMessage
+                              type="cancel"
+                              title="Book Creation Cancelled"
+                              message="Your changes were not saved"
+                              onDismiss={() => toast.dismiss(t.id)}
+                            />
+                          ),
+                          { duration: 3000 }
+                        );
+                        resetCreationState();
+                        onClose();
+                      }}
+                      className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg"
+                    >
+                      Discard Changes
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {coverImageState.showCropModal && coverImageState.tempImage && (
               <ImageCropperModal
                 image={coverImageState.tempImage}
