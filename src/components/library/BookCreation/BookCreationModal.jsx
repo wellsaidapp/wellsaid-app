@@ -109,7 +109,7 @@ const BookCreationModal = ({
   // Then modify your handleComplete function:
   const handleComplete = async (actionType = 'cancel') => {
     try {
-      if (actionType === 'publish') {
+      if (actionType === 'publish' || actionType === 'draft') {
         // Generate the PDF before showing success message
         const pdfBlob = await generateBookPDF(newBook, entryOrder, insights);
 
@@ -123,30 +123,56 @@ const BookCreationModal = ({
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
 
+        // Prepare the updated book data
+        const updatedBookData = {
+          id: newBook.existingBookId,
+          name: newBook.title,
+          description: newBook.description,
+          collections: newBook.selectedCollections,
+          personId: newBook.recipient?.id,
+          personName: newBook.recipient?.name,
+          color: newBook.color,
+          fontStyle: newBook.fontStyle,
+          status: actionType === 'publish' ? 'Published' : 'Draft',
+          savedOn: new Date().toISOString().split('T')[0],
+          ...(actionType === 'publish' ? {
+            publishedState: {
+              pdfBase64: url, // In a real app, this should be the actual base64 string
+              contentSnapshot: entryOrder.map(id => {
+                const insight = insights.find(i => i.id === id);
+                return insight ? {
+                  insightId: insight.id,
+                  prompt: insight.prompt,
+                  response: insight.response
+                } : null;
+              }).filter(Boolean)
+            }
+          } : {
+            draftState: {
+              insightIds: entryOrder,
+              coverImage: newBook.coverImage
+            }
+          })
+        };
+
+        // Log the updated book data for debugging
+        console.log('Updated book data:', updatedBookData);
+
+        // Show success message
         toast.success(
           (t) => (
             <ToastMessage
               type="success"
-              title="Book Published"
-              message={`"${newBook.title || 'Untitled Book'}" is now available.`}
+              title={actionType === 'publish' ? "Book Published" : "Draft Updated"}
+              message={`"${newBook.title || 'Untitled Book'}" has been ${actionType === 'publish' ? 'published' : 'updated'}.`}
               onDismiss={() => toast.dismiss(t.id)}
             />
           ),
           { duration: 4000 }
         );
-      }
-      else if (actionType === 'draft') {
-        toast.custom(
-          (t) => (
-            <ToastMessage
-              type="draft"
-              title="Draft Saved"
-              message={`"${newBook.title || 'Untitled Book'}" was saved.`}
-              onDismiss={() => toast.dismiss(t.id)}
-            />
-          ),
-          { duration: 4000 }
-        );
+
+        // In a real app, you would update the book in your state/API here
+        // For example: updateBookInState(updatedBookData);
       }
       else if (actionType === 'cancel' && bookCreationStep > 0) {
         toast.custom(
@@ -170,8 +196,8 @@ const BookCreationModal = ({
       // Close modal
       onClose();
     } catch (error) {
-      console.error('Error during publish:', error);
-      toast.error('Failed to generate PDF');
+      console.error('Error during book completion:', error);
+      toast.error(`Failed to ${actionType === 'publish' ? 'publish' : 'save'} book`);
     }
   };
 

@@ -289,11 +289,43 @@ const LibraryView = ({
             }
           />
         ) : (
+          // In LibraryView.jsx, update the BooksList component
           <BooksList
             books={sortedBooks}
             onViewBook={(book) => {
-              console.log('Book selected:', book.id); // Debug log
-              setSelectedBook(book);
+              if (book.status === "Draft") {
+                // For draft books, open the creation modal with preloaded data
+                const draftInsights = book.draftState.insightIds.map(id =>
+                  insights.find(insight => insight.id === id)
+                ).filter(Boolean); // Filter out any undefined in case insights were deleted
+
+                setNewBook({
+                  title: book.name,
+                  description: book.description,
+                  selectedCollections: book.collections || [],
+                  selectedEntries: book.draftState.insightIds,
+                  coverImage: book.draftState.coverImage || null,
+                  backCoverNote: book.backCoverNote || '',
+                  recipient: book.personId || null, // Ensure this is set
+                  recipientName: book.personName || '', // Add this if needed
+                  showTags: true,
+                  fontStyle: book.fontStyle || 'serif',
+                  isBlackAndWhite: false,
+                  isDraft: true,
+                  color: book.color || 'bg-blue-500',
+                  existingBookId: book.id // Track the original book ID for updating
+                });
+
+                // Set the entry order to maintain the original arrangement
+                setEntryOrder(book.draftState.insightIds);
+
+                // Open the modal at the first step
+                setBookCreationStep(0);
+                setShowBookCreation(true);
+              } else {
+                // For published books, show the preview
+                setSelectedBook(book);
+              }
             }}
             onStartNewBook={handleStartNewBook}
             isCreating={currentView === 'arrangeBook'}

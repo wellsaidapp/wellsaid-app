@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from "react";
 import {
   Send, Mic, MicOff, ArrowRight, Check, Plus, User, Mail, Hash, Inbox, Trash2, Save, GripVertical, Bookmark, CheckCircle,
   MessageCircle, Wand2, BookOpen, Share2, ChevronLeft, X, Download, ImageIcon,
@@ -20,20 +20,36 @@ const Step2Insights = ({ newBook, setNewBook, insights, setEntryOrder, groupedEn
   );
 
   const toggleEntry = (entryId) => {
-    setNewBook(prev => ({
-      ...prev,
-      selectedEntries: prev.selectedEntries.includes(entryId)
+    setNewBook(prev => {
+      const newSelected = prev.selectedEntries.includes(entryId)
         ? prev.selectedEntries.filter(id => id !== entryId)
-        : [...prev.selectedEntries, entryId]
-    }));
+        : [...prev.selectedEntries, entryId];
 
-    // Initialize entry order when first selecting entries
-  if (!newBook.selectedEntries.includes(entryId)) {
-      setEntryOrder(prev => [...prev, entryId]);
-    } else {
-      setEntryOrder(prev => prev.filter(id => id !== entryId));
-    }
+      return {
+        ...prev,
+        selectedEntries: newSelected
+      };
+    });
+
+    setEntryOrder(prev => {
+      if (prev.includes(entryId)) {
+        return prev.filter(id => id !== entryId);
+      } else {
+        return [...prev, entryId];
+      }
+    });
   };
+
+  // Highlight existing selections from draft
+  useEffect(() => {
+    // This ensures entryOrder stays in sync when collections change
+    setEntryOrder(prev => {
+      const validEntries = prev.filter(id =>
+        uniqueEntries.some(entry => entry.id === id)
+      );
+      return [...new Set([...validEntries, ...newBook.selectedEntries])];
+    });
+  }, [newBook.selectedCollections]);
 
   return (
     <div>
