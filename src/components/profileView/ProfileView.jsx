@@ -13,6 +13,7 @@ import AIDisclosure from './disclosures/AIDisclosure';
 import { SHARED_BOOKS, getRecentBooks, getPublishedBooksCount } from '../../constants/sharedBooks';
 import ImageCropperModal from '../library/BookCreation/ImageCropperModal';
 import AccountSettings from './subcomponents/AccountSettings';
+import NotificationSettings from './subcomponents/NotificationSettings';
 
 const ProfileView = ({ user, insights = [], individuals = [], collections = [], setCurrentView }) => {
   const { expandedId, toggleDisclosure } = UseDisclosureToggle();
@@ -21,7 +22,7 @@ const ProfileView = ({ user, insights = [], individuals = [], collections = [], 
   const [avatarUploadTemp, setAvatarUploadTemp] = useState(null);
   const [showAvatarCropper, setShowAvatarCropper] = useState(false);
   const [croppedAvatarImage, setCroppedAvatarImage] = useState(null);
-
+  const [showNotificationSettings, setShowNotificationSettings] = useState(false);
   const disclosures = [
     {
       id: 'terms',
@@ -94,6 +95,24 @@ const ProfileView = ({ user, insights = [], individuals = [], collections = [], 
     );
   }
 
+  if (showNotificationSettings) {
+    return (
+      <NotificationSettings
+        user={currentUser}
+        onBack={() => setShowNotificationSettings(false)}
+        onUpdateNotificationSettings={(newSettings) => {
+          // Update your user's notification settings here
+          console.log('Updating notification settings:', newSettings);
+          // Typically you would make an API call here
+          setCurrentUser(prev => ({
+            ...prev,
+            notificationSettings: newSettings
+          }));
+        }}
+      />
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-blue-50 to-indigo-50 pb-20">
       <Header />
@@ -119,7 +138,11 @@ const ProfileView = ({ user, insights = [], individuals = [], collections = [], 
             onClick={() => setShowAccountSettings(true)}
             showChevron={true}
           />
-          <ProfileMenuItem icon={<Bell size={20} />} label="Notification Preferences" />
+          <ProfileMenuItem
+            icon={<Bell size={20}/>}
+            label="Notification Preferences"
+            onClick={() => setShowNotificationSettings(true)}
+          />
           <ProfileMenuItem icon={<Users size={20} />} label="Help & Support" />
 
           <DisclosureAccordion
