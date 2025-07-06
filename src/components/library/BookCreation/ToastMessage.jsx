@@ -27,12 +27,12 @@ const ToastMessage = ({ type, title, message, onDismiss }) => {
       buttonColor: 'text-blue-400 hover:text-blue-600'
     },
     cancel: {
-      bg: 'bg-gray-50',
-      border: 'border-gray-200',
-      icon: <Info className="w-5 h-5 text-gray-500 flex-shrink-0" />,
-      titleColor: 'text-gray-800',
-      messageColor: 'text-gray-700',
-      buttonColor: 'text-gray-400 hover:text-gray-600'
+      bg: 'bg-red-50',
+      border: 'border-red-200',
+      icon: <Info className="w-5 h-5 text-red-500 flex-shrink-0" />,
+      titleColor: 'text-red-800',
+      messageColor: 'text-red-700',
+      buttonColor: 'text-red-400 hover:text-red-600'
     },
     error: {
       bg: 'bg-red-50',

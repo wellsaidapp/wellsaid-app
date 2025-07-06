@@ -109,8 +109,8 @@ const BookCreationModal = ({
   // Then modify your handleComplete function:
   const handleComplete = async (actionType = 'cancel') => {
     try {
-      if (actionType === 'publish' || actionType === 'draft') {
-        // Generate the PDF before showing success message
+      if (actionType === 'publish') {
+        // Only generate PDF for publishing, not for drafts
         const pdfBlob = await generateBookPDF(newBook, entryOrder, insights);
 
         // Create download link
@@ -133,46 +133,67 @@ const BookCreationModal = ({
           personName: newBook.recipient?.name,
           color: newBook.color,
           fontStyle: newBook.fontStyle,
-          status: actionType === 'publish' ? 'Published' : 'Draft',
+          status: 'Published', // Hardcoded since we're in publish branch
           savedOn: new Date().toISOString().split('T')[0],
-          ...(actionType === 'publish' ? {
-            publishedState: {
-              pdfBase64: url, // In a real app, this should be the actual base64 string
-              contentSnapshot: entryOrder.map(id => {
-                const insight = insights.find(i => i.id === id);
-                return insight ? {
-                  insightId: insight.id,
-                  prompt: insight.prompt,
-                  response: insight.response
-                } : null;
-              }).filter(Boolean)
-            }
-          } : {
-            draftState: {
-              insightIds: entryOrder,
-              coverImage: newBook.coverImage
-            }
-          })
+          publishedState: {
+            pdfBase64: url, // In a real app, this should be the actual base64 string
+            contentSnapshot: entryOrder.map(id => {
+              const insight = insights.find(i => i.id === id);
+              return insight ? {
+                insightId: insight.id,
+                prompt: insight.prompt,
+                response: insight.response
+              } : null;
+            }).filter(Boolean)
+          }
         };
 
-        // Log the updated book data for debugging
-        console.log('Updated book data:', updatedBookData);
+        console.log('Published book data:', updatedBookData);
 
-        // Show success message
         toast.success(
           (t) => (
             <ToastMessage
               type="success"
-              title={actionType === 'publish' ? "Book Published" : "Draft Updated"}
-              message={`"${newBook.title || 'Untitled Book'}" has been ${actionType === 'publish' ? 'published' : 'updated'}.`}
+              title="Book Published"
+              message={`"${newBook.title || 'Untitled Book'}" has been published.`}
               onDismiss={() => toast.dismiss(t.id)}
             />
           ),
           { duration: 4000 }
         );
+      }
+      else if (actionType === 'draft') {
+        // Handle draft saving without PDF generation
+        const updatedBookData = {
+          id: newBook.existingBookId,
+          name: newBook.title,
+          description: newBook.description,
+          collections: newBook.selectedCollections,
+          personId: newBook.recipient?.id,
+          personName: newBook.recipient?.name,
+          color: newBook.color,
+          fontStyle: newBook.fontStyle,
+          status: 'Draft',
+          savedOn: new Date().toISOString().split('T')[0],
+          draftState: {
+            insightIds: entryOrder,
+            coverImage: newBook.coverImage
+          }
+        };
 
-        // In a real app, you would update the book in your state/API here
-        // For example: updateBookInState(updatedBookData);
+        console.log('Draft book data:', updatedBookData);
+
+        toast.success(
+          (t) => (
+            <ToastMessage
+              type="draft"
+              title="Draft Saved"
+              message={`"${newBook.title || 'Untitled Book'}" has been saved as draft.`}
+              onDismiss={() => toast.dismiss(t.id)}
+            />
+          ),
+          { duration: 4000 }
+        );
       }
       else if (actionType === 'cancel' && bookCreationStep > 0) {
         toast.custom(

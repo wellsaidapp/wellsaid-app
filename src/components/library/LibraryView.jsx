@@ -310,10 +310,11 @@ const LibraryView = ({
                   recipientName: book.personName || '', // Add this if needed
                   showTags: true,
                   fontStyle: book.fontStyle || 'serif',
-                  isBlackAndWhite: false,
+                  isBlackAndWhite: book.isBlackAndWhite || false,
                   isDraft: true,
                   color: book.color || 'bg-blue-500',
-                  existingBookId: book.id // Track the original book ID for updating
+                  existingBookId: book.id, // Track the original book ID for updating
+                  coverMode: book.coverMode || 'color'
                 });
 
                 // Set the entry order to maintain the original arrangement
