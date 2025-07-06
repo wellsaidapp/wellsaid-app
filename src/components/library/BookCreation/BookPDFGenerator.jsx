@@ -387,6 +387,7 @@ const renderBackCoverPage = async (
   const userInfoSpacing = 8;
   const logoMaxHeight = 20;
   const logoSpacing = 15;
+
   const bottomPadding = 10;
   const noteToUserSpacing = 20;
   const availableHeight = contentHeight - (noteToUserSpacing + avatarSize + userInfoSpacing + 12 + logoSpacing + logoMaxHeight + bottomPadding) - 20;
@@ -413,7 +414,12 @@ const renderBackCoverPage = async (
   const userInfoY = noteEndY + noteToUserSpacing;
   const nameY = userInfoY + avatarSize + userInfoSpacing;
   const adjustedNameY = nameY + 4;
-  const logoY = margin + contentHeight - logoMaxHeight - bottomPadding;
+
+  // Match the page number position from other pages
+  const pageNumberYPosition = inchToPt(5) - margin + 5; // Same as addPageNumber function
+  const logoY = pageNumberYPosition - (logoMaxHeight / 2); // Center logo vertically at this position
+
+  // const logoY = margin + contentHeight - logoMaxHeight - bottomPadding;
 
   if (logoBase64) {
     try {
