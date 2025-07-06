@@ -31,23 +31,33 @@ const Step2Insights = ({ newBook, setNewBook, insights, setEntryOrder, groupedEn
       };
     });
 
+    // Update entryOrder to match selected entries
     setEntryOrder(prev => {
-      if (prev.includes(entryId)) {
-        return prev.filter(id => id !== entryId);
-      } else {
-        return [...prev, entryId];
-      }
+      const newOrder = prev.includes(entryId)
+        ? prev.filter(id => id !== entryId)
+        : [...prev, entryId];
+
+      // Ensure we only keep entries that exist in uniqueEntries
+      return newOrder.filter(id =>
+        uniqueEntries.some(entry => entry.id === id)
+      );
     });
   };
 
   // Highlight existing selections from draft
   useEffect(() => {
-    // This ensures entryOrder stays in sync when collections change
     setEntryOrder(prev => {
+      // Filter out entries that are no longer in selected collections
       const validEntries = prev.filter(id =>
         uniqueEntries.some(entry => entry.id === id)
       );
-      return [...new Set([...validEntries, ...newBook.selectedEntries])];
+
+      // Add any newly selected entries that aren't already in the order
+      const newEntries = newBook.selectedEntries.filter(id =>
+        !validEntries.includes(id) && uniqueEntries.some(entry => entry.id === id)
+      );
+
+      return [...validEntries, ...newEntries];
     });
   }, [newBook.selectedCollections]);
 

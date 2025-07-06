@@ -253,6 +253,20 @@ const BookCreationModal = ({
     }
   };
 
+  // Add this useEffect hook right after your other state declarations
+  useEffect(() => {
+    // Filter entryOrder to only include insights that are still selected
+    if (bookCreationStep >= 2) { // Only needed when we get to Step 3 and beyond
+      const filteredOrder = entryOrder.filter(id =>
+        newBook.selectedEntries.includes(id)
+      );
+
+      if (filteredOrder.length !== entryOrder.length) {
+        setEntryOrder(filteredOrder);
+      }
+    }
+  }, [bookCreationStep, newBook.selectedEntries]);
+
   return (
     <>
       <DndProvider backend={getBackend()}>
@@ -363,6 +377,7 @@ const BookCreationModal = ({
                   newBook={newBook}
                   setNewBook={setNewBook}
                   insights={insights}
+                  entryOrder={entryOrder}
                   setEntryOrder={setEntryOrder}
                   groupedEntries={groupedEntries}
                 />
