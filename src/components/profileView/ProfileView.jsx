@@ -12,11 +12,12 @@ import PrivacyPolicy from './disclosures/PrivacyPolicy';
 import AIDisclosure from './disclosures/AIDisclosure';
 import { SHARED_BOOKS, getRecentBooks, getPublishedBooksCount } from '../../constants/sharedBooks';
 import ImageCropperModal from '../library/BookCreation/ImageCropperModal';
+import AccountSettings from './subcomponents/AccountSettings';
 
 const ProfileView = ({ user, insights = [], individuals = [], collections = [], setCurrentView }) => {
   const { expandedId, toggleDisclosure } = UseDisclosureToggle();
-
-  // Add these state variables for avatar cropping
+  const [currentUser, setCurrentUser] = useState(user);
+  const [showAccountSettings, setShowAccountSettings] = useState(false);
   const [avatarUploadTemp, setAvatarUploadTemp] = useState(null);
   const [showAvatarCropper, setShowAvatarCropper] = useState(false);
   const [croppedAvatarImage, setCroppedAvatarImage] = useState(null);
@@ -51,6 +52,48 @@ const ProfileView = ({ user, insights = [], individuals = [], collections = [], 
     console.log('New avatar image:', croppedImage);
   };
 
+  const handleUpdateUser = async (updatedData) => {
+    try {
+      // Here you would typically make an API call to update the user
+      // For now, we'll just update the local state
+      setCurrentUser(prev => ({
+        ...prev,
+        ...updatedData
+      }));
+      console.log('User updated:', updatedData);
+      // If you had an API call, it would look something like:
+      // await api.updateUser(currentUser.id, updatedData);
+    } catch (error) {
+      console.error('Failed to update user:', error);
+      // You might want to show an error message to the user here
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    try {
+      // Here you would typically make an API call to delete the account
+      console.log('Account deletion confirmed for user:', currentUser.id);
+      // If you had an API call, it would look something like:
+      // await api.deleteUser(currentUser.id);
+      // Then you would typically redirect to the login/signup page
+      // window.location.href = '/login';
+    } catch (error) {
+      console.error('Failed to delete account:', error);
+      // You might want to show an error message to the user here
+    }
+  };
+
+  if (showAccountSettings) {
+    return (
+      <AccountSettings
+        user={currentUser}
+        onBack={() => setShowAccountSettings(false)}
+        onUpdateUser={handleUpdateUser}
+        onDeleteAccount={handleDeleteAccount}
+      />
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-blue-50 to-indigo-50 pb-20">
       <Header />
@@ -70,7 +113,12 @@ const ProfileView = ({ user, insights = [], individuals = [], collections = [], 
         />
 
         <div className="space-y-3">
-          <ProfileMenuItem icon={<Settings size={20} />} label="Account Settings" />
+          <ProfileMenuItem
+            icon={<Settings size={20}/>}
+            label="Account Settings"
+            onClick={() => setShowAccountSettings(true)}
+            showChevron={true}
+          />
           <ProfileMenuItem icon={<Bell size={20} />} label="Notification Preferences" />
           <ProfileMenuItem icon={<Users size={20} />} label="Help & Support" />
 
