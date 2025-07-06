@@ -310,6 +310,7 @@ const LibraryView = ({
             <div className="relative w-full max-w-4xl bg-white rounded-lg shadow-xl">
               <PDFViewerWrapper
                 file={selectedBook.pdfBase64}
+                name={selectedBook.name}  // Add this line
                 onClose={() => {
                   setSelectedBook(null);
                   setCurrentPage(0);
