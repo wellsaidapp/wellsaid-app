@@ -1,45 +1,5 @@
 export const INSIGHTS = [
   {
-    id: 1,
-    prompt: "What are you most excited about for your summer intensive?",
-    response: "I'm really looking forward to learning new techniques from professional dancers and pushing myself beyond my current limits.",
-    date: '2025-06-01',
-    collections: ['sage-summer-intensive', 'fitness-sports', 'personal-growth'],
-    userId: '1',
-    personIds: [1],
-    bookIds: []
-  },
-  {
-    id: 2,
-    prompt: "What would make your 17th birthday truly special?",
-    response: "I'd love a small gathering with close friends, maybe some video games and pizza. No big party this year.",
-    date: '2025-01-15',
-    collections: ['cohens-birthday', 'events-celebrations', 'family'],
-    userId: '1',
-    personIds: [2],
-    bookIds: []
-  },
-  {
-    id: 3,
-    prompt: "A reflection for Sage before her summer intensive begins",
-    response: "I know you’re feeling a mix of nerves and excitement — and that’s exactly where growth happens. Trust yourself and let this experience shape you in ways you can’t yet imagine.",
-    date: '2025-05-28',
-    collections: ['sage-summer-intensive', 'fitness-sports', 'personal-growth'],
-    userId: '1',
-    personIds: [1],
-    bookIds: []
-  },
-  {
-    id: 4,
-    prompt: "A note for Cohen’s 17th birthday",
-    response: "Seventeen suits you. You’ve grown into a thoughtful, funny, and driven young man — and I’m proud of the way you carry yourself in the world. Here’s to another year of discovering who you’re becoming.",
-    date: '2025-01-10',
-    collections: ['family', 'cohens-birthday', 'personal-growth'],
-    userId: '1',
-    personIds: [2],
-    bookIds: []
-  },
-  {
     id: 1001,
     prompt: "What’s a principle you and your spouse have committed to in your marriage?",
     response: "We’ve committed to not use the words 'always' or 'never' when describing one another in a negative way. It helps us stay constructive and avoid exaggeration in conflict.",

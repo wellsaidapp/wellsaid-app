@@ -111,10 +111,6 @@ const HelpAndSupport = ({ onBack }) => {
                 <div className="text-sm text-gray-500">Learn how to get the most from WellSaid</div>
               </a>
               <a href="#" className="p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors block">
-                <div className="font-medium text-gray-800">Community Forum</div>
-                <div className="text-sm text-gray-500">Connect with other users</div>
-              </a>
-              <a href="#" className="p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors block">
                 <div className="font-medium text-gray-800">Video Tutorials</div>
                 <div className="text-sm text-gray-500">Watch step-by-step guides</div>
               </a>
