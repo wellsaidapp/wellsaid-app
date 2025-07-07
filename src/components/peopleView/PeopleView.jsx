@@ -8,12 +8,17 @@ import { SYSTEM_COLLECTIONS } from '../../constants/systemCollections';
 import ImageCropperModal from '../library/BookCreation/ImageCropperModal';
 import PDFViewerWrapper from '../library/BooksView/PDFViewerWrapper';
 import BookPreviewModal from '../home/BookPreviewModal';
+import BookEditor from '../library/BooksView/BookEditor';
 
 const PeopleView = ({ individuals, insights, collections, sharedBooks }) => {
   const [selectedPerson, setSelectedPerson] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedBook, setSelectedBook] = useState(null);
   const [currentPage, setCurrentPage] = useState(0);
+
+  const [editingBook, setEditingBook] = useState(null);
+  const [returnToViewer, setReturnToViewer] = useState(false);
+  const [previousViewerState, setPreviousViewerState] = useState(null);
 
   const [avatarUploadTemp, setAvatarUploadTemp] = useState(null); // base64 temp image
   const [showAvatarCropper, setShowAvatarCropper] = useState(false);
@@ -164,6 +169,31 @@ const PeopleView = ({ individuals, insights, collections, sharedBooks }) => {
     isImageUsed: Boolean(p.avatarImage?.trim?.())
   })));
 
+  if (editingBook) {
+    return (
+      <BookEditor
+        book={editingBook}
+        onClose={() => {
+          setEditingBook(null);
+          setReturnToViewer(false);
+        }}
+        onSave={async (updatedBook) => {
+          // TODO: Implement your save logic here
+          // await updateBook(updatedBook);
+          setEditingBook(null);
+          setReturnToViewer(false);
+        }}
+        onBackToViewer={() => {
+          if (returnToViewer && previousViewerState) {
+            setSelectedBook(previousViewerState.book);
+          }
+          setEditingBook(null);
+          setReturnToViewer(false);
+        }}
+      />
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-blue-50 to-indigo-50 pb-20">
       <Header />
@@ -216,6 +246,15 @@ const PeopleView = ({ individuals, insights, collections, sharedBooks }) => {
             onClose={() => {
               setSelectedBook(null);
               setCurrentPage(0);
+            }}
+            onEdit={(book) => {
+              setPreviousViewerState({
+                book: selectedBook,
+                showPdfViewer: true
+              });
+              setEditingBook(book);
+              setSelectedBook(null);
+              setReturnToViewer(true);
             }}
           />
         ) : (
