@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Lightbulb, ArrowRight, Pencil, Zap, Clock, Sparkles, Calendar, Trophy } from 'lucide-react';
 import { SHARED_BOOKS, getRecentBooks, getPublishedBooksCount } from '../../constants/sharedBooks';
 import { INSIGHTS } from '../../constants/insights';
@@ -16,6 +16,7 @@ import WeeklyProgress from './WeeklyProgress';
 import SharedBooksSection from './SharedBooksSection';
 import LegacyStats from './LegacyStats';
 import PDFViewerWrapper from '../library/BooksView/PDFViewerWrapper';
+import BookEditor from '../library/BooksView/BookEditor';
 import { isThisWeek, parseISO } from 'date-fns';
 
 const HomeView = ({
@@ -37,7 +38,9 @@ const HomeView = ({
   const [currentQuestion, setCurrentQuestion] = useState('');
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const recentBooks = getRecentBooks(2);
-
+  const [editingBook, setEditingBook] = useState(null);
+  const [returnToViewer, setReturnToViewer] = useState(false);
+  const [previousViewerState, setPreviousViewerState] = useState(null);
   const resetForm = () => {
     setSelectedOccasion(null);
     setQuestionSet([]);
@@ -56,6 +59,33 @@ const HomeView = ({
         setCurrentQuestionIndex={setCurrentQuestionIndex}
         setCurrentView={setCurrentView}
         captureMode={captureMode}
+      />
+    );
+  }
+
+  // In HomeView.jsx - simplify the BookEditor props
+  // In HomeView.jsx - update the BookEditor props
+  if (editingBook) {
+    return (
+      <BookEditor
+        book={editingBook}
+        onClose={() => {
+          setEditingBook(null);
+          setReturnToViewer(false);
+        }}
+        onSave={async (updatedBook) => {
+          await updatePublishedBook(updatedBook);
+          setEditingBook(null);
+          setReturnToViewer(false);
+        }}
+        onBackToViewer={() => {
+          if (returnToViewer && previousViewerState) {
+            setSelectedBook(previousViewerState.book);
+            setShowPdfViewer(true);
+          }
+          setEditingBook(null);
+          setReturnToViewer(false);
+        }}
       />
     );
   }
@@ -126,6 +156,15 @@ const HomeView = ({
             onClose={() => {
               setSelectedBook(null);
               setShowPdfViewer(false);
+            }}
+            onEdit={(book) => {  // <-- THIS IS WHERE YOU ADD IT
+              setPreviousViewerState({
+                book: selectedBook,
+                showPdfViewer: true
+              });
+              setEditingBook(book);
+              setShowPdfViewer(false);
+              setReturnToViewer(true);
             }}
           />
         ) : (

@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
 import { X, ChevronLeft, ChevronRight, MoreHorizontal, Download, ShoppingCart, Edit } from 'lucide-react';
+import BookEditor from './BookEditor';
 
 pdfjs.GlobalWorkerOptions.workerSrc =
   process.env.NODE_ENV === 'development'
     ? `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`
     : '/pdf.worker.min.js';
 
-export default function PDFViewerWrapper({ book, onClose }) {
+export default function PDFViewerWrapper({ book, onClose, onEdit }) {
   const file = book.status === "Published"
     ? book.publishedState.pdfBase64
     : null;
@@ -15,25 +16,31 @@ export default function PDFViewerWrapper({ book, onClose }) {
   const [numPages, setNumPages] = useState(null);
   const [pageNumber, setPageNumber] = useState(1);
 
+  // Update handleEdit function
+  const handleEdit = () => {
+    onEdit(book);
+    onClose(); // Close the PDF viewer
+  };
+
   const [dimensions, setDimensions] = useState({
     width: 800,
     height: 1000
   });
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  const handleEdit = () => {
-    if (book.status === "Draft") {
-      // Open in editor with draft state
-      openBookEditor(book.id);
-    } else {
-      // Convert published book to draft first
-      if (confirm("Editing will convert this published book to a draft. Continue?")) {
-        convertToDraft(book.id);
-        openBookEditor(book.id);
-      }
-    }
-    onClose();
-  };
+  // const handleEdit = () => {
+  //   if (book.status === "Draft") {
+  //     // Open in editor with draft state
+  //     openBookEditor(book.id);
+  //   } else {
+  //     // Convert published book to draft first
+  //     if (confirm("Editing will convert this published book to a draft. Continue?")) {
+  //       convertToDraft(book.id);
+  //       openBookEditor(book.id);
+  //     }
+  //   }
+  //   onClose();
+  // };
 
   if (book.status === "Draft" && !file) {
     return (
