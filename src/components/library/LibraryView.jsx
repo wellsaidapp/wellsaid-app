@@ -16,6 +16,7 @@ import BooksList from './BooksView/BooksList';
 import BookPreviewModal from '../home/BookPreviewModal';
 import CreateBook from './BookCreation/CreateBook';
 import PDFViewerWrapper from './BooksView/PDFViewerWrapper';
+import BookEditor from './BooksView/BookEditor';
 
 const LibraryView = ({
   insights,
@@ -59,6 +60,10 @@ const LibraryView = ({
     fontStyle: 'serif',
     isDraft: false
   });
+  const [editingBook, setEditingBook] = useState(null);
+  const [returnToViewer, setReturnToViewer] = useState(false);
+  const [previousViewerState, setPreviousViewerState] = useState(null);
+
   const groupedEntries = insights.reduce((acc, entry) => {
     if (!entry.collections || entry.collections.length === 0) {
       if (!acc.unorganized) acc.unorganized = [];
@@ -85,6 +90,16 @@ const LibraryView = ({
     const dateB = new Date(b.savedOn);
     return sortDirection === 'asc' ? dateA - dateB : dateB - dateA;
   });
+
+  const handleEditBook = (book) => {
+    setPreviousViewerState({
+      book: selectedBook,
+      showPdfViewer: true
+    });
+    setEditingBook(book);
+    setSelectedBook(null); // Close the viewer
+    setReturnToViewer(true);
+  };
 
   // Derived state
   const filteredSystemCollections = SYSTEM_COLLECTIONS.filter(collection => {
@@ -227,9 +242,36 @@ const LibraryView = ({
     );
   };
 
+
+
   useEffect(() => {
     console.log('Selected book changed:', selectedBook);
   }, [selectedBook]);
+
+  if (editingBook) {
+    return (
+      <BookEditor
+        book={editingBook}
+        onClose={() => {
+          setEditingBook(null);
+          setReturnToViewer(false);
+        }}
+        onSave={async (updatedBook) => {
+          // TODO: Implement your save logic here
+          // await updateBook(updatedBook);
+          setEditingBook(null);
+          setReturnToViewer(false);
+        }}
+        onBackToViewer={() => {
+          if (returnToViewer && previousViewerState) {
+            setSelectedBook(previousViewerState.book);
+          }
+          setEditingBook(null);
+          setReturnToViewer(false);
+        }}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-blue-50 to-indigo-50 pb-20">
@@ -344,6 +386,15 @@ const LibraryView = ({
           <PDFViewerWrapper
             book={selectedBook}
             onClose={() => setSelectedBook(null)}
+            onEdit={(book) => {
+              setPreviousViewerState({
+                book: selectedBook,
+                showPdfViewer: true
+              });
+              setEditingBook(book);
+              setSelectedBook(null);
+              setReturnToViewer(true);
+            }}
           />
         ) : (
           <BookPreviewModal
@@ -373,6 +424,7 @@ const LibraryView = ({
           setCurrentView={setCurrentView}
         />
       )}
+
 
       {showTagEditor && selectedEntry && (
         <TagEditor
