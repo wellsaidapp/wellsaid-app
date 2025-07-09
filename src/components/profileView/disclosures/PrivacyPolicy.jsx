@@ -39,8 +39,12 @@ const PrivacyPolicy = () => (
     <p className="mb-4">
       You may request to delete your data or account by contacting us at{' '}
       <a href="mailto:hello@wellsaid.com" className="text-blue-600 underline">
-        hello@wellsaid.com
+        hello@wellsaidapp.com
       </a>. We will respond within 30 days.
+    </p>
+    <h3 className="font-semibold mt-4 mb-2">5. Data Retention</h3>
+    <p className="mb-4">
+      If you cancel your subscription or stop using the app, we may retain your data for up to 12 months to allow for easy reactivation and continuity of your journal. After this period, your data may be permanently deleted unless otherwise requested. You may contact us at any time to request immediate deletion of your data.
     </p>
   </div>
 );

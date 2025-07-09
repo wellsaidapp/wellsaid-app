@@ -329,6 +329,7 @@ const LibraryView = ({
             onClearFilters={() =>
               setSelectedFilters({ personIds: [], topics: [], entryTypes: [] })
             }
+            isPersonView={false}
           />
         ) : (
           // In LibraryView.jsx, update the BooksList component

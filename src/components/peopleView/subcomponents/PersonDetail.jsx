@@ -272,6 +272,8 @@ const PersonDetail = ({
           onEntryDelete={onEntryDelete}
           onCollectionToggle={onCollectionToggle}
           onRecipientToggle={onRecipientToggle}
+          isPersonView={true}
+          currentPersonId={person.id}
         />
       </div>
 

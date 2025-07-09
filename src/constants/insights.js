@@ -4,7 +4,7 @@ export const INSIGHTS = [
     prompt: "What’s a principle you and your spouse have committed to in your marriage?",
     response: "We’ve committed to not use the words 'always' or 'never' when describing one another in a negative way. It helps us stay constructive and avoid exaggeration in conflict.",
     date: '2025-07-02',
-    collections: ['relationships'],
+    collections: ['relationships', 'sage-summer-intensive', 'cohens-birthday'],
     userId: '1',
     personIds: [1, 2],
     bookIds: []
@@ -14,7 +14,7 @@ export const INSIGHTS = [
     prompt: "Has your mindset around parenting changed over time?",
     response: "I used to think kids made life messier. But the mindset shift I’ve made is this: my kids *are* my nice things. They are infinitely more valuable than anything they might break.",
     date: '2025-07-02',
-    collections: ['parenting', 'personal-growth'],
+    collections: ['parenting', 'personal-growth', 'cohens-birthday'],
     userId: '1',
     personIds: [1, 2],
     bookIds: []
