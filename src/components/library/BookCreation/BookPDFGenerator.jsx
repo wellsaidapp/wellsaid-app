@@ -83,7 +83,7 @@ const addPageNumber = (doc, currentPage, totalPages, margin) => {
   doc.setFontSize(8);
   const centerX = inchToPt(5) / 2; // Center of the 5" page
   doc.text(
-    `Page ${currentPage} of ${totalPages - 1}`,
+    `Page ${currentPage} of ${totalPages}`,
     centerX,
     inchToPt(5) - margin + 5,
     { align: 'center' }
@@ -157,6 +157,9 @@ export const generateBookPDF = async (
     { type: 'backCover' }
   ];
 
+  // Calculate content pages (excluding cover and back cover)
+  const contentPageCount = previewPages.length - 2;
+
   for (let pageIndex = 0; pageIndex < previewPages.length; pageIndex++) {
     const page = previewPages[pageIndex];
     if (pageIndex > 0) doc.addPage([inchToPt(5), inchToPt(5)]);
@@ -187,7 +190,8 @@ export const generateBookPDF = async (
     }
 
     if (page.type !== 'cover' && page.type !== 'backCover') {
-      addPageNumber(doc, pageIndex, previewPages.length, margin);
+      const contentPageNumber = pageIndex;
+      addPageNumber(doc, contentPageNumber, contentPageCount, margin);
     }
   }
 
