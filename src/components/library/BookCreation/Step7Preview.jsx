@@ -10,7 +10,6 @@ const Step7Preview = ({
   const [currentPreviewPage, setCurrentPreviewPage] = useState(0);
   const [isFlipping, setIsFlipping] = useState(false);
   const isSerifFont = newBook.fontStyle === 'serif';
-  // Get all entries in order
   const orderedEntries = entryOrder.map(id => insights.find(e => e.id === id)).filter(Boolean);
 
   const fontClass = isSerifFont ? 'font-serif' : 'font-sans';
@@ -23,7 +22,7 @@ const Step7Preview = ({
     { type: 'backCover' }
   ];
   const currentPage = previewPages[currentPreviewPage];
-
+  const totalContentPages = previewPages.length - 2; // Exclude front and back covers
 
   // 🔍 Log all book data for inspection
   useEffect(() => {
@@ -152,7 +151,10 @@ const Step7Preview = ({
             }`}>
               {currentPage.type !== 'cover' && (
                 <button
-                  onClick={() => setIsSerifFont((prev) => !prev)}
+                  onClick={() => setNewBook(prev => ({
+                    ...prev,
+                    fontStyle: prev.fontStyle === 'serif' ? 'sans' : 'serif'
+                  }))}
                   className="absolute top-3 right-3 z-10 bg-white border border-gray-200 rounded-full p-2 shadow-md hover:bg-gray-100 transition"
                   title={isSerifFont ? 'Switch to Sans Serif' : 'Switch to Serif'}
                 >
@@ -190,7 +192,10 @@ const Step7Preview = ({
               isFlipping ? 'scale-95 opacity-70' : 'scale-100 opacity-100'
             }`}>
             <button
-              onClick={() => setIsSerifFont((prev) => !prev)}
+              onClick={() => setNewBook(prev => ({
+                ...prev,
+                fontStyle: prev.fontStyle === 'serif' ? 'sans' : 'serif'
+              }))}
               className="absolute top-3 right-3 z-10 bg-white border border-gray-200 rounded-full p-2 shadow-md hover:bg-gray-100 transition"
               title={isSerifFont ? 'Switch to Sans Serif' : 'Switch to Serif'}
             >
@@ -233,7 +238,13 @@ const Step7Preview = ({
             </button>
 
             <span className="text-sm font-medium text-gray-600">
-              Page {currentPreviewPage + 1} of {previewPages.length}
+              {currentPreviewPage === 0 ? (
+                'Front Cover'
+              ) : currentPreviewPage === previewPages.length - 1 ? (
+                'Back Cover'
+              ) : (
+                `Page ${currentPreviewPage} of ${totalContentPages}`
+              )}
             </span>
 
             <button
