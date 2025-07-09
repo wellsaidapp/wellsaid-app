@@ -111,7 +111,17 @@ const PeopleView = ({ individuals, insights, collections, sharedBooks }) => {
   const [sortDirection, setSortDirection] = useState('asc'); // asc | desc
 
   const getSortedEnrichedIndividuals = () => {
-    return [...enrichedIndividuals].sort((a, b) => {
+    // First filter by search query
+    const filteredIndividuals = enrichedIndividuals.filter(person => {
+      if (!searchQuery) return true;
+      const query = searchQuery.toLowerCase();
+      return (
+        person.name.toLowerCase().includes(query) ||
+        (person.relationship && person.relationship.toLowerCase().includes(query))
+      );
+    });
+    // Then sort the filtered results
+    return filteredIndividuals.sort((a, b) => {
       let aVal, bVal;
 
       switch (sortField) {
