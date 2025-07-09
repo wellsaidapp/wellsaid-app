@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
 import { SYSTEM_COLLECTIONS } from '../../constants/systemCollections';
 import { CUSTOM_COLLECTIONS } from '../../constants/collections';
@@ -43,7 +43,7 @@ const LibraryView = ({
   const [isFlipping, setIsFlipping] = useState(false);
   const [showBookCreation, setShowBookCreation] = useState(false);
   const [bookCreationStep, setBookCreationStep] = useState(0); // Add this to your state
-  //const [currentView, setCurrentView] = useState('collections');
+  const [hasPerformedSearch, setHasPerformedSearch] = useState(false);
   const [showInactiveCollections, setShowInactiveCollections] = useState(false);
   const [selectedEntry, setSelectedEntry] = useState(null);
   const [showTagEditor, setShowTagEditor] = useState(false);
@@ -64,20 +64,32 @@ const LibraryView = ({
   const [returnToViewer, setReturnToViewer] = useState(false);
   const [previousViewerState, setPreviousViewerState] = useState(null);
 
-  const groupedEntries = insights.reduce((acc, entry) => {
-    if (!entry.collections || entry.collections.length === 0) {
-      if (!acc.unorganized) acc.unorganized = [];
-      acc.unorganized.push(entry);
-      return acc;
-    }
+  const shouldUseSearchResults =
+    searchQuery.trim().length > 0 && searchResults.length > 0;
 
-    entry.collections.forEach(collectionId => {
-      if (!acc[collectionId]) acc[collectionId] = [];
-      acc[collectionId].push(entry);
-    });
+  const insightsToUse = shouldUseSearchResults ||
+    Object.values(selectedFilters).some(f => f.length > 0)
+    ? searchResults
+    : insights;
 
-    return acc;
-  }, {});
+    const groupedEntries = useMemo(() => {
+      return insightsToUse.reduce((acc, entry) => {
+        // Handle unorganized entries (no collections)
+        if (!entry.collections || entry.collections.length === 0) {
+          if (!acc.unorganized) acc.unorganized = [];
+          acc.unorganized.push(entry);
+          return acc;
+        }
+
+        // Group entries by their collections
+        entry.collections.forEach(collectionId => {
+          if (!acc[collectionId]) acc[collectionId] = [];
+          acc[collectionId].push(entry);
+        });
+
+        return acc;
+      }, {});
+    }, [insightsToUse]);
 
   const [sortDirection, setSortDirection] = useState('desc');
 
@@ -130,31 +142,56 @@ const LibraryView = ({
   });
 
   // Handlers
-  const performRAGSearch = async (query) => {
-    setIsSearching(true);
-    await new Promise(resolve => setTimeout(resolve, 500));
-    const results = insights.filter(entry => {
-      const matchesText = entry.text?.toLowerCase().includes(query.toLowerCase()) ||
-                        entry.content?.toLowerCase().includes(query.toLowerCase()) ||
-                        entry.question?.toLowerCase().includes(query.toLowerCase());
-      const matchesTopics = selectedFilters.topics.length === 0 ||
-                          entry.topics?.some(topic => selectedFilters.topics.includes(topic));
-      const matchesPersons = selectedFilters.personIds.length === 0 ||
-                          entry.personIds?.some(id => selectedFilters.personIds.includes(id));
-      const matchesType = selectedFilters.entryTypes.length === 0 ||
-                        (selectedFilters.entryTypes.includes('draft') && entry.isDraft) ||
-                        (selectedFilters.entryTypes.includes('voice') && entry.isVoiceNote) ||
-                        (selectedFilters.entryTypes.includes('insight') && !entry.isDraft && !entry.isVoiceNote);
+  const performRAGSearch = async (query = '') => {
+    // If query is empty and no filters, return early
+    // if (query.trim() === '' && !Object.values(selectedFilters).some(f => f.length > 0)) {
+    //   setSearchResults([]);
+    //   setIsSearching(false);
+    //   return;
+    // }
 
-      return matchesText && matchesTopics && matchesPersons && matchesType;
-    });
-    setSearchResults(results);
-    setIsSearching(false);
+    setIsSearching(true);
+
+    try {
+      const queryLower = query.toLowerCase().trim();
+      const currentInsights = [...insights];
+
+      const results = currentInsights.filter(entry => {
+        // Text search (if query exists)
+        if (queryLower && queryLower.length > 0) {
+          const promptText = entry.prompt?.toLowerCase() || '';
+          const responseText = entry.response?.toLowerCase() || '';
+          if (!(promptText.includes(queryLower) || responseText.includes(queryLower))) {
+            return false;
+          }
+        }
+
+        // Apply all active filters
+        if (selectedFilters.personIds?.length > 0) {
+          const personIds = entry.personIds || [];
+          if (!selectedFilters.personIds.some(id => personIds.includes(id))) {
+            return false;
+          }
+        }
+
+        return true;
+      });
+
+      setSearchResults(results);
+      return results;
+    } catch (error) {
+      console.error('Search error:', error);
+      setSearchResults([]);
+      return [];
+    } finally {
+      setIsSearching(false);
+    }
   };
 
   const handleSearch = (e) => {
     e.preventDefault();
-    searchQuery.trim() ? performRAGSearch(searchQuery) : setSearchResults([]);
+    setHasPerformedSearch(true); // Add this line
+    performRAGSearch(searchQuery);
   };
 
   const toggleFilter = (filterType, value) => {
@@ -242,7 +279,17 @@ const LibraryView = ({
     );
   };
 
-
+  useEffect(() => {
+    // Only perform search if either:
+    // 1. There's a search query (even if filters are empty)
+    // 2. There are active filters (even if search query is empty)
+    if (searchQuery.trim().length > 0 || Object.values(selectedFilters).some(f => f.length > 0)) {
+      performRAGSearch(searchQuery);
+    } else {
+      setSearchResults([]);
+      setHasPerformedSearch(false);
+    }
+  }, [selectedFilters, searchQuery]);
 
   useEffect(() => {
     console.log('Selected book changed:', selectedBook);
@@ -273,6 +320,31 @@ const LibraryView = ({
     );
   }
 
+  const getFilteredCollections = useCallback(() => {
+    const insightsToUse = searchQuery || selectedFilters.personIds.length > 0 ?
+      searchResults :
+      insights;
+
+    return CUSTOM_COLLECTIONS.filter(collection => {
+      const hasEntries = insightsToUse.some(entry =>
+        entry.collections?.includes(collection.id)
+      );
+
+      if (!hasEntries) return false;
+
+      // Your existing filter logic...
+      if (collectionFilter === 'person') {
+        return collection.type === 'person' ||
+               insightsToUse.some(entry => entry.personIds?.length > 0);
+      }
+      // ... other filter conditions
+    });
+  }, [searchResults, selectedFilters, collectionFilter]);
+
+  const isFiltering = searchQuery.trim().length > 0 || Object.values(selectedFilters).some(f => f.length > 0);
+  const filteredInsights = isFiltering ? searchResults : insights;
+  const noMatchesFound = hasPerformedSearch && isFiltering && searchResults.length === 0;
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-blue-50 to-indigo-50 pb-20">
       <Header />
@@ -288,20 +360,27 @@ const LibraryView = ({
         {viewMode !== 'books' && (
           <SearchAndFilterBar
             searchQuery={searchQuery}
-            setSearchQuery={setSearchQuery}
+            setSearchQuery={(query) => {
+              setSearchQuery(query);
+              if (query === '') {
+                setHasPerformedSearch(false);
+                setSearchResults([]); // Clear search results when query is empty
+              }
+            }}
             handleSearch={handleSearch}
             isSearching={isSearching}
             selectedFilters={selectedFilters}
             toggleFilter={toggleFilter}
             allPersonIds={individuals.map(p => p.id)}
             individuals={individuals}
+            insights={insights}
           />
         )}
 
-
         {viewMode === 'collections' ? (
           <CollectionsList
-            userCollections={filteredUserCollections}
+            userCollections={CUSTOM_COLLECTIONS} // Pass all collections and let CollectionsList handle filtering
+            systemCollections={SYSTEM_COLLECTIONS}
             groupedEntries={groupedEntries}
             expandedCollection={expandedCollection}
             onToggleCollection={(collectionId) => {
@@ -309,27 +388,24 @@ const LibraryView = ({
                 prev === collectionId ? null : collectionId
               );
             }}
-            onAddToCollection={(collectionId) => {
-              setCurrentCollection(collectionId);
-              setCurrentView('capture');
-            }}
             showInactiveCollections={showInactiveCollections}
             onToggleInactiveCollections={() => setShowInactiveCollections(!showInactiveCollections)}
-            inactiveCollections={SYSTEM_COLLECTIONS.filter(c => !groupedEntries[c.id]?.length)}
             startQuickCaptureFromCollection={startQuickCaptureFromCollection}
-            systemCollections={SYSTEM_COLLECTIONS} // Pass the full system collections
             onEntryUpdate={handleEntryUpdate}
             onEntryDelete={handleEntryDelete}
             onCollectionToggle={handleCollectionToggle}
             onPersonToggle={handlePersonToggle}
             individuals={individuals}
             collections={CUSTOM_COLLECTIONS}
-            setInsights={setInsights}
             selectedFilters={selectedFilters}
-            onClearFilters={() =>
-              setSelectedFilters({ personIds: [], topics: [], entryTypes: [] })
-            }
+            onClearFilters={() => {
+              setSelectedFilters({ personIds: [], topics: [], entryTypes: [] });
+              setHasPerformedSearch(false); // Add this
+              setSearchQuery(''); // Also clear the search query if you want
+            }}
             isPersonView={false}
+            filteredInsights={filteredInsights}
+            noMatchesFound={noMatchesFound}
           />
         ) : (
           // In LibraryView.jsx, update the BooksList component

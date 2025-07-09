@@ -1,5 +1,5 @@
 import { Search, X, Filter, User } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 const SearchAndFilterBar = ({
   searchQuery,
@@ -10,8 +10,24 @@ const SearchAndFilterBar = ({
   toggleFilter,
   allPersonIds,
   individuals,
+  insights, // Add insights prop to check for active names
 }) => {
   const [showFilters, setShowFilters] = useState(false);
+  const [activePersonIds, setActivePersonIds] = useState([]);
+
+  // Calculate which person IDs are actually present in insights
+  useEffect(() => {
+    const activeIds = new Set();
+    insights.forEach(insight => {
+      if (insight.personIds) {
+        insight.personIds.forEach(id => activeIds.add(id));
+      }
+    });
+    setActivePersonIds(Array.from(activeIds));
+  }, [insights]);
+
+  // Only show filter button if there are active names to filter by
+  const shouldShowFilterButton = activePersonIds.length > 0;
 
   return (
     <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 mb-6 shadow-sm border border-white/50">
@@ -52,26 +68,29 @@ const SearchAndFilterBar = ({
           )}
         </button>
 
-        <button
-          type="button"
-          onClick={() => setShowFilters(!showFilters)}
-          className={`p-2 rounded-lg transition-colors ${
-            showFilters ? 'bg-blue-100 text-blue-600' : 'hover:bg-gray-100 text-gray-600'
-          }`}
-          aria-label={showFilters ? "Hide filters" : "Show filters"}
-        >
-          <Filter className="w-4 h-4" />
-        </button>
+        {shouldShowFilterButton && (
+          <button
+            type="button"
+            onClick={() => setShowFilters(!showFilters)}
+            disabled={!shouldShowFilterButton}
+            className={`p-2 rounded-lg transition-colors ${
+              showFilters ? 'bg-blue-100 text-blue-600' : 'hover:bg-gray-100 text-gray-600'
+            } ${!shouldShowFilterButton ? 'opacity-50 cursor-not-allowed' : ''}`}
+            aria-label={showFilters ? "Hide filters" : "Show filters"}
+          >
+            <Filter className="w-4 h-4" />
+          </button>
+        )}
       </form>
 
       {/* Filters Section */}
-      {showFilters && (
+      {showFilters && shouldShowFilterButton && (
         <div className="mt-3 pt-3 border-t border-gray-100 space-y-3">
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-xs font-medium text-gray-500">FILTER BY:</span>
 
-            {/* Recipient Filters */}
-            {allPersonIds.map((id) => {
+            {/* Recipient Filters - only show active names */}
+            {activePersonIds.map((id) => {
               const person = individuals.find((p) => p.id === id);
               return (
                 <button

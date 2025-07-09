@@ -22,7 +22,8 @@ const CollectionsList = ({
   selectedFilters = {},
   onClearFilters,
   isPersonView = false,
-  currentPersonId = null
+  currentPersonId = null,
+  noMatchesFound
 }) => {
   const [sortDescending, setSortDescending] = useState(true);
 
@@ -53,30 +54,21 @@ const CollectionsList = ({
       )
     : sortCollections(userCollections);
 
+  // Simplified filter function since filtering is now done in LibraryView
   const filterEntries = (entries = []) => {
-    if (!selectedFilters.personIds?.length) return entries;
-    return entries.filter(entry =>
-      entry.personIds?.some(id => selectedFilters.personIds.includes(id))
-    );
+    return entries || [];
   };
 
-  const visibleSystemCollections = activeSystemCollections.filter(
-    collection => {
+  // Determine visible collections based on whether they have entries
+  const getVisibleCollections = (collections) => {
+    return collections.filter(collection => {
       const entries = groupedEntries[collection.id] || [];
-      return isPersonView
-        ? entries.length > 0 // For person view, just check if has entries
-        : filterEntries(entries).length > 0 // For library view, apply filters
-    }
-  );
+      return entries.length > 0;
+    });
+  };
 
-  const visibleUserCollections = activeUserCollections.filter(
-    collection => {
-      const entries = groupedEntries[collection.id] || [];
-      return isPersonView
-        ? entries.length > 0
-        : filterEntries(entries).length > 0
-    }
-  );
+  const visibleSystemCollections = getVisibleCollections(activeSystemCollections);
+  const visibleUserCollections = getVisibleCollections(activeUserCollections);
 
   // For library view, determine inactive collections
   const libraryInactiveCollections = !isPersonView
@@ -109,6 +101,12 @@ const CollectionsList = ({
           >
             Clear all
           </button>
+        </div>
+      )}
+
+      {noMatchesFound && (
+        <div className="text-center text-sm text-gray-500 py-6">
+          No insights matched your search or filters.
         </div>
       )}
 
