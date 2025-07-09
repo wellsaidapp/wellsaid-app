@@ -111,17 +111,38 @@ const PeopleView = ({ individuals, insights, collections, sharedBooks }) => {
   const [sortDirection, setSortDirection] = useState('asc'); // asc | desc
 
   const getSortedEnrichedIndividuals = () => {
-    // First filter by search query
-    const filteredIndividuals = enrichedIndividuals.filter(person => {
+    // First filter the original individuals by search query
+    const filteredIndividuals = individuals.filter(person => {
       if (!searchQuery) return true;
       const query = searchQuery.toLowerCase();
       return (
-        person.name.toLowerCase().includes(query) ||
-        (person.relationship && person.relationship.toLowerCase().includes(query))
+        person.name.toLowerCase().includes(query)
       );
     });
-    // Then sort the filtered results
-    return filteredIndividuals.sort((a, b) => {
+
+    // Then enrich the filtered individuals
+    const enrichedFiltered = filteredIndividuals.map(person => {
+      const sharedSystemCollectionIds = new Set();
+
+      insights.forEach(insight => {
+        if (insight.personIds?.includes(person.id)) {
+          insight.collections?.forEach(colId => {
+            if (systemCollectionIds.has(colId)) {
+              sharedSystemCollectionIds.add(colId);
+            }
+          });
+        }
+      });
+
+      return {
+        ...person,
+        activeCollectionsCount: sharedSystemCollectionIds.size,
+        totalCollectionsCount: systemCollectionIds.size
+      };
+    });
+
+    // Then sort the enriched filtered results
+    return enrichedFiltered.sort((a, b) => {
       let aVal, bVal;
 
       switch (sortField) {
