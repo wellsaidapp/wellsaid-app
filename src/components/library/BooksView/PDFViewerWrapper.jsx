@@ -19,7 +19,6 @@ export default function PDFViewerWrapper({ book, onClose, onEdit }) {
   // Update handleEdit function
   const handleEdit = () => {
     onEdit(book);
-    onClose(); // Close the PDF viewer
   };
 
   const [dimensions, setDimensions] = useState({

@@ -4,7 +4,7 @@ import Header from '../../appLayout/Header';
 import { generateBookPDF } from '../BookCreation/BookPDFGenerator';
 import ImageCropperModal from '../BookCreation/ImageCropperModal'
 
-const BookEditor = ({ book, onClose, onSave, onBackToViewer, returnToViewer, previousViewerState }) => {
+const BookEditor = ({ book, onClose, onSave, onBackToViewer, returnToViewer, previousViewerState, editingBook }) => {
   const [pages, setPages] = useState([]);
   const [title, setTitle] = useState(book.name);
   const [description, setDescription] = useState(book.description || '');
@@ -131,7 +131,9 @@ const BookEditor = ({ book, onClose, onSave, onBackToViewer, returnToViewer, pre
       <div className="p-4">
         <div className="flex justify-between items-center mb-4">
           <button
-            onClick={onBackToViewer}
+            onClick={() => {
+              onBackToViewer?.(editingBook);
+            }}
             className="flex items-center text-blue-600 hover:text-blue-800 transition-colors"
           >
             <ChevronLeft size={20} className="mr-1" />

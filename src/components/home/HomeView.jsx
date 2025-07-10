@@ -17,6 +17,8 @@ import SharedBooksSection from './SharedBooksSection';
 import LegacyStats from './LegacyStats';
 import PDFViewerWrapper from '../library/BooksView/PDFViewerWrapper';
 import BookEditor from '../library/BooksView/BookEditor';
+import BookPreviewModal from './BookPreviewModal'
+
 import { isThisWeek, parseISO } from 'date-fns';
 
 const HomeView = ({
@@ -115,6 +117,7 @@ const HomeView = ({
       // In the BookEditor props in HomeView.jsx:
       <BookEditor
         book={editingBook}
+        editingBook={editingBook}
         returnToViewer={returnToViewer}
         previousViewerState={previousViewerState}
         onClose={() => {
@@ -133,9 +136,12 @@ const HomeView = ({
           }
         }}
         onBackToViewer={(savedBook) => {
-          setSelectedBook(savedBook); // Update with the saved version
+          setSelectedBook(savedBook || previousViewerState?.book);
           setEditingBook(null);
           setReturnToViewer(false);
+          setShowPdfViewer(true);
+          setCurrentPage(prev => prev + 1); // Temporary workaround
+          setTimeout(() => setCurrentPage(prev => prev - 1), 10);
         }}
       />
     );
