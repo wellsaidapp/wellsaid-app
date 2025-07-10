@@ -295,31 +295,6 @@ const LibraryView = ({
     console.log('Selected book changed:', selectedBook);
   }, [selectedBook]);
 
-  if (editingBook) {
-    return (
-      <BookEditor
-        book={editingBook}
-        onClose={() => {
-          setEditingBook(null);
-          setReturnToViewer(false);
-        }}
-        onSave={async (updatedBook) => {
-          // TODO: Implement your save logic here
-          // await updateBook(updatedBook);
-          setEditingBook(null);
-          setReturnToViewer(false);
-        }}
-        onBackToViewer={() => {
-          if (returnToViewer && previousViewerState) {
-            setSelectedBook(previousViewerState.book);
-          }
-          setEditingBook(null);
-          setReturnToViewer(false);
-        }}
-      />
-    );
-  }
-
   const getFilteredCollections = useCallback(() => {
     const insightsToUse = searchQuery || selectedFilters.personIds.length > 0 ?
       searchResults :
@@ -347,171 +322,188 @@ const LibraryView = ({
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-blue-50 to-indigo-50 pb-20">
-      <Header />
-      <div className="p-4">
-
-        <ViewModeToggle
-          viewMode={viewMode}
-          setViewMode={setViewMode}
-          collectionFilter={collectionFilter}
-          setCollectionFilter={setCollectionFilter}
-        />
-
-        {viewMode !== 'books' && (
-          <SearchAndFilterBar
-            searchQuery={searchQuery}
-            setSearchQuery={(query) => {
-              setSearchQuery(query);
-              if (query === '') {
-                setHasPerformedSearch(false);
-                setSearchResults([]); // Clear search results when query is empty
-              }
-            }}
-            handleSearch={handleSearch}
-            isSearching={isSearching}
-            selectedFilters={selectedFilters}
-            toggleFilter={toggleFilter}
-            allPersonIds={individuals.map(p => p.id)}
-            individuals={individuals}
-            insights={insights}
-          />
-        )}
-
-        {viewMode === 'collections' ? (
-          <CollectionsList
-            userCollections={CUSTOM_COLLECTIONS} // Pass all collections and let CollectionsList handle filtering
-            systemCollections={SYSTEM_COLLECTIONS}
-            groupedEntries={groupedEntries}
-            expandedCollection={expandedCollection}
-            onToggleCollection={(collectionId) => {
-              setExpandedCollection(prev =>
-                prev === collectionId ? null : collectionId
-              );
-            }}
-            showInactiveCollections={showInactiveCollections}
-            onToggleInactiveCollections={() => setShowInactiveCollections(!showInactiveCollections)}
-            startQuickCaptureFromCollection={startQuickCaptureFromCollection}
-            onEntryUpdate={handleEntryUpdate}
-            onEntryDelete={handleEntryDelete}
-            onCollectionToggle={handleCollectionToggle}
-            onPersonToggle={handlePersonToggle}
-            individuals={individuals}
-            collections={CUSTOM_COLLECTIONS}
-            selectedFilters={selectedFilters}
-            onClearFilters={() => {
-              setSelectedFilters({ personIds: [], topics: [], entryTypes: [] });
-              setHasPerformedSearch(false); // Add this
-              setSearchQuery(''); // Also clear the search query if you want
-            }}
-            isPersonView={false}
-            filteredInsights={filteredInsights}
-            noMatchesFound={noMatchesFound}
-          />
-        ) : (
-          // In LibraryView.jsx, update the BooksList component
-          <BooksList
-            books={sortedBooks}
-            onViewBook={(book) => {
-              if (book.status === "Draft") {
-                // For draft books, open the creation modal with preloaded data
-                const draftInsights = book.draftState.insightIds.map(id =>
-                  insights.find(insight => insight.id === id)
-                ).filter(Boolean); // Filter out any undefined in case insights were deleted
-
-                setNewBook({
-                  title: book.name,
-                  description: book.description,
-                  selectedCollections: book.collections || [],
-                  selectedEntries: book.draftState.insightIds,
-                  coverImage: book.draftState.coverImage || null,
-                  backCoverNote: book.backCoverNote || '',
-                  recipient: book.personId || null, // Ensure this is set
-                  recipientName: book.personName || '', // Add this if needed
-                  showTags: true,
-                  fontStyle: book.fontStyle || 'serif',
-                  isBlackAndWhite: book.isBlackAndWhite || false,
-                  isDraft: true,
-                  color: book.color || 'bg-blue-500',
-                  existingBookId: book.id, // Track the original book ID for updating
-                  coverMode: book.coverMode || 'color'
-                });
-
-                // Set the entry order to maintain the original arrangement
-                setEntryOrder(book.draftState.insightIds);
-
-                // Open the modal at the first step
-                setBookCreationStep(0);
-                setShowBookCreation(true);
-              } else {
-                // For published books, show the preview
-                setSelectedBook(book);
-              }
-            }}
-            onStartNewBook={handleStartNewBook}
-            isCreating={currentView === 'arrangeBook'}
-            entryOrder={entryOrder}
-            insights={insights}
-            sortDirection={sortDirection}
-            onToggleSortDirection={toggleSortDirection}
-          />
-        )}
-      </div>
-
-      {/* Modals */}
-      {selectedBook && (
-        selectedBook.status === "Published" ? (
-          <PDFViewerWrapper
-            book={selectedBook}
-            onClose={() => setSelectedBook(null)}
-            onEdit={(book) => {
-              setPreviousViewerState({
-                book: selectedBook,
-                showPdfViewer: true
-              });
-              setEditingBook(book);
-              setSelectedBook(null);
-              setReturnToViewer(true);
-            }}
-          />
-        ) : (
-          <BookPreviewModal
-            book={selectedBook}
-            currentPage={currentPage}
-            setCurrentPage={setCurrentPage}
-            onClose={() => setSelectedBook(null)}
-          />
-        )
-      )}
-
-      {showBookCreation && (
-        <BookCreationModal
-          onClose={() => setShowBookCreation(false)}
-          newBook={newBook}
-          setNewBook={setNewBook}
-          bookCreationStep={bookCreationStep} // Make sure this is passed
-          setBookCreationStep={setBookCreationStep} // And this
-          entryOrder={entryOrder}
-          setEntryOrder={setEntryOrder}
-          individuals={individuals}
-          insights={insights}
-          collections={CUSTOM_COLLECTIONS}
-          groupedEntries={groupedEntries}
-          SYSTEM_COLLECTIONS={SYSTEM_COLLECTIONS}
-          currentView={currentView}
-          setCurrentView={setCurrentView}
-        />
-      )}
-
-
-      {showTagEditor && selectedEntry && (
-        <TagEditor
-          entry={selectedEntry}
+      {editingBook ? (
+        <BookEditor
+          key={editingBook.id}
+          book={editingBook}
           onClose={() => {
-            setShowTagEditor(false);
-            setSelectedEntry(null);
+            setEditingBook(null);
+            setReturnToViewer(false);
           }}
-          onSave={updateEntry}
+          onSave={async (updatedBook) => {
+            // Your save logic
+            setEditingBook(null);
+            setReturnToViewer(false);
+          }}
+          onBackToViewer={() => {
+            if (returnToViewer && previousViewerState) {
+              setSelectedBook(previousViewerState.book);
+            }
+            setEditingBook(null);
+            setReturnToViewer(false);
+          }}
         />
+      ) : (
+        <>
+          <Header />
+          <div className="p-4">
+            <ViewModeToggle
+              viewMode={viewMode}
+              setViewMode={setViewMode}
+              collectionFilter={collectionFilter}
+              setCollectionFilter={setCollectionFilter}
+            />
+
+            {viewMode !== 'books' && (
+              <SearchAndFilterBar
+                searchQuery={searchQuery}
+                setSearchQuery={(query) => {
+                  setSearchQuery(query);
+                  if (query === '') {
+                    setHasPerformedSearch(false);
+                    setSearchResults([]);
+                  }
+                }}
+                handleSearch={handleSearch}
+                isSearching={isSearching}
+                selectedFilters={selectedFilters}
+                toggleFilter={toggleFilter}
+                allPersonIds={individuals.map(p => p.id)}
+                individuals={individuals}
+                insights={insights}
+              />
+            )}
+
+            {viewMode === 'collections' ? (
+              <CollectionsList
+                userCollections={CUSTOM_COLLECTIONS}
+                systemCollections={SYSTEM_COLLECTIONS}
+                groupedEntries={groupedEntries}
+                expandedCollection={expandedCollection}
+                onToggleCollection={(collectionId) => {
+                  setExpandedCollection(prev =>
+                    prev === collectionId ? null : collectionId
+                  );
+                }}
+                showInactiveCollections={showInactiveCollections}
+                onToggleInactiveCollections={() => setShowInactiveCollections(!showInactiveCollections)}
+                startQuickCaptureFromCollection={startQuickCaptureFromCollection}
+                onEntryUpdate={handleEntryUpdate}
+                onEntryDelete={handleEntryDelete}
+                onCollectionToggle={handleCollectionToggle}
+                onPersonToggle={handlePersonToggle}
+                individuals={individuals}
+                collections={CUSTOM_COLLECTIONS}
+                selectedFilters={selectedFilters}
+                onClearFilters={() => {
+                  setSelectedFilters({ personIds: [], topics: [], entryTypes: [] });
+                  setHasPerformedSearch(false);
+                  setSearchQuery('');
+                }}
+                isPersonView={false}
+                filteredInsights={filteredInsights}
+                noMatchesFound={noMatchesFound}
+              />
+            ) : (
+              <BooksList
+                books={sortedBooks}
+                onViewBook={(book) => {
+                  if (book.status === "Draft") {
+                    const draftInsights = book.draftState.insightIds.map(id =>
+                      insights.find(insight => insight.id === id)
+                    ).filter(Boolean);
+
+                    setNewBook({
+                      title: book.name,
+                      description: book.description,
+                      selectedCollections: book.collections || [],
+                      selectedEntries: book.draftState.insightIds,
+                      coverImage: book.draftState.coverImage || null,
+                      backCoverNote: book.backCoverNote || '',
+                      recipient: book.personId || null,
+                      recipientName: book.personName || '',
+                      showTags: true,
+                      fontStyle: book.fontStyle || 'serif',
+                      isBlackAndWhite: book.isBlackAndWhite || false,
+                      isDraft: true,
+                      color: book.color || 'bg-blue-500',
+                      existingBookId: book.id,
+                      coverMode: book.coverMode || 'color'
+                    });
+
+                    setEntryOrder(book.draftState.insightIds);
+                    setBookCreationStep(0);
+                    setShowBookCreation(true);
+                  } else {
+                    setSelectedBook(book);
+                  }
+                }}
+                onStartNewBook={handleStartNewBook}
+                isCreating={currentView === 'arrangeBook'}
+                entryOrder={entryOrder}
+                insights={insights}
+                sortDirection={sortDirection}
+                onToggleSortDirection={toggleSortDirection}
+              />
+            )}
+          </div>
+
+          {/* Modals */}
+          {selectedBook && (
+            selectedBook.status === "Published" ? (
+              <PDFViewerWrapper
+                book={selectedBook}
+                onClose={() => setSelectedBook(null)}
+                onEdit={(book) => {
+                  setPreviousViewerState({
+                    book: selectedBook,
+                    showPdfViewer: true
+                  });
+                  setEditingBook(book);
+                  setSelectedBook(null);
+                  setReturnToViewer(true);
+                }}
+              />
+            ) : (
+              <BookPreviewModal
+                book={selectedBook}
+                currentPage={currentPage}
+                setCurrentPage={setCurrentPage}
+                onClose={() => setSelectedBook(null)}
+              />
+            )
+          )}
+
+          {showBookCreation && (
+            <BookCreationModal
+              onClose={() => setShowBookCreation(false)}
+              newBook={newBook}
+              setNewBook={setNewBook}
+              bookCreationStep={bookCreationStep}
+              setBookCreationStep={setBookCreationStep}
+              entryOrder={entryOrder}
+              setEntryOrder={setEntryOrder}
+              individuals={individuals}
+              insights={insights}
+              collections={CUSTOM_COLLECTIONS}
+              groupedEntries={groupedEntries}
+              SYSTEM_COLLECTIONS={SYSTEM_COLLECTIONS}
+              currentView={currentView}
+              setCurrentView={setCurrentView}
+            />
+          )}
+
+          {showTagEditor && selectedEntry && (
+            <TagEditor
+              entry={selectedEntry}
+              onClose={() => {
+                setShowTagEditor(false);
+                setSelectedEntry(null);
+              }}
+              onSave={updateEntry}
+            />
+          )}
+        </>
       )}
     </div>
   );

@@ -25,7 +25,9 @@ const HomeView = ({
   setCurrentView,
   setCaptureMode,
   currentView,
-  setLibraryDefaultViewMode
+  setLibraryDefaultViewMode,
+  books,
+  setBooks
 }) => {
   const [insights] = useState(INSIGHTS);
   const weekInsights = insights.filter(i => isThisWeek(parseISO(i.date))).length;
@@ -63,26 +65,75 @@ const HomeView = ({
     );
   }
 
+  const updatePublishedBook = async (updatedBook) => {
+    try {
+      // Update local state
+      setBooks(prevBooks =>
+        prevBooks.map(book =>
+          book.id === updatedBook.id ? updatedBook : book
+        )
+      );
+
+      // If using API, add your update call here
+      // const response = await api.updateBook(updatedBook.id, updatedBook);
+      // return response.data;
+
+      return updatedBook;
+    } catch (error) {
+      console.error("Failed to update book:", error);
+      throw error;
+    }
+  };
+
   // In HomeView.jsx - simplify the BookEditor props
   // In HomeView.jsx - update the BookEditor props
   if (editingBook) {
+    // Define the update function
+    const updatePublishedBook = async (updatedBook) => {
+      try {
+        // 1. Update in your state
+        setBooks(prevBooks =>
+          prevBooks.map(book =>
+            book.id === updatedBook.id ? updatedBook : book
+          )
+        );
+
+        // 2. If using an API, add your backend call here:
+        // const response = await api.updateBook(updatedBook.id, updatedBook);
+        // return response.data;
+
+        // 3. For demo purposes without backend:
+        return updatedBook;
+
+      } catch (error) {
+        console.error("Failed to update book:", error);
+        throw error;
+      }
+    };
+
     return (
+      // In the BookEditor props in HomeView.jsx:
       <BookEditor
         book={editingBook}
+        returnToViewer={returnToViewer}
+        previousViewerState={previousViewerState}
         onClose={() => {
           setEditingBook(null);
           setReturnToViewer(false);
         }}
         onSave={async (updatedBook) => {
-          await updatePublishedBook(updatedBook);
-          setEditingBook(null);
-          setReturnToViewer(false);
-        }}
-        onBackToViewer={() => {
-          if (returnToViewer && previousViewerState) {
-            setSelectedBook(previousViewerState.book);
-            setShowPdfViewer(true);
+          try {
+            const savedBook = await updatePublishedBook(updatedBook);
+            setEditingBook(null);
+            setReturnToViewer(false);
+            return savedBook; // Make sure to return the saved book
+          } catch (error) {
+            console.error("Error saving book:", error);
+            throw error;
           }
+        }}
+        onBackToViewer={(savedBook) => {
+          setSelectedBook(savedBook); // Update with the saved version
           setEditingBook(null);
           setReturnToViewer(false);
         }}

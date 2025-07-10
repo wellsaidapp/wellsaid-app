@@ -33,6 +33,7 @@ const WellSaidApp = () => {
   const [individuals, setIndividuals] = useState(INDIVIDUALS);
   const [insights, setInsights] = useState(INSIGHTS);
   const [libraryDefaultViewMode, setLibraryDefaultViewMode] = useState('collections');
+  const [books, setBooks] = useState(SHARED_BOOKS);
   // Simulate checking auth status - in a real app this would check Cognito
   useEffect(() => {
     // For demo purposes, we'll use localStorage to simulate auth states
@@ -60,6 +61,8 @@ const WellSaidApp = () => {
           setCaptureMode={setCaptureMode}
           currentView={currentView}
           setLibraryDefaultViewMode={setLibraryDefaultViewMode}
+          books={books}
+          setBooks={setBooks}
         />;
       case 'capture':
         return <CaptureView
