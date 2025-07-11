@@ -15,6 +15,7 @@ import CaptureView from './components/capture/CaptureView';
 import LibraryView from './components/library/LibraryView';
 import ProfileView from './components/profileView/ProfileView';
 import PeopleView from './components/peopleView/PeopleView';
+import WellSaidOnboarding from './components/landingPage/WellSaidOnboarding';
 
 // Only keep constants you actually use
 import { INDIVIDUALS } from './constants/individuals';
@@ -46,10 +47,6 @@ const WellSaidApp = () => {
   const [newInsight, setNewInsight] = useState('');
   const [selectedPersons, setSelectedPersons] = useState([]);
   const [selectedTopics, setSelectedTopics] = useState([]);
-
-  if (showSplash) {
-    return <SplashScreen onComplete={() => setShowSplash(false)} />;
-  }
 
   const renderView = () => {
     switch (currentView) {
@@ -101,9 +98,6 @@ const WellSaidApp = () => {
 
   // Determine which component to render
   const renderContent = () => {
-    if (showSplash) {
-      return <SplashScreen onComplete={() => setShowSplash(false)} />;
-    }
     switch (authState) {
       case 'checking':
         return (
