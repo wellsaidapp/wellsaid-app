@@ -109,29 +109,62 @@ const BookEditor = ({ book, onClose, onSave, onBackToViewer, returnToViewer, pre
       // Save the updated book
       const savedBook = await onSave(finalBook);
 
-      // iOS-SPECIFIC DOWNLOAD HANDLING
-      const url = URL.createObjectURL(pdfBlob);
-      if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
-        // For iOS - open in new tab
-        const newWindow = window.open('', '_blank');
-        newWindow.location.href = url;
-
-        // Clean up after some time
-        setTimeout(() => {
-          URL.revokeObjectURL(url);
-        }, 10000); // 10 second delay before cleanup
-      } else {
-        // Standard desktop download behavior
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `${title || 'book'}.pdf`;
-        document.body.appendChild(a);
-        a.click();
-        setTimeout(() => {
-          document.body.removeChild(a);
-          URL.revokeObjectURL(url);
-        }, 100);
-      }
+      // // iOS-SPECIFIC DOWNLOAD HANDLING
+      // const url = URL.createObjectURL(pdfBlob);
+      // if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
+      //   // Step 1: Prepare a visible download button
+      //   const downloadContainer = document.createElement('div');
+      //   downloadContainer.style.position = 'fixed';
+      //   downloadContainer.style.bottom = '20px';
+      //   downloadContainer.style.left = '0';
+      //   downloadContainer.style.right = '0';
+      //   downloadContainer.style.textAlign = 'center';
+      //   downloadContainer.style.zIndex = '1000';
+      //
+      //   const downloadBtn = document.createElement('button');
+      //   downloadBtn.textContent = 'Tap to Download PDF';
+      //   downloadBtn.style.padding = '12px 24px';
+      //   downloadBtn.style.backgroundColor = '#007AFF';
+      //   downloadBtn.style.color = 'white';
+      //   downloadBtn.style.borderRadius = '8px';
+      //   downloadBtn.style.border = 'none';
+      //
+      //   // Step 2: User-initiated download flow
+      //   downloadBtn.onclick = () => {
+      //     const a = document.createElement('a');
+      //     a.href = url;
+      //     a.download = `${title || 'book'}.pdf`;
+      //     document.body.appendChild(a);
+      //     a.click();
+      //     setTimeout(() => {
+      //       document.body.removeChild(a);
+      //       URL.revokeObjectURL(url);
+      //       document.body.removeChild(downloadContainer);
+      //     }, 30000);
+      //   };
+      //
+      //   downloadContainer.appendChild(downloadBtn);
+      //   document.body.appendChild(downloadContainer);
+      //
+      //   // Auto-remove after 60 seconds if not used
+      //   setTimeout(() => {
+      //     if (document.body.contains(downloadContainer)) {
+      //       document.body.removeChild(downloadContainer);
+      //       URL.revokeObjectURL(url);
+      //     }
+      //   }, 60000);
+      // } else {
+      //   // Standard desktop download behavior
+      //   const a = document.createElement('a');
+      //   a.href = url;
+      //   a.download = `${title || 'book'}.pdf`;
+      //   document.body.appendChild(a);
+      //   a.click();
+      //   setTimeout(() => {
+      //     document.body.removeChild(a);
+      //     URL.revokeObjectURL(url);
+      //   }, 100);
+      // }
 
       // Handle navigation back to viewer
       if (returnToViewer) {
