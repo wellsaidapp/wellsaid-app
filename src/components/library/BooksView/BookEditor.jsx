@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { X, ChevronLeft, ChevronUp, ChevronDown, Save, Trash2, Image as ImageIcon } from 'lucide-react';
 import Header from '../../appLayout/Header';
 import { generateBookPDF } from '../BookCreation/BookPDFGenerator';
-import ImageCropperModal from '../BookCreation/ImageCropperModal'
+import ImageCropperModal from '../BookCreation/ImageCropperModal';
 
 const BookEditor = ({ book, onClose, onSave, onBackToViewer, returnToViewer, previousViewerState, editingBook }) => {
   const [pages, setPages] = useState([]);
@@ -270,13 +270,6 @@ const BookEditor = ({ book, onClose, onSave, onBackToViewer, returnToViewer, pre
                   </label>
                 </div>
               )}
-              {showCropper && (
-                <ImageCropperModal
-                  image={selectedImage}
-                  onCropComplete={handleCropComplete}
-                  onClose={() => setShowCropper(false)}
-                />
-              )}
             </div>
 
             <div className="mb-6">
@@ -292,6 +285,15 @@ const BookEditor = ({ book, onClose, onSave, onBackToViewer, returnToViewer, pre
           </div>
         )}
       </div>
+
+      {/* Image Cropper Modal - moved outside of the main content */}
+      {showCropper && (
+        <ImageCropperModal
+          image={selectedImage}
+          onCropComplete={handleCropComplete}
+          onClose={() => setShowCropper(false)}
+        />
+      )}
     </div>
   );
 };
