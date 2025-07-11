@@ -67,12 +67,13 @@ const BookEditor = ({ book, onClose, onSave, onBackToViewer, returnToViewer, pre
     try {
       const updatedBook = {
         ...book,
-        name: title,
+        title,
         description,
         backCoverNote,
         coverImage,
         publishedState: {
           ...book.publishedState,
+          contentSnapshot: pages,
           lastEdited: new Date().toISOString()
         }
       };

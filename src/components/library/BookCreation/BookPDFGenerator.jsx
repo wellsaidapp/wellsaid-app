@@ -363,7 +363,19 @@ export const generateBookPDF = async (
     }
   }
 
-  const orderedEntries = entryOrder.map(id => insights.find(e => e.id === id)).filter(Boolean);
+  // Handle both creation and editing cases
+  let orderedEntries = [];
+
+  if (newBook.publishedState?.contentSnapshot) {
+    // EDITING CASE: Use the static contentSnapshot
+    orderedEntries = [...newBook.publishedState.contentSnapshot];
+  } else {
+    // CREATION CASE: Use insights + entryOrder
+    orderedEntries = entryOrder
+      ? entryOrder.map(id => insights.find(e => e.id === id)).filter(Boolean)
+      : insights;
+  }
+
   const previewPages = [
     { type: 'cover' },
     ...orderedEntries.flatMap(entry => ([
