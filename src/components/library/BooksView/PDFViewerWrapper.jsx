@@ -73,20 +73,16 @@ export default function PDFViewerWrapper({ book, onClose, onEdit }) {
   }, []);
 
   const handleDownload = () => {
-    // Use the book's name for the filename
     const cleanName = book.name
-      ? book.name.replace(/[^\w\s-]/g, '') // Remove special chars
-                .replace(/\s+/g, ' ')     // Collapse spaces
-                .trim()                   // Trim whitespace
+      ? book.name.replace(/[^\w\s-]/g, '')
+                .replace(/\s+/g, ' ')
+                .trim()
       : 'document';
 
     const filename = `${cleanName}.pdf`;
 
-    // Convert base64 to Blob
     try {
-      // First, ensure we're working with the base64 data part only (remove data:application/pdf;base64, if present)
       const base64Data = file.split(',')[1] || file;
-
       const byteCharacters = atob(base64Data);
       const byteNumbers = new Array(byteCharacters.length);
       for (let i = 0; i < byteCharacters.length; i++) {
@@ -94,25 +90,45 @@ export default function PDFViewerWrapper({ book, onClose, onEdit }) {
       }
       const byteArray = new Uint8Array(byteNumbers);
       const blob = new Blob([byteArray], { type: 'application/pdf' });
-
-      // Create download link
       const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = filename;
 
-      // Trigger download
-      document.body.appendChild(link);
-      link.click();
+      if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
+        // Mobile behavior - open in new tab
+        const newTab = window.open('', '_blank');
+        if (newTab) {
+          newTab.location.href = url;
+          // Mobile Safari workaround - may still show toolbar briefly
+          setTimeout(() => {
+            try {
+              newTab.document.title = filename;
+              // This helps prevent the "Back" button from reloading your app
+              newTab.history.replaceState(null, '', window.location.href);
+            } catch (e) {
+              console.log("Couldn't modify new tab", e);
+            }
+          }, 500);
+        } else {
+          // Fallback if popup blocked
+          window.location.href = url;
+        }
 
-      // Clean up
-      setTimeout(() => {
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-      }, 100);
+        // Clean up after longer delay for mobile
+        setTimeout(() => URL.revokeObjectURL(url), 30000);
+      } else {
+        // Desktop behavior - standard download
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        setTimeout(() => {
+          document.body.removeChild(link);
+          URL.revokeObjectURL(url);
+        }, 100);
+      }
     } catch (error) {
       console.error('Error downloading PDF:', error);
-      // Fallback to simple download if Base64 decoding fails
+      // Fallback for base64 errors
       const link = document.createElement('a');
       link.href = file;
       link.download = filename;
