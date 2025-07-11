@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, ChevronLeft, ChevronUp, ChevronDown, Save, Trash2, Image as ImageIcon } from 'lucide-react';
+import { X, ChevronLeft, ChevronUp, ChevronDown, Save, Trash2, Palette, Type, Image as ImageIcon } from 'lucide-react';
 import Header from '../../appLayout/Header';
 import { generateBookPDF } from '../BookCreation/BookPDFGenerator';
 import ImageCropperModal from '../BookCreation/ImageCropperModal';
@@ -14,7 +14,9 @@ const BookEditor = ({ book, onClose, onSave, onBackToViewer, returnToViewer, pre
   const [activeTab, setActiveTab] = useState('content'); // 'content' or 'design'
   const [showCropper, setShowCropper] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
-
+  // Inside the BookEditor component, add these state variables:
+  const [fontStyle, setFontStyle] = useState(book.fontStyle || 'serif');
+  const [isBlackAndWhite, setIsBlackAndWhite] = useState(book.isBlackAndWhite || false);
   // Initialize editor with book content
   useEffect(() => {
     if (book.publishedState?.contentSnapshot) {
@@ -71,6 +73,8 @@ const BookEditor = ({ book, onClose, onSave, onBackToViewer, returnToViewer, pre
         description,
         backCoverNote,
         coverImage,
+        fontStyle,
+        isBlackAndWhite,
         publishedState: {
           ...book.publishedState,
           contentSnapshot: pages,
@@ -166,6 +170,31 @@ const BookEditor = ({ book, onClose, onSave, onBackToViewer, returnToViewer, pre
             Cover & Design
           </button>
         </div>
+
+        {/* Add this new section right here - below the tab buttons but above the content sections */}
+        {activeTab === 'design' && (
+          <div className="flex justify-end gap-2 mb-4">
+            {/* Font Style Toggle */}
+            <button
+              onClick={() => setFontStyle(prev => prev === 'serif' ? 'sans' : 'serif')}
+              className="flex items-center gap-2 px-3 py-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50"
+              title={fontStyle === 'serif' ? 'Switch to Sans Serif' : 'Switch to Serif'}
+            >
+              <Type className={`w-4 h-4 ${fontStyle === 'serif' ? 'text-blue-600' : 'text-gray-400'}`} />
+              <span className="text-sm">{fontStyle === 'serif' ? 'Serif' : 'Sans'}</span>
+            </button>
+
+            {/* Black & White Toggle */}
+            <button
+              onClick={() => setIsBlackAndWhite(prev => !prev)}
+              className="flex items-center gap-2 px-3 py-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50"
+              title={isBlackAndWhite ? 'Show in Color' : 'Show in B&W'}
+            >
+              <Palette className={`w-4 h-4 ${isBlackAndWhite ? 'text-gray-400' : 'text-blue-600'}`} />
+              <span className="text-sm">{isBlackAndWhite ? 'B&W' : 'Color'}</span>
+            </button>
+          </div>
+        )}
 
         {activeTab === 'content' ? (
           <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 mb-4 border border-white/50 shadow-sm">
