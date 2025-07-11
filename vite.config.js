@@ -11,5 +11,11 @@ export default defineConfig({
   },
   build: {
     assetsInclude: ['**/*.worker.js']
+  },
+  server: {
+    host: true, // Allow external connections
+    allowedHosts: [
+      '9082aaed0f68.ngrok-free.app' // 👈 Replace with your actual ngrok hostname
+    ]
   }
 });

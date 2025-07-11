@@ -109,17 +109,31 @@ const BookEditor = ({ book, onClose, onSave, onBackToViewer, returnToViewer, pre
       // Save the updated book
       const savedBook = await onSave(finalBook);
 
-      // Trigger download
+      // iOS-SPECIFIC DOWNLOAD HANDLING
       const url = URL.createObjectURL(pdfBlob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${title || 'book'}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
+        // For iOS - open in new tab
+        const newWindow = window.open('', '_blank');
+        newWindow.location.href = url;
 
-      // If we're supposed to return to viewer, do that with the updated book
+        // Clean up after some time
+        setTimeout(() => {
+          URL.revokeObjectURL(url);
+        }, 10000); // 10 second delay before cleanup
+      } else {
+        // Standard desktop download behavior
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${title || 'book'}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => {
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        }, 100);
+      }
+
+      // Handle navigation back to viewer
       if (returnToViewer) {
         onBackToViewer(savedBook || finalBook);
       } else {
