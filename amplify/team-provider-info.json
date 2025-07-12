@@ -1,15 +1,20 @@
 {
   "dev": {
     "awscloudformation": {
-      "AuthRoleName": "amplify-prod-dev-c8686-authRole",
-      "UnauthRoleArn": "arn:aws:iam::862994312970:role/amplify-prod-dev-c8686-unauthRole",
-      "AuthRoleArn": "arn:aws:iam::862994312970:role/amplify-prod-dev-c8686-authRole",
+      "AuthRoleName": "amplify-wellsaidapp-dev-0660a-authRole",
+      "UnauthRoleArn": "arn:aws:iam::862994312970:role/amplify-wellsaidapp-dev-0660a-unauthRole",
+      "AuthRoleArn": "arn:aws:iam::862994312970:role/amplify-wellsaidapp-dev-0660a-authRole",
       "Region": "us-east-2",
-      "DeploymentBucketName": "amplify-prod-dev-c8686-deployment",
-      "UnauthRoleName": "amplify-prod-dev-c8686-unauthRole",
-      "StackName": "amplify-prod-dev-c8686",
-      "StackId": "arn:aws:cloudformation:us-east-2:862994312970:stack/amplify-prod-dev-c8686/47731f10-5ed4-11f0-b1d8-0a05869760a5",
+      "DeploymentBucketName": "amplify-wellsaidapp-dev-0660a-deployment",
+      "UnauthRoleName": "amplify-wellsaidapp-dev-0660a-unauthRole",
+      "StackName": "amplify-wellsaidapp-dev-0660a",
+      "StackId": "arn:aws:cloudformation:us-east-2:862994312970:stack/amplify-wellsaidapp-dev-0660a/43ae2a00-5ee3-11f0-b421-02721231c643",
       "AmplifyAppId": "d2fhnktgorqm50"
+    },
+    "categories": {
+      "auth": {
+        "wellsaidDevAuth": {}
+      }
     }
   }
 }
