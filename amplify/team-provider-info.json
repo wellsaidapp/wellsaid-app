@@ -1,0 +1,15 @@
+{
+  "prod": {
+    "awscloudformation": {
+      "AuthRoleName": "amplify-wellsaidappprod-prod-276eb-authRole",
+      "UnauthRoleArn": "arn:aws:iam::862994312970:role/amplify-wellsaidappprod-prod-276eb-unauthRole",
+      "AuthRoleArn": "arn:aws:iam::862994312970:role/amplify-wellsaidappprod-prod-276eb-authRole",
+      "Region": "us-east-2",
+      "DeploymentBucketName": "amplify-wellsaidappprod-prod-276eb-deployment",
+      "UnauthRoleName": "amplify-wellsaidappprod-prod-276eb-unauthRole",
+      "StackName": "amplify-wellsaidappprod-prod-276eb",
+      "StackId": "arn:aws:cloudformation:us-east-2:862994312970:stack/amplify-wellsaidappprod-prod-276eb/ff65e7d0-5edc-11f0-994b-0a9d2e35311f",
+      "AmplifyAppId": "d1zumxq5hrprik"
+    }
+  }
+}
