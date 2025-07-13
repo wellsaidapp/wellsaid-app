@@ -58,11 +58,15 @@ const WellSaidApp = () => {
   const [insights, setInsights] = useState(INSIGHTS);
   const [libraryDefaultViewMode, setLibraryDefaultViewMode] = useState('collections');
   const [books, setBooks] = useState(SHARED_BOOKS);
-  // Simulate checking auth status - in a real app this would check Cognito
+
   useEffect(() => {
-    // For demo purposes, we'll use localStorage to simulate auth states
-    const simulatedAuthState = localStorage.getItem('wellsaid-auth-state') || 'new';
-    setAuthState(simulatedAuthState);
+    const storedAuthState = localStorage.getItem('wellsaid-auth-state');
+    setAuthState(storedAuthState || 'new');
+
+    // Skip splash if already logged in
+    if (storedAuthState === 'loggedIn') {
+      setShowSplash(false);
+    }
   }, []);
 
   const [showCaptureOptions, setShowCaptureOptions] = useState(false);
@@ -121,47 +125,52 @@ const WellSaidApp = () => {
 
   // Determine which component to render
   const renderContent = () => {
-    switch (authState) {
-      case 'checking':
-        return (
-          <div className="fixed inset-0 flex items-center justify-center bg-white overflow-y-auto">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-          </div>
-        );
-      case 'new':
-        return (
-          <WellSaidOnboarding
-            onComplete={() => {
-              localStorage.setItem('wellsaid-auth-state', 'loggedIn');
-              setShowSplash(false);
-            }}
-          />
-        );
-      case 'returning':
-        return (
-          <div className="fixed inset-0 flex items-center justify-center bg-gradient-to-br from-blue-500 to-indigo-600 p-4 overflow-y-auto">
-            <div className="bg-white rounded-2xl shadow-lg p-6 w-full max-w-md">
-            </div>
-          </div>
-        );
-      case 'loggedIn':
-      default:
+    if (authState === 'checking') {
       return (
-        <div className="relative min-h-screen overflow-y-auto">
-          <main className="flex-grow">
-            {renderView()}
-          </main>
-          <BottomNav
-            currentView={currentView}
-            setCurrentView={setCurrentView}
-            setShowCaptureOptions={setShowCaptureOptions}
-          />
+        <div className="fixed inset-0 flex items-center justify-center bg-white overflow-y-auto">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
         </div>
       );
     }
+
+    if (authState === 'new') {
+      return (
+        <WellSaidOnboarding
+          onComplete={() => {
+            localStorage.setItem('wellsaid-auth-state', 'loggedIn');
+            setAuthState('loggedIn');
+            setShowSplash(false); // Ensure splash is hidden
+          }}
+        />
+      );
+    }
+
+    // For all logged in states
+    return (
+      <div className="relative min-h-screen overflow-y-auto">
+        <main className="flex-grow">
+          {renderView()}
+        </main>
+        <BottomNav
+          currentView={currentView}
+          setCurrentView={setCurrentView}
+          setShowCaptureOptions={setShowCaptureOptions}
+        />
+      </div>
+    );
   };
-  if (showSplash) {
-    return <SplashScreen onComplete={() => setShowSplash(false)} />;
+
+  // Replace the entire if (showSplash) condition with:
+  if (showSplash && authState !== 'loggedIn') {
+    return (
+      <SplashScreen 
+        onComplete={() => {
+          const authState = localStorage.getItem('wellsaid-auth-state') || 'new';
+          setAuthState(authState);
+          setShowSplash(false);
+        }}
+      />
+    );
   }
   return (
     <>

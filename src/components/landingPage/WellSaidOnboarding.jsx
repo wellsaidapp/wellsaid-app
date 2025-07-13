@@ -739,7 +739,14 @@ const WellSaidOnboarding = ({ onComplete }) => {
               Your profile is set up and ready to go. Let's start capturing your insights!
             </p>
             <button
-              onClick={onComplete}
+              onClick={() => {
+                // Set authentication state
+                localStorage.setItem('wellsaid-auth-state', 'loggedIn');
+                // Store user data if needed
+                localStorage.setItem('wellsaid-user-data', JSON.stringify(userData));
+                // Call the completion handler
+                onComplete();
+              }}
               className="w-full bg-gradient-to-r from-blue-500 to-indigo-500 text-white py-3 px-8 rounded-xl font-medium hover:from-blue-600 hover:to-indigo-600 transition-colors"
             >
               Start Using WellSaid

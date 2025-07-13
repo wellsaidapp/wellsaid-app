@@ -104,6 +104,7 @@ const SplashScreen = ({ onComplete }) => {
   };
 
   const handleEmailSubmit = async (e) => {
+    console.log("User clicked");
     e.preventDefault();
     await signOut(); // clear any prior session
     const user = await signIn({
