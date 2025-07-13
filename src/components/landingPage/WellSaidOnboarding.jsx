@@ -100,7 +100,7 @@ const WellSaidOnboarding = ({ onComplete }) => {
     }
     else if (field === 'email') {
       setMessages(prev => [...prev, { text: value, isBot: false, timestamp: Date.now() }]);
-      typeMessage("Perfect! I've sent you a 4-digit code. Please enter it below:", true, 500);
+      typeMessage("Perfect! I've sent you a 6-digit code. Please enter it below:", true, 500);
       setShowPinInput(true);
 
       try {
