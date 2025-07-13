@@ -7,17 +7,12 @@ export default defineConfig({
     postcss: './postcss.config.js'
   },
   optimizeDeps: {
-    include: ['pdfjs-dist', 'aws-amplify'] // Add aws-amplify here
+    include: ['pdfjs-dist', '@aws-amplify/core', '@aws-amplify/auth']
   },
   build: {
     assetsInclude: ['**/*.worker.js'],
-    rollupOptions: {
-      external: ['aws-amplify'], // Add this line
-      output: {
-        manualChunks: {
-          'aws-amplify': ['aws-amplify'] // Optional: creates separate chunk
-        }
-      }
+    commonjsOptions: {
+      include: [/node_modules/]
     }
   },
   server: {
@@ -28,7 +23,7 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      './runtimeConfig': './runtimeConfig.browser' // Important for Amplify
+      './runtimeConfig': './runtimeConfig.browser'
     }
   }
 });
