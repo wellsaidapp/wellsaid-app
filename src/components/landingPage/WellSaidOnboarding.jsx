@@ -1,6 +1,12 @@
 // Imports
 import React, { useState, useEffect, useRef } from 'react';
 import { User, ArrowRight, Mail, Mic, MicOff, Plus, Check, Send } from 'lucide-react';
+import {
+  signUp,
+  confirmSignUp,
+  resendSignUpCode, // Optional: if you add a "Resend code" option
+} from '@aws-amplify/auth';
+
 // Assets
 import logo from '../../assets/wellsaid.svg';
 import WellSaidIconOnboarding from '../../assets/icons/WellSaidIconOnboarding';
@@ -25,7 +31,7 @@ const WellSaidOnboarding = ({ onComplete }) => {
   const [isRecording, setIsRecording] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   const [showPinInput, setShowPinInput] = useState(false);
-  const [pinDigits, setPinDigits] = useState(['', '', '', '']);
+  const [pinDigits, setPinDigits] = useState(['', '', '', '', '', '']);
   const [currentPersonInput, setCurrentPersonInput] = useState('');
   const [currentPerson, setCurrentPerson] = useState(null);
   const [showPersonForm, setShowPersonForm] = useState(false);
@@ -85,17 +91,54 @@ const WellSaidOnboarding = ({ onComplete }) => {
     });
   };
 
-  const handleRegistrationSubmit = (field, value) => {
+  const handleRegistrationSubmit = async (field, value) => {
     setUserData(prev => ({ ...prev, [field]: value }));
 
     if (field === 'name') {
       setMessages(prev => [...prev, { text: value, isBot: false, timestamp: Date.now() }]);
       typeMessage(`Nice to meet you, ${value}! What's your email address?`, true, 500);
-    } else if (field === 'email') {
+    }
+    else if (field === 'email') {
       setMessages(prev => [...prev, { text: value, isBot: false, timestamp: Date.now() }]);
       typeMessage("Perfect! I've sent you a 4-digit code. Please enter it below:", true, 500);
       setShowPinInput(true);
+
+      try {
+        console.log('Attempting signUp with:', {
+          username: value,
+          password: '***' // Don't log actual password
+        });
+
+        const signUpResult = await signUp({
+          username: value,
+          password: generateTempPassword(),
+          options: {
+            userAttributes: {
+              email: value,
+            },
+          },
+        });
+
+        console.log('SignUp successful! Result:', {
+          userId: signUpResult.userId,
+          isConfirmed: signUpResult.isConfirmed,
+          nextStep: signUpResult.nextStep
+        });
+      } catch (err) {
+        console.error('Error during sign up:', {
+          errorName: err.name,
+          errorMessage: err.message,
+          errorStack: err.stack,
+          errorDetails: err
+        });
+        typeMessage("Oops, something went wrong during sign up. Please try again.", true, 0);
+        setShowPinInput(false);
+      }
     }
+  };
+
+  const generateTempPassword = () => {
+    return `TempPass${Math.floor(100000 + Math.random() * 900000)}!`;
   };
 
   const [isVerifyingPin, setIsVerifyingPin] = useState(false);
@@ -106,7 +149,7 @@ const WellSaidOnboarding = ({ onComplete }) => {
       newPin[index] = value;
       setPinDigits(newPin);
 
-      if (value && index < 3) {
+      if (value && index < 5) {
         document.getElementById(`pin-${index + 1}`)?.focus();
       }
 
@@ -117,29 +160,59 @@ const WellSaidOnboarding = ({ onComplete }) => {
         setShowPinInput(false);
 
         const runSequence = async () => {
-          // Step 1: show verifying message
-          await typeMessage("Verifying your code...", true, 0);
+          const username = userData.email;
+          const confirmationCode = fullPin;
 
-          // Step 2: show success
-          await new Promise(res => setTimeout(res, 1000));
-          await typeMessage("✓ Verified successfully!", true, 0);
+          console.log('Attempting confirmSignUp with:', {
+            username,
+            confirmationCode,
+            userData: {
+              ...userData,
+              pin: '***' // Don't log full pin
+            }
+          });
 
-          // Step 3: pause and clear before new step
-          setIsVerifyingPin(false);
-          await new Promise(res => setTimeout(res, 1500));
-          setMessages([]);
-          setCurrentStep('conversation');
+          try {
+            await typeMessage("Verifying your code...", true, 0);
+            const confirmResult = await confirmSignUp({
+              username,
+              confirmationCode
+            });
 
-          // Step 4: continue onboarding
-          await new Promise(res => setTimeout(res, 300));
-          await typeMessage(
-            "Great! Now let's get to work. Over the next few minutes, I'd like to hear more about you and how you would like to use this app. This will help me help you! You can speak or type your answers using the area below. What brings you to this app?",
-            true,
-            0
-          );
+            console.log('confirmSignUp successful! Result:', confirmResult);
+
+            await typeMessage("✓ Verified successfully!", true, 0);
+            setIsVerifyingPin(false);
+
+            await new Promise(res => setTimeout(res, 1500));
+            setMessages([]);
+            setCurrentStep('conversation');
+
+            await new Promise(res => setTimeout(res, 300));
+            await typeMessage(
+              "Great! Now let's get to work...",
+              true,
+              0
+            );
+          } catch (err) {
+            console.error('Verification failed:', {
+              errorName: err.name,
+              errorMessage: err.message,
+              errorStack: err.stack,
+              errorDetails: err,
+              inputValues: {
+                username,
+                confirmationCode
+              }
+            });
+
+            await typeMessage("The code was invalid. Please double-check and try again.", true, 0);
+            setIsVerifyingPin(false);
+            setShowPinInput(true);
+          }
         };
 
-        runSequence(); // Start the async onboarding sequence
+        runSequence();
       }
     }
   };
@@ -382,6 +455,23 @@ const WellSaidOnboarding = ({ onComplete }) => {
   };
   // ... (keep all your existing helper functions like handlePinChange, handleConversationSubmit, etc.)
 
+  const handlePaste = (e) => {
+    e.preventDefault();
+    const pasted = e.clipboardData.getData('text').trim();
+
+    if (/^\d{6}$/.test(pasted)) {
+      const newDigits = pasted.split('');
+      setPinDigits(newDigits);
+
+      // Optionally save to userData
+      const fullPin = newDigits.join('');
+      setUserData((prev) => ({ ...prev, pin: fullPin }));
+
+      // Trigger your PIN verification flow
+      runSequence(); // Or verifyCode(fullPin), if that's what you're using
+    }
+  };
+
   return (
     <div className="fixed inset-0 bg-gradient-to-br from-blue-50 to-indigo-50 z-50 overflow-y-auto">
       <div className="max-w-2xl mx-auto p-4 min-h-screen flex flex-col">
@@ -448,7 +538,7 @@ const WellSaidOnboarding = ({ onComplete }) => {
         {/* PIN Input */}
         {showPinInput && currentStep === 'registration' && (
           <div className="bg-white rounded-2xl shadow-lg p-6 mb-4">
-            <p className="text-center text-gray-600 mb-4">Enter your 4-digit code:</p>
+            <p className="text-center text-gray-600 mb-4">Enter your 6-digit code:</p>
             <div className="flex justify-center gap-2">
               {pinDigits.map((digit, index) => (
                 <input
@@ -459,8 +549,10 @@ const WellSaidOnboarding = ({ onComplete }) => {
                   pattern="[0-9]*"
                   value={digit}
                   onChange={(e) => handlePinChange(index, e.target.value)}
+                  onPaste={(e) => handlePaste(e)}
                   className="w-12 h-12 text-center text-xl font-bold border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none"
                   maxLength={1}
+                  autoFocus={index === 0}
                 />
               ))}
             </div>

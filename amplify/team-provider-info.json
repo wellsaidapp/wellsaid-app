@@ -9,11 +9,26 @@
       "UnauthRoleName": "amplify-wellsaidapp-dev-0660a-unauthRole",
       "StackName": "amplify-wellsaidapp-dev-0660a",
       "StackId": "arn:aws:cloudformation:us-east-2:862994312970:stack/amplify-wellsaidapp-dev-0660a/43ae2a00-5ee3-11f0-b421-02721231c643",
-      "AmplifyAppId": "d2fhnktgorqm50"
+      "AmplifyAppId": "d2fhnktgorqm50",
+      "AuthTriggerTemplateURL": "https://s3.amazonaws.com/amplify-wellsaidapp-dev-0660a-deployment/amplify-cfn-templates/auth/auth-trigger-cloudformation-template.json"
     },
     "categories": {
       "auth": {
         "wellsaidDevAuth": {}
+      },
+      "function": {
+        "wellsaidDevAuthCreateAuthChallenge": {
+          "deploymentBucketName": "amplify-wellsaidapp-dev-0660a-deployment",
+          "s3Key": "amplify-builds/wellsaidDevAuthCreateAuthChallenge-6a3977486d5a457a326a-build.zip"
+        },
+        "wellsaidDevAuthDefineAuthChallenge": {
+          "deploymentBucketName": "amplify-wellsaidapp-dev-0660a-deployment",
+          "s3Key": "amplify-builds/wellsaidDevAuthDefineAuthChallenge-394e6146486a794e544d-build.zip"
+        },
+        "wellsaidDevAuthVerifyAuthChallengeResponse": {
+          "deploymentBucketName": "amplify-wellsaidapp-dev-0660a-deployment",
+          "s3Key": "amplify-builds/wellsaidDevAuthVerifyAuthChallengeResponse-435a486c4d6466315553-build.zip"
+        }
       }
     }
   }

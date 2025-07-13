@@ -2,7 +2,35 @@
   "auth": {
     "wellsaidDevAuth": {
       "customAuth": false,
-      "dependsOn": [],
+      "dependsOn": [
+        {
+          "attributes": [
+            "Arn",
+            "Name"
+          ],
+          "category": "function",
+          "resourceName": "wellsaidDevAuthCreateAuthChallenge",
+          "triggerProvider": "Cognito"
+        },
+        {
+          "attributes": [
+            "Arn",
+            "Name"
+          ],
+          "category": "function",
+          "resourceName": "wellsaidDevAuthDefineAuthChallenge",
+          "triggerProvider": "Cognito"
+        },
+        {
+          "attributes": [
+            "Arn",
+            "Name"
+          ],
+          "category": "function",
+          "resourceName": "wellsaidDevAuthVerifyAuthChallengeResponse",
+          "triggerProvider": "Cognito"
+        }
+      ],
       "frontendAuthConfig": {
         "mfaConfiguration": "OFF",
         "mfaTypes": [
@@ -25,6 +53,73 @@
       },
       "providerPlugin": "awscloudformation",
       "service": "Cognito"
+    }
+  },
+  "function": {
+    "wellsaidDevAuthCreateAuthChallenge": {
+      "build": true,
+      "providerPlugin": "awscloudformation",
+      "service": "Lambda"
+    },
+    "wellsaidDevAuthDefineAuthChallenge": {
+      "build": true,
+      "providerPlugin": "awscloudformation",
+      "service": "Lambda"
+    },
+    "wellsaidDevAuthVerifyAuthChallengeResponse": {
+      "build": true,
+      "providerPlugin": "awscloudformation",
+      "service": "Lambda"
+    }
+  },
+  "parameters": {
+    "AMPLIFY_function_wellsaidDevAuthCreateAuthChallenge_deploymentBucketName": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "wellsaidDevAuthCreateAuthChallenge"
+        }
+      ]
+    },
+    "AMPLIFY_function_wellsaidDevAuthCreateAuthChallenge_s3Key": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "wellsaidDevAuthCreateAuthChallenge"
+        }
+      ]
+    },
+    "AMPLIFY_function_wellsaidDevAuthDefineAuthChallenge_deploymentBucketName": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "wellsaidDevAuthDefineAuthChallenge"
+        }
+      ]
+    },
+    "AMPLIFY_function_wellsaidDevAuthDefineAuthChallenge_s3Key": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "wellsaidDevAuthDefineAuthChallenge"
+        }
+      ]
+    },
+    "AMPLIFY_function_wellsaidDevAuthVerifyAuthChallengeResponse_deploymentBucketName": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "wellsaidDevAuthVerifyAuthChallengeResponse"
+        }
+      ]
+    },
+    "AMPLIFY_function_wellsaidDevAuthVerifyAuthChallengeResponse_s3Key": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "wellsaidDevAuthVerifyAuthChallengeResponse"
+        }
+      ]
     }
   }
 }

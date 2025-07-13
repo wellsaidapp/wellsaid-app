@@ -6,6 +6,29 @@ import {
 } from 'lucide-react';
 import { Toaster } from 'react-hot-toast';
 
+import { Amplify } from 'aws-amplify';
+import amplifyconfig from './aws-exports';
+
+Amplify.configure({
+  ...amplifyconfig,
+  Auth: {
+    region: amplifyconfig.aws_cognito_region,
+    userPoolId: amplifyconfig.aws_user_pools_id,
+    userPoolWebClientId: amplifyconfig.aws_user_pools_web_client_id,
+    authenticationFlowType: 'CUSTOM_AUTH',
+    oauth: amplifyconfig.oauth,
+    // Add this explicit configuration:
+    signUpVerificationMethod: 'code', // For custom auth
+    passwordPolicy: {
+      minLength: 8,
+      requireLowercase: false,
+      requireUppercase: false,
+      requireNumbers: false,
+      requireSpecialCharacters: false,
+    }
+  }
+});
+
 // Components actually used
 import SplashScreen from './components/landingPage/SplashScreen';
 import Header from './components/appLayout/Header';

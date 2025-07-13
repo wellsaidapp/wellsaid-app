@@ -11,6 +11,59 @@ import {
   Heart, ArrowLeft, Cake, Orbit, GraduationCap, Gift, Shuffle, PlusCircle, Library, Lightbulb, Pencil, Lock, Key, KeyRound
 } from 'lucide-react';
 
+// import {
+//   signIn,
+//   confirmSignIn,
+//   fetchAuthSession
+// } from '@aws-amplify/auth';
+// ERROR: SplashScreen.jsx:79 signIn error: EmptySignInUsername: username is required to signIn
+    // at assertValidationError (http://localhost:5173/node_modules/.vite/deps/chunk-JMU2AT7J.js?v=c71e8a31:8044:11)
+    // at signInWithSRP (http://localhost:5173/node_modules/.vite/deps/chunk-JMU2AT7J.js?v=c71e8a31:10654:3)
+    // at signIn (http://localhost:5173/node_modules/.vite/deps/chunk-JMU2AT7J.js?v=c71e8a31:10896:14)
+    // at async handleEmailSubmit (http://localhost:5173/src/components/landingPage/SplashScreen.jsx?t=1752373144062:129:20)
+
+// import { signIn, sendCustomChallengeAnswer, fetchAuthSession } from 'aws-amplify/auth';
+// ERROR: Uncaught SyntaxError: The requested module '/node_modules/.vite/deps/aws-amplify_auth.js?t=1752372823947&v=c71e8a31' does not provide an export named 'sendCustomChallengeAnswer' (at SplashScreen.jsx:26:3)
+
+// import { Auth } from 'aws-amplify';
+// ERROR: Uncaught SyntaxError: The requested module '/node_modules/.vite/deps/aws-amplify.js?v=c71e8a31' does not provide an export named 'Auth' (at SplashScreen.jsx:23:10)
+
+
+// ERROR: Uncaught SyntaxError: The requested module '/node_modules/.vite/deps/aws-amplify_auth.js?t=1752373144172&v=c71e8a31' does not provide an export named 'sendCustomChallengeAnswer' (at SplashScreen.jsx:34:3)
+
+// import {
+//   signIn,
+//   signOut,
+//   confirmSignIn,
+//   fetchAuthSession,
+//   getCurrentUser,
+// } from '@aws-amplify/auth';
+//
+// import { signIn, confirmSignIn } from '@aws-amplify/auth'; // ✅ correct for Amplify v6+
+// import { Amplify } from 'aws-amplify';
+// import { Auth } from '@aws-amplify/auth'; // v6+ modular import
+// import amplifyconfig from '../../aws-exports';
+//
+// Amplify.configure({
+//   ...amplifyconfig,
+//   Auth: {
+//     ...amplifyconfig, // preserves your pool ID and region
+//     authenticationFlowType: 'CUSTOM_AUTH', // this is key!
+//   }
+// });
+
+import { Amplify } from 'aws-amplify';
+import {
+  signIn,
+  confirmSignIn,
+  fetchAuthSession,
+  signOut
+} from '@aws-amplify/auth';
+import awsconfig from '../../aws-exports';
+
+Amplify.configure(awsconfig);
+
+
 // Assets
 import logo from '../../assets/wellsaid.svg';
 import animationData from '../../assets/animations/TypeBounce.json';
@@ -24,7 +77,7 @@ const SplashScreen = ({ onComplete }) => {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
   const [email, setEmail] = useState('');
-  // Remove password state since we're not using it anymore
+  const [userData, setUserData] = useState({});
   const [pin, setPin] = useState(''); // New state for PIN
   const [loginStep, setLoginStep] = useState('email'); // 'email' or 'pin'
 
@@ -50,16 +103,43 @@ const SplashScreen = ({ onComplete }) => {
     onComplete();
   };
 
-  const handleEmailSubmit = (e) => {
+  const handleEmailSubmit = async (e) => {
     e.preventDefault();
-    // Here you would typically send the email to your backend to generate/send the PIN
+    await signOut(); // clear any prior session
+    const user = await signIn({
+      username: email,
+      options: {
+        authFlowType: 'CUSTOM_WITHOUT_SRP'
+      }
+    });
+    setUserData({ user });
     setLoginStep('pin');
   };
 
-  const handlePinSubmit = (e) => {
+  const handlePinSubmit = async (e) => {
     e.preventDefault();
-    // Here you would validate the PIN with your backend
-    handleDevLogin(e); // Or your actual login logic
+    try {
+      const { isSignedIn, nextStep } = await confirmSignIn({
+        challengeResponse: pin
+      });
+
+      if (isSignedIn) {
+        const session = await fetchAuthSession();
+        console.log('Logged in!', session);
+        localStorage.setItem('wellsaid-auth-state', 'loggedIn');
+        onComplete();
+      }
+    } catch (err) {
+      console.error('PIN validation error:', err);
+      // Handle incorrect PIN or other errors
+    }
+  };
+
+  // Helper function to generate random passwords
+  const generateRandomPassword = () => {
+    return Array(16).fill(0).map(() =>
+      Math.random().toString(36).charAt(2)
+    ).join('');
   };
 
   if (showLogin) {
@@ -72,24 +152,24 @@ const SplashScreen = ({ onComplete }) => {
                 <WellSaidLogo />
               </div>
               <h2 className="text-2xl font-bold text-gray-800 mt-4">Enter your PIN</h2>
-              <p className="text-gray-600 mt-2">We've sent a 4-digit code to {email}</p>
+              <p className="text-gray-600 mt-2">We've sent a 6-digit code to {email}</p>
             </div>
 
             <form onSubmit={handlePinSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">4-digit PIN</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">6-digit PIN</label>
                 <input
                   type="text"
                   inputMode="numeric"
-                  pattern="[0-9]{4}"
-                  maxLength={4}
+                  pattern="[0-9]{6}"
+                  maxLength={6}
                   value={pin}
                   onChange={(e) => {
                     const value = e.target.value.replace(/\D/g, ''); // Only allow numbers
                     setPin(value);
                   }}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-center text-2xl tracking-widest"
-                  placeholder="••••"
+                  placeholder="••••••"
                   autoComplete="one-time-code"
                   autoFocus
                   required
