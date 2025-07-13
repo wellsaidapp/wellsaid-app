@@ -7,15 +7,28 @@ export default defineConfig({
     postcss: './postcss.config.js'
   },
   optimizeDeps: {
-    include: ['pdfjs-dist']
+    include: ['pdfjs-dist', 'aws-amplify'] // Add aws-amplify here
   },
   build: {
-    assetsInclude: ['**/*.worker.js']
+    assetsInclude: ['**/*.worker.js'],
+    rollupOptions: {
+      external: ['aws-amplify'], // Add this line
+      output: {
+        manualChunks: {
+          'aws-amplify': ['aws-amplify'] // Optional: creates separate chunk
+        }
+      }
+    }
   },
   server: {
-    host: true, // Allow external connections
+    host: true,
     allowedHosts: [
-      '9082aaed0f68.ngrok-free.app' // 👈 Replace with your actual ngrok hostname
+      '9082aaed0f68.ngrok-free.app'
     ]
+  },
+  resolve: {
+    alias: {
+      './runtimeConfig': './runtimeConfig.browser' // Important for Amplify
+    }
   }
 });
