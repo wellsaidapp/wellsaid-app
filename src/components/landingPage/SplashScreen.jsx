@@ -11,47 +11,6 @@ import {
   Heart, ArrowLeft, Cake, Orbit, GraduationCap, Gift, Shuffle, PlusCircle, Library, Lightbulb, Pencil, Lock, Key, KeyRound
 } from 'lucide-react';
 
-// import {
-//   signIn,
-//   confirmSignIn,
-//   fetchAuthSession
-// } from '@aws-amplify/auth';
-// ERROR: SplashScreen.jsx:79 signIn error: EmptySignInUsername: username is required to signIn
-    // at assertValidationError (http://localhost:5173/node_modules/.vite/deps/chunk-JMU2AT7J.js?v=c71e8a31:8044:11)
-    // at signInWithSRP (http://localhost:5173/node_modules/.vite/deps/chunk-JMU2AT7J.js?v=c71e8a31:10654:3)
-    // at signIn (http://localhost:5173/node_modules/.vite/deps/chunk-JMU2AT7J.js?v=c71e8a31:10896:14)
-    // at async handleEmailSubmit (http://localhost:5173/src/components/landingPage/SplashScreen.jsx?t=1752373144062:129:20)
-
-// import { signIn, sendCustomChallengeAnswer, fetchAuthSession } from 'aws-amplify/auth';
-// ERROR: Uncaught SyntaxError: The requested module '/node_modules/.vite/deps/aws-amplify_auth.js?t=1752372823947&v=c71e8a31' does not provide an export named 'sendCustomChallengeAnswer' (at SplashScreen.jsx:26:3)
-
-// import { Auth } from 'aws-amplify';
-// ERROR: Uncaught SyntaxError: The requested module '/node_modules/.vite/deps/aws-amplify.js?v=c71e8a31' does not provide an export named 'Auth' (at SplashScreen.jsx:23:10)
-
-
-// ERROR: Uncaught SyntaxError: The requested module '/node_modules/.vite/deps/aws-amplify_auth.js?t=1752373144172&v=c71e8a31' does not provide an export named 'sendCustomChallengeAnswer' (at SplashScreen.jsx:34:3)
-
-// import {
-//   signIn,
-//   signOut,
-//   confirmSignIn,
-//   fetchAuthSession,
-//   getCurrentUser,
-// } from '@aws-amplify/auth';
-//
-// import { signIn, confirmSignIn } from '@aws-amplify/auth'; // ✅ correct for Amplify v6+
-// import { Amplify } from 'aws-amplify';
-// import { Auth } from '@aws-amplify/auth'; // v6+ modular import
-// import amplifyconfig from '../../aws-exports';
-//
-// Amplify.configure({
-//   ...amplifyconfig,
-//   Auth: {
-//     ...amplifyconfig, // preserves your pool ID and region
-//     authenticationFlowType: 'CUSTOM_AUTH', // this is key!
-//   }
-// });
-
 import { Amplify } from 'aws-amplify';
 import {
   signIn,
@@ -62,7 +21,6 @@ import {
 import awsconfig from '../../aws-exports';
 
 Amplify.configure(awsconfig);
-
 
 // Assets
 import logo from '../../assets/wellsaid.svg';
@@ -80,6 +38,8 @@ const SplashScreen = ({ onComplete }) => {
   const [userData, setUserData] = useState({});
   const [pin, setPin] = useState(''); // New state for PIN
   const [loginStep, setLoginStep] = useState('email'); // 'email' or 'pin'
+  const [isEmailSubmitting, setIsEmailSubmitting] = useState(false);
+  const [isPinSubmitting, setIsPinSubmitting] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -106,19 +66,27 @@ const SplashScreen = ({ onComplete }) => {
   const handleEmailSubmit = async (e) => {
     console.log("User clicked");
     e.preventDefault();
-    await signOut(); // clear any prior session
-    const user = await signIn({
-      username: email,
-      options: {
-        authFlowType: 'CUSTOM_WITHOUT_SRP'
-      }
-    });
-    setUserData({ user });
-    setLoginStep('pin');
+    setIsEmailSubmitting(true); // Start loading
+    try {
+      await signOut(); // clear any prior session
+      const user = await signIn({
+        username: email,
+        options: {
+          authFlowType: 'CUSTOM_WITHOUT_SRP'
+        }
+      });
+      setUserData({ user });
+      setLoginStep('pin');
+    } catch (error) {
+      console.error('Email submission error:', error);
+    } finally {
+      setIsEmailSubmitting(false); // Stop loading regardless of success/failure
+    }
   };
 
   const handlePinSubmit = async (e) => {
     e.preventDefault();
+    setIsPinSubmitting(true); // Start loading
     try {
       const { isSignedIn, nextStep } = await confirmSignIn({
         challengeResponse: pin
@@ -133,6 +101,8 @@ const SplashScreen = ({ onComplete }) => {
     } catch (err) {
       console.error('PIN validation error:', err);
       // Handle incorrect PIN or other errors
+    } finally {
+      setIsPinSubmitting(false); // Stop loading regardless of success/failure
     }
   };
 
@@ -179,9 +149,20 @@ const SplashScreen = ({ onComplete }) => {
 
               <button
                 type="submit"
-                className="w-full bg-gradient-to-r from-blue-500 to-indigo-500 text-white py-3 rounded-lg font-medium hover:from-blue-600 hover:to-indigo-600 transition-colors"
+                className="w-full bg-gradient-to-r from-blue-500 to-indigo-500 text-white py-3 rounded-lg font-medium hover:from-blue-600 hover:to-indigo-600 transition-colors flex items-center justify-center"
+                disabled={isPinSubmitting}
               >
-                Verify PIN
+                {isPinSubmitting ? (
+                  <>
+                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Verifying...
+                  </>
+                ) : (
+                  'Verify PIN'
+                )}
               </button>
             </form>
 
@@ -227,9 +208,20 @@ const SplashScreen = ({ onComplete }) => {
 
             <button
               type="submit"
-              className="w-full bg-gradient-to-r from-blue-500 to-indigo-500 text-white py-3 rounded-lg font-medium hover:from-blue-600 hover:to-indigo-600 transition-colors"
+              className="w-full bg-gradient-to-r from-blue-500 to-indigo-500 text-white py-3 rounded-lg font-medium hover:from-blue-600 hover:to-indigo-600 transition-colors flex items-center justify-center"
+              disabled={isEmailSubmitting}
             >
-              Continue
+              {isEmailSubmitting ? (
+                <>
+                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Processing...
+                </>
+              ) : (
+                'Continue'
+              )}
             </button>
           </form>
 
