@@ -32,7 +32,7 @@
       "email"
     ],
     "userpoolClientLambdaRole": "wellsa43cb7f0a_userpoolclient_lambda_role",
-    "userpoolClientSetAttributes": true,
+    "userpoolClientSetAttributes": false,
     "sharedId": "43cb7f0a",
     "resourceName": "wellsaidDevAuth",
     "authSelections": "identityPoolAndUserPool",
@@ -50,14 +50,14 @@
       "DefineAuthChallenge": [
         "boilerplate-define-challenge"
       ],
+      "PostConfirmation": [
+        "custom"
+      ],
       "VerifyAuthChallengeResponse": [
         "boilerplate-verify"
       ]
     },
-    "hostedUI": true,
-    "hostedUIDomainName": "wellsaid-dev",
-    "authProvidersUserPool": [],
-    "hostedUIProviderMeta": "[]",
+    "hostedUI": false,
     "userPoolGroupList": [],
     "serviceName": "Cognito",
     "usernameCaseSensitive": false,
@@ -102,14 +102,22 @@
           "Arn",
           "Name"
         ]
+      },
+      {
+        "category": "function",
+        "resourceName": "wellsaidDevAuthPostConfirmation",
+        "triggerProvider": "Cognito",
+        "attributes": [
+          "Arn",
+          "Name"
+        ]
       }
     ],
-    "oAuthMetadata": "{\"AllowedOAuthFlows\":[\"code\"],\"AllowedOAuthScopes\":[\"email\",\"openid\",\"profile\"],\"CallbackURLs\":[\"https://dev.wellsaidapp.com/\",\"https://dev.wellsaidapp.com/\"],\"LogoutURLs\":[\"https://dev.wellsaidapp.com/\",\"https://dev.wellsaidapp.com/\"]}",
     "authProviders": [],
     "parentStack": {
       "Ref": "AWS::StackId"
     },
-    "authTriggerConnections": "[\n  {\n    \"triggerType\": \"CreateAuthChallenge\",\n    \"lambdaFunctionName\": \"wellsaidDevAuthCreateAuthChallenge\"\n  },\n  {\n    \"triggerType\": \"DefineAuthChallenge\",\n    \"lambdaFunctionName\": \"wellsaidDevAuthDefineAuthChallenge\"\n  },\n  {\n    \"triggerType\": \"VerifyAuthChallengeResponse\",\n    \"lambdaFunctionName\": \"wellsaidDevAuthVerifyAuthChallengeResponse\"\n  }\n]",
+    "authTriggerConnections": "[\n  {\n    \"triggerType\": \"CreateAuthChallenge\",\n    \"lambdaFunctionName\": \"wellsaidDevAuthCreateAuthChallenge\"\n  },\n  {\n    \"triggerType\": \"DefineAuthChallenge\",\n    \"lambdaFunctionName\": \"wellsaidDevAuthDefineAuthChallenge\"\n  },\n  {\n    \"triggerType\": \"PostConfirmation\",\n    \"lambdaFunctionName\": \"wellsaidDevAuthPostConfirmation\"\n  },\n  {\n    \"triggerType\": \"VerifyAuthChallengeResponse\",\n    \"lambdaFunctionName\": \"wellsaidDevAuthVerifyAuthChallengeResponse\"\n  }\n]",
     "permissions": []
   }
 }

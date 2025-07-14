@@ -1,6 +1,6 @@
 // context/UserContext.jsx
 import { createContext, useState, useEffect, useContext } from 'react';
-import { fetchAuthSession } from 'aws-amplify/auth';
+import { fetchAuthSession, getCurrentUser } from 'aws-amplify/auth';
 import { jwtDecode } from 'jwt-decode';
 
 export const UserContext = createContext();
@@ -12,6 +12,10 @@ export const UserProvider = ({ children }) => {
   useEffect(() => {
     const fetchUserData = async () => {
       try {
+        // ✅ Only continue if user is signed in
+        const user = await getCurrentUser();
+        if (!user) throw new Error("No signed-in user");
+
         const session = await fetchAuthSession();
         const idToken = session.tokens?.idToken?.toString();
 
@@ -29,7 +33,6 @@ export const UserProvider = ({ children }) => {
         const data = await res.json();
         setUserData(data);
         console.log("✅ Loaded user data:", data);
-
       } catch (err) {
         console.error("❌ Failed to load user data:", err.message);
       } finally {

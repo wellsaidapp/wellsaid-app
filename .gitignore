@@ -27,6 +27,8 @@ dist-ssr
 # Amplify reference configs
 config-reference.json
 
+tmp/
+
 #amplify-do-not-edit-begin
 amplify/\#current-cloud-backend
 amplify/.config/local-*
@@ -48,4 +50,3 @@ amplifytools.xcconfig
 .secret-*
 **.sample
 #amplify-do-not-edit-end
-tmp/

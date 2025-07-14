@@ -2,7 +2,7 @@
   "providers": [
     "awscloudformation"
   ],
-  "projectName": "wellsaidapp",
+  "projectName": "WellSaidAppdev",
   "version": "3.1",
   "frontend": "javascript",
   "javascript": {
@@ -10,8 +10,8 @@
     "config": {
       "SourceDir": "src",
       "DistributionDir": "dist",
-      "BuildCommand": "yarn build",
-      "StartCommand": "yarn dev"
+      "BuildCommand": "npm run build",
+      "StartCommand": "npm run dev"
     }
   }
 }

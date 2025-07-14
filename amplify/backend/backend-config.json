@@ -29,6 +29,15 @@
           "category": "function",
           "resourceName": "wellsaidDevAuthVerifyAuthChallengeResponse",
           "triggerProvider": "Cognito"
+        },
+        {
+          "attributes": [
+            "Arn",
+            "Name"
+          ],
+          "category": "function",
+          "resourceName": "wellsaidDevAuthPostConfirmation",
+          "triggerProvider": "Cognito"
         }
       ],
       "frontendAuthConfig": {
@@ -62,6 +71,11 @@
       "service": "Lambda"
     },
     "wellsaidDevAuthDefineAuthChallenge": {
+      "build": true,
+      "providerPlugin": "awscloudformation",
+      "service": "Lambda"
+    },
+    "wellsaidDevAuthPostConfirmation": {
       "build": true,
       "providerPlugin": "awscloudformation",
       "service": "Lambda"
@@ -102,6 +116,22 @@
         {
           "category": "function",
           "resourceName": "wellsaidDevAuthDefineAuthChallenge"
+        }
+      ]
+    },
+    "AMPLIFY_function_wellsaidDevAuthPostConfirmation_deploymentBucketName": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "wellsaidDevAuthPostConfirmation"
+        }
+      ]
+    },
+    "AMPLIFY_function_wellsaidDevAuthPostConfirmation_s3Key": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "wellsaidDevAuthPostConfirmation"
         }
       ]
     },

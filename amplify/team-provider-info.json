@@ -28,6 +28,10 @@
         "wellsaidDevAuthVerifyAuthChallengeResponse": {
           "deploymentBucketName": "amplify-wellsaidapp-dev-0660a-deployment",
           "s3Key": "amplify-builds/wellsaidDevAuthVerifyAuthChallengeResponse-435a486c4d6466315553-build.zip"
+        },
+        "wellsaidDevAuthPostConfirmation": {
+          "deploymentBucketName": "amplify-wellsaidapp-dev-0660a-deployment",
+          "s3Key": "amplify-builds/wellsaidDevAuthPostConfirmation-32766841726e4a665173-build.zip"
         }
       }
     }
