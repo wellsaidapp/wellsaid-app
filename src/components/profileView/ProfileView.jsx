@@ -16,7 +16,7 @@ import AccountSettings from './subcomponents/AccountSettings';
 import NotificationSettings from './subcomponents/NotificationSettings';
 import HelpAndSupport from './subcomponents/HelpAndSupport';
 
-import { signOut } from '@aws-amplify/auth';
+import { signOut, getCurrentUser, fetchUserAttributes, fetchAuthSession } from '@aws-amplify/auth';
 
 const ProfileView = ({ user, insights = [], individuals = [], collections = [], setCurrentView }) => {
   const { expandedId, toggleDisclosure } = UseDisclosureToggle();
@@ -60,18 +60,34 @@ const ProfileView = ({ user, insights = [], individuals = [], collections = [], 
 
   const handleUpdateUser = async (updatedData) => {
     try {
-      // Here you would typically make an API call to update the user
-      // For now, we'll just update the local state
+      const session = await fetchAuthSession();
+      const idToken = session.tokens?.idToken?.toString();
+
+      console.log('🧾 ID Token:', idToken);
+
+      if (!idToken) throw new Error("Could not get user ID token");
+
+      const response = await fetch('https://aqaahphwfj.execute-api.us-east-2.amazonaws.com/dev/users/settings/account', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: idToken
+        },
+        body: JSON.stringify(updatedData)
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to update user');
+      }
+
       setCurrentUser(prev => ({
         ...prev,
         ...updatedData
       }));
-      console.log('User updated:', updatedData);
-      // If you had an API call, it would look something like:
-      // await api.updateUser(currentUser.id, updatedData);
+      console.log('✅ User updated on server and locally:', updatedData);
     } catch (error) {
-      console.error('Failed to update user:', error);
-      // You might want to show an error message to the user here
+      console.error('❌ Failed to update user:', error.message);
     }
   };
 
