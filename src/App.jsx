@@ -160,21 +160,8 @@ const WellSaidApp = () => {
     );
   };
 
-  // Replace the entire if (showSplash) condition with:
-  if (showSplash && authState !== 'loggedIn') {
-    return (
-      <SplashScreen 
-        onComplete={() => {
-          const authState = localStorage.getItem('wellsaid-auth-state') || 'new';
-          setAuthState(authState);
-          setShowSplash(false);
-        }}
-      />
-    );
-  }
   return (
     <>
-      {renderContent()}
       <Toaster
         position="top-center"
         toastOptions={{
@@ -193,6 +180,19 @@ const WellSaidApp = () => {
           custom: { icon: null }
         }}
       />
+
+      {/* Rest of your rendering logic */}
+      {showSplash && authState !== 'loggedIn' ? (
+        <SplashScreen
+          onComplete={() => {
+            const authState = localStorage.getItem('wellsaid-auth-state') || 'new';
+            setAuthState(authState);
+            setShowSplash(false);
+          }}
+        />
+      ) : (
+        renderContent()
+      )}
     </>
   );
 };

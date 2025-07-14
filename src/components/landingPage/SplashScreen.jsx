@@ -1,6 +1,8 @@
 // Imports
 import React, { useState, useEffect, useRef } from 'react';
 import Lottie from 'lottie-react';
+import { toast } from 'react-hot-toast';
+import ToastMessage from '../library/BookCreation/ToastMessage'; // Update this path to match your project structure
 
 import {
   Send, Mic, MicOff, ArrowRight, Check, Plus, User, Mail, Hash, Inbox, Trash2, Save, GripVertical, Bookmark, CheckCircle,
@@ -40,6 +42,34 @@ const SplashScreen = ({ onComplete }) => {
   const [loginStep, setLoginStep] = useState('email'); // 'email' or 'pin'
   const [isEmailSubmitting, setIsEmailSubmitting] = useState(false);
   const [isPinSubmitting, setIsPinSubmitting] = useState(false);
+  const [isResendingPin, setIsResendingPin] = useState(false);
+  const [lastEmailSent, setLastEmailSent] = useState(null);
+  const [secondsUntilResend, setSecondsUntilResend] = useState(0);
+  const canResendPin = !lastEmailSent || Date.now() - lastEmailSent > 30000;
+  const [pinVerificationFailed, setPinVerificationFailed] = useState(false);
+  useEffect(() => {
+    if (!lastEmailSent) return;
+
+    const remainingTime = 30000 - (Date.now() - lastEmailSent);
+    if (remainingTime <= 0) {
+      setSecondsUntilResend(0);
+      return;
+    }
+
+    setSecondsUntilResend(Math.ceil(remainingTime / 1000));
+
+    const interval = setInterval(() => {
+      setSecondsUntilResend(prev => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [lastEmailSent]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -64,53 +94,162 @@ const SplashScreen = ({ onComplete }) => {
   };
 
   const handleEmailSubmit = async (e) => {
-    console.log("User clicked");
     e.preventDefault();
-    setIsEmailSubmitting(true); // Start loading
+
+    // Basic validation
+    if (!email.includes('@') || !email.includes('.')) {
+      toast.custom(
+        (t) => (
+          <ToastMessage
+            type="error"
+            title="Invalid Email"
+            message="Please enter a valid email address"
+            onDismiss={() => toast.dismiss(t.id)}
+          />
+        ),
+        { duration: 4000 }
+      );
+      return;
+    }
+
+    setIsEmailSubmitting(true);
     try {
-      await signOut(); // clear any prior session
+      await signOut(); // Clear any prior session
       const user = await signIn({
         username: email,
-        options: {
-          authFlowType: 'CUSTOM_WITHOUT_SRP'
-        }
+        options: { authFlowType: 'CUSTOM_WITHOUT_SRP' }
       });
       setUserData({ user });
       setLoginStep('pin');
+      setLastEmailSent(Date.now());
+      toast.success("PIN sent to your email");
     } catch (error) {
       console.error('Email submission error:', error);
+      const message = error.name === 'UserNotFoundException'
+        ? "No account found with this email address"
+        : "Failed to send PIN. Please try again.";
+
+      toast.custom(
+        (t) => (
+          <ToastMessage
+            type="error"
+            title="Login Failed"
+            message={message}
+            onDismiss={() => toast.dismiss(t.id)}
+          />
+        ),
+        { duration: 4000 }
+      );
     } finally {
-      setIsEmailSubmitting(false); // Stop loading regardless of success/failure
+      setIsEmailSubmitting(false);
     }
   };
 
   const handlePinSubmit = async (e) => {
     e.preventDefault();
-    setIsPinSubmitting(true); // Start loading
+
+    if (pin.length !== 6 || !/^\d+$/.test(pin)) {
+      toast.custom(
+        (t) => (
+          <ToastMessage
+            type="error"
+            title="Invalid PIN"
+            message="Please enter a 6-digit number"
+            onDismiss={() => toast.dismiss(t.id)}
+          />
+        ),
+        { duration: 4000 }
+      );
+      return;
+    }
+
+    setIsPinSubmitting(true);
     try {
-      const { isSignedIn, nextStep } = await confirmSignIn({
+      const { isSignedIn } = await confirmSignIn({
         challengeResponse: pin
       });
 
       if (isSignedIn) {
         const session = await fetchAuthSession();
-        console.log('Logged in!', session);
         localStorage.setItem('wellsaid-auth-state', 'loggedIn');
+        toast.success("Login successful!");
         onComplete();
       }
     } catch (err) {
       console.error('PIN validation error:', err);
-      // Handle incorrect PIN or other errors
+      setPin(''); // Clear the PIN field
+      setPinVerificationFailed(true); // Mark verification as failed
+
+      // Immediately allow resend on failure
+      setSecondsUntilResend(0);
+
+      toast.custom(
+        (t) => (
+          <ToastMessage
+            type="error"
+            title="Invalid PIN"
+            message="Please request a new PIN and try again"
+            onDismiss={() => toast.dismiss(t.id)}
+          />
+        ),
+        { duration: 4000 }
+      );
     } finally {
-      setIsPinSubmitting(false); // Stop loading regardless of success/failure
+      setIsPinSubmitting(false);
     }
   };
 
-  // Helper function to generate random passwords
-  const generateRandomPassword = () => {
-    return Array(16).fill(0).map(() =>
-      Math.random().toString(36).charAt(2)
-    ).join('');
+  // Updated handleResendPin function
+  const handleResendPin = async () => {
+    if (secondsUntilResend > 0) {
+      toast.error(`Please wait ${secondsUntilResend} seconds before requesting a new PIN`);
+      return;
+    }
+
+    setIsResendingPin(true);
+    try {
+      await signOut();
+      await signIn({
+        username: email,
+        options: { authFlowType: 'CUSTOM_WITHOUT_SRP' }
+      });
+      setLastEmailSent(Date.now());
+      setSecondsUntilResend(30); // Reset to 30 seconds
+      setPinVerificationFailed(false); // Reset failed state
+      toast.custom(
+        (t) => (
+          <ToastMessage
+            type="success"
+            title="PIN Sent"
+            message="New PIN sent to your email"
+            onDismiss={() => toast.dismiss(t.id)}
+          />
+        ),
+        { duration: 4000 }
+      );
+    } catch (error) {
+      console.error('Resend PIN error:', error);
+      toast.custom(
+        (t) => (
+          <ToastMessage
+            type="error"
+            title="Error"
+            message="Failed to resend PIN. Please try again."
+            onDismiss={() => toast.dismiss(t.id)}
+          />
+        ),
+        { duration: 4000 }
+      );
+    } finally {
+      setIsResendingPin(false);
+    }
+  };
+
+  // Update the back to email button handler
+  const handleBackToEmail = () => {
+    setLoginStep('email');
+    setPin('');
+    setPinVerificationFailed(false);
   };
 
   if (showLogin) {
@@ -118,39 +257,40 @@ const SplashScreen = ({ onComplete }) => {
       return (
         <div className="fixed inset-0 flex items-center justify-center bg-gradient-to-br from-blue-500 to-indigo-600 p-4 overflow-y-auto">
           <div className="bg-white rounded-2xl shadow-lg p-6 w-full max-w-md">
-            <div className="text-center mb-6">
-              <div className="flex justify-center mb-2">
-                <WellSaidLogo />
-              </div>
-              <h2 className="text-2xl font-bold text-gray-800 mt-4">Enter your PIN</h2>
-              <p className="text-gray-600 mt-2">We've sent a 6-digit code to {email}</p>
-            </div>
+            {/* ... keep existing header ... */}
 
             <form onSubmit={handlePinSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">6-digit PIN</label>
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  pattern="[0-9]{6}"
-                  maxLength={6}
-                  value={pin}
-                  onChange={(e) => {
-                    const value = e.target.value.replace(/\D/g, ''); // Only allow numbers
-                    setPin(value);
-                  }}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-center text-2xl tracking-widest"
-                  placeholder="••••••"
-                  autoComplete="one-time-code"
-                  autoFocus
-                  required
-                />
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  6-digit PIN
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]{6}"
+                    maxLength={6}
+                    value={pin}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/\D/g, '');
+                      setPin(value);
+                    }}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-center text-2xl tracking-widest"
+                    placeholder="••••••"
+                    autoComplete="one-time-code"
+                    autoFocus
+                    required
+                    disabled={isPinSubmitting} // Disable input after submission
+                  />
+                </div>
               </div>
 
               <button
                 type="submit"
-                className="w-full bg-gradient-to-r from-blue-500 to-indigo-500 text-white py-3 rounded-lg font-medium hover:from-blue-600 hover:to-indigo-600 transition-colors flex items-center justify-center"
-                disabled={isPinSubmitting}
+                className={`w-full bg-gradient-to-r from-blue-500 to-indigo-500 text-white py-3 rounded-lg font-medium transition-colors flex items-center justify-center ${
+                  isPinSubmitting || pinVerificationFailed ? 'opacity-50 cursor-not-allowed' : 'hover:from-blue-600 hover:to-indigo-600'
+                }`}
+                disabled={isPinSubmitting || pinVerificationFailed}
               >
                 {isPinSubmitting ? (
                   <>
@@ -166,13 +306,32 @@ const SplashScreen = ({ onComplete }) => {
               </button>
             </form>
 
-            <div className="mt-4 text-center">
-              <button
-                onClick={() => setLoginStep('email')}
-                className="text-blue-600 text-sm font-medium"
-              >
-                Back to email entry
-              </button>
+            <div className="mt-6 pt-4 border-t border-gray-100">
+              <div className="flex flex-col space-y-3 text-center">
+                <button
+                  onClick={handleBackToEmail}
+                  className="text-blue-600 text-sm font-medium hover:text-blue-700 transition-colors"
+                >
+                  Back to email entry
+                </button>
+
+                <div className="flex items-center justify-center space-x-2">
+                  <button
+                    onClick={handleResendPin}
+                    disabled={secondsUntilResend > 0 || isResendingPin}
+                    className={`text-blue-600 text-sm font-medium hover:text-blue-700 transition-colors ${
+                      secondsUntilResend > 0 ? 'opacity-50 cursor-not-allowed' : ''
+                    }`}
+                  >
+                    {isResendingPin ? 'Sending...' : 'Resend PIN'}
+                  </button>
+                  {secondsUntilResend > 0 && (
+                    <span className="text-xs text-gray-500">
+                      (Available in {secondsUntilResend}s)
+                    </span>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -193,7 +352,9 @@ const SplashScreen = ({ onComplete }) => {
 
           <form onSubmit={handleEmailSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Email
+              </label>
               <input
                 type="email"
                 value={email}
@@ -225,12 +386,14 @@ const SplashScreen = ({ onComplete }) => {
             </button>
           </form>
 
-          <button
-            onClick={() => setShowLogin(false)}
-            className="w-full text-blue-600 text-sm font-medium mt-4"
-          >
-            Back to welcome
-          </button>
+          <div className="mt-4 text-center">
+            <button
+              onClick={() => setShowLogin(false)}
+              className="text-blue-600 text-sm font-medium"
+            >
+              Back to welcome
+            </button>
+          </div>
         </div>
       </div>
     );
