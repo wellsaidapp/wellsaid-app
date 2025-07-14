@@ -19,7 +19,7 @@
       "function": {
         "wellsaidDevAuthCreateAuthChallenge": {
           "deploymentBucketName": "amplify-wellsaidapp-dev-0660a-deployment",
-          "s3Key": "amplify-builds/wellsaidDevAuthCreateAuthChallenge-6a3977486d5a457a326a-build.zip"
+          "s3Key": "amplify-builds/wellsaidDevAuthCreateAuthChallenge-4446636462566d706a30-build.zip"
         },
         "wellsaidDevAuthDefineAuthChallenge": {
           "deploymentBucketName": "amplify-wellsaidapp-dev-0660a-deployment",

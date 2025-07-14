@@ -16,6 +16,8 @@ import AccountSettings from './subcomponents/AccountSettings';
 import NotificationSettings from './subcomponents/NotificationSettings';
 import HelpAndSupport from './subcomponents/HelpAndSupport';
 
+import { signOut } from '@aws-amplify/auth';
+
 const ProfileView = ({ user, insights = [], individuals = [], collections = [], setCurrentView }) => {
   const { expandedId, toggleDisclosure } = UseDisclosureToggle();
   const [currentUser, setCurrentUser] = useState(user);
@@ -162,7 +164,15 @@ const ProfileView = ({ user, insights = [], individuals = [], collections = [], 
           />
 
           <button
-            onClick={() => window.location.reload()}
+            onClick={async () => {
+              try {
+                await signOut(); // signs out from Cognito
+                localStorage.removeItem('wellsaid-auth-state'); // clear your custom flag
+                window.location.reload(); // re-triggers App state logic (or route to Splash/Login)
+              } catch (err) {
+                console.error('Sign out failed:', err);
+              }
+            }}
             className="w-full bg-white/80 backdrop-blur-sm rounded-xl p-4 text-red-600 text-center border border-white/50 shadow-sm hover:bg-gray-50 transition-colors"
           >
             Sign Out
