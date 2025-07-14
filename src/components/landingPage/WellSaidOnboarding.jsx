@@ -115,6 +115,7 @@ const WellSaidOnboarding = ({ onComplete }) => {
           options: {
             userAttributes: {
               email: value,
+              name: userData.name,
             },
           },
         });
