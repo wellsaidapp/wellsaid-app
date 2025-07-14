@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { Lightbulb, ArrowRight, Pencil, Zap, Clock, Sparkles, Calendar, Trophy } from 'lucide-react';
 import { SHARED_BOOKS, getRecentBooks, getPublishedBooksCount } from '../../constants/sharedBooks';
 import { INSIGHTS } from '../../constants/insights';
-import { USER } from '../../constants/user';
+// import { USER } from '../../constants/user';
+import { useUser } from '../../context/UserContext';
 import { UPCOMING_EVENTS } from '../../constants/upcomingEvents';
 import { INDIVIDUALS } from '../../constants/individuals';
 import { CUSTOM_COLLECTIONS } from '../../constants/collections';
@@ -31,9 +32,23 @@ const HomeView = ({
   books,
   setBooks
 }) => {
+  const { userData, loadingUser } = useUser();
+
+  if (loadingUser) {
+    return (
+      <div className="fixed inset-0 flex items-center justify-center bg-white">
+        <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500" />
+      </div>
+    );
+  }
+
+  const userName = userData?.name?.split(' ')[0] || 'Friend';
+  const weeklyGoal = userData?.weeklyGoal ?? 5;
+  const userStreak = userData?.streak ?? 0;
+
   const [insights] = useState(INSIGHTS);
   const weekInsights = insights.filter(i => isThisWeek(parseISO(i.date))).length;
-  const weeklyGoal = 5;
+  // const weeklyGoal = 5;
   const [selectedBook, setSelectedBook] = useState(null);
   const [currentPage, setCurrentPage] = useState(0);
   const [showPdfViewer, setShowPdfViewer] = useState(false);
@@ -154,7 +169,7 @@ const HomeView = ({
       <div className="p-4">
         <HeroSection
           setShowCaptureOptions={setShowCaptureOptions}
-          userName={USER.name.split(' ')[0]}
+          userName={userName}
         />
 
         {UPCOMING_EVENTS.length > 0 && (
@@ -173,7 +188,7 @@ const HomeView = ({
         <WeeklyProgress
           weekInsights={weekInsights}
           weeklyGoal={weeklyGoal}
-          userStreak={USER.streak}
+          userStreak={userStreak}
         />
 
         <SharedBooksSection

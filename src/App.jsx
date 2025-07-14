@@ -5,6 +5,7 @@ import {
   ChevronDown, Home, Bell, Settings, Users, Wand2, Lock, CheckCircle
 } from 'lucide-react';
 import { Toaster } from 'react-hot-toast';
+import { useUser } from './context/UserContext';
 
 import { Amplify } from 'aws-amplify';
 import amplifyconfig from './aws-exports';
@@ -48,7 +49,7 @@ import { USER } from './constants/user';
 import { SHARED_BOOKS } from './constants/sharedBooks';
 
 const WellSaidApp = () => {
-
+  const { userData, loadingUser } = useUser();
   const [authState, setAuthState] = useState('checking');
   const [showLogin, setShowLogin] = useState(false);
   const [currentView, setCurrentView] = useState('home');
@@ -139,13 +140,18 @@ const WellSaidApp = () => {
           onComplete={() => {
             localStorage.setItem('wellsaid-auth-state', 'loggedIn');
             setAuthState('loggedIn');
-            setShowSplash(false); // Ensure splash is hidden
+            setShowSplash(false);
           }}
         />
       );
     }
 
-    // For all logged in states
+    // 👇 BLOCK here if user data hasn't finished loading yet
+    if (authState === 'loggedIn' && loadingUser) {
+      return null; // prevent premature view rendering
+    }
+
+    // ✅ Once userData is loaded, render the app
     return (
       <div className="relative min-h-screen overflow-y-auto">
         <main className="flex-grow">
@@ -159,6 +165,9 @@ const WellSaidApp = () => {
       </div>
     );
   };
+
+  const shouldShowSplash =
+    showSplash || (authState === 'loggedIn' && loadingUser);
 
   return (
     <>
@@ -182,7 +191,7 @@ const WellSaidApp = () => {
       />
 
       {/* Rest of your rendering logic */}
-      {showSplash && authState !== 'loggedIn' ? (
+      {shouldShowSplash ? (
         <SplashScreen
           onComplete={() => {
             const authState = localStorage.getItem('wellsaid-auth-state') || 'new';
