@@ -27,6 +27,7 @@ const ProfileView = ({ user, insights = [], individuals = [], collections = [], 
   const [croppedAvatarImage, setCroppedAvatarImage] = useState(null);
   const [showNotificationSettings, setShowNotificationSettings] = useState(false);
   const [showHelpSupport, setShowHelpSupport] = useState(false);
+  const [isSigningOut, setIsSigningOut] = useState(false);
   const disclosures = [
     {
       id: 'terms',
@@ -165,17 +166,30 @@ const ProfileView = ({ user, insights = [], individuals = [], collections = [], 
 
           <button
             onClick={async () => {
+              setIsSigningOut(true); // Start loading
               try {
                 await signOut(); // signs out from Cognito
                 localStorage.removeItem('wellsaid-auth-state'); // clear your custom flag
                 window.location.reload(); // re-triggers App state logic (or route to Splash/Login)
               } catch (err) {
                 console.error('Sign out failed:', err);
+                setIsSigningOut(false); // Stop loading on error
               }
             }}
-            className="w-full bg-white/80 backdrop-blur-sm rounded-xl p-4 text-red-600 text-center border border-white/50 shadow-sm hover:bg-gray-50 transition-colors"
+            disabled={isSigningOut}
+            className={`w-full bg-white/80 backdrop-blur-sm rounded-xl p-4 text-red-600 text-center border border-white/50 shadow-sm hover:bg-gray-50 transition-colors flex items-center justify-center ${isSigningOut ? 'opacity-75' : ''}`}
           >
-            Sign Out
+            {isSigningOut ? (
+              <>
+                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-red-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Signing Out...
+              </>
+            ) : (
+              'Sign Out'
+            )}
           </button>
           {/* Copyright message */}
           <p className="text-xs text-gray-400 text-center pt-4 px-6">
