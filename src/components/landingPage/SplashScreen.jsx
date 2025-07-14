@@ -122,7 +122,17 @@ const SplashScreen = ({ onComplete }) => {
       setUserData({ user });
       setLoginStep('pin');
       setLastEmailSent(Date.now());
-      toast.success("PIN sent to your email");
+      toast.custom(
+        (t) => (
+          <ToastMessage
+            type="success"
+            title="Success!"
+            message="PIN sent to your email"
+            onDismiss={() => toast.dismiss(t.id)}
+          />
+        ),
+        { duration: 4000 }
+      );
     } catch (error) {
       console.error('Email submission error:', error);
       const message = error.name === 'UserNotFoundException'
@@ -172,7 +182,17 @@ const SplashScreen = ({ onComplete }) => {
       if (isSignedIn) {
         const session = await fetchAuthSession();
         localStorage.setItem('wellsaid-auth-state', 'loggedIn');
-        toast.success("Login successful!");
+        toast.custom(
+          (t) => (
+            <ToastMessage
+              type="success"
+              title="Success!"
+              message="Login successful!"
+              onDismiss={() => toast.dismiss(t.id)}
+            />
+          ),
+          { duration: 4000 }
+        );
         onComplete();
       }
     } catch (err) {
