@@ -10,8 +10,11 @@ export const UserProvider = ({ children }) => {
   const [userData, setUserData] = useState(null);
   const [loadingUser, setLoadingUser] = useState(true);
 
-  const fetchUserData = async () => {
-    setLoadingUser(true);
+  const fetchUserData = async (suppressSplash = false) => {
+
+    if (!suppressSplash) {
+      setLoadingUser(true);
+    }
     try {
       const user = await getCurrentUser();
       console.log("🧑 Current Cognito user:", user);

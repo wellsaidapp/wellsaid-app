@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { ChevronLeft, Trash2, Edit, X } from 'lucide-react';
 import Modal from './Modal';
 import Header from '../../appLayout/Header';
+import { useUser } from '../../../context/UserContext';
 
 const AccountSettings = ({ user, onBack, onUpdateUser, onDeleteAccount }) => {
   const [name, setName] = useState(user.name || '');
@@ -11,6 +12,7 @@ const AccountSettings = ({ user, onBack, onUpdateUser, onDeleteAccount }) => {
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const { refetchUser } = useUser();
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -19,6 +21,7 @@ const AccountSettings = ({ user, onBack, onUpdateUser, onDeleteAccount }) => {
         name,
         weeklyGoal: parseInt(weeklyGoal) || 5
       });
+      await refetchUser(true);
       setIsEditing(false);
     } finally {
       setIsSaving(false);

@@ -95,7 +95,7 @@ const ProfileView = ({ user, insights = [], individuals = [], collections = [], 
         data: imageBlob,
         options: {
           contentType: 'image/jpeg',
-          accessLevel: 'public' // or 'guest' if your app uses that
+          accessLevel: 'public'
         }
       }).result;
 
@@ -109,8 +109,7 @@ const ProfileView = ({ user, insights = [], individuals = [], collections = [], 
       console.log("🖼 Avatar uploaded to:", avatarUrl);
 
       await handleUpdateUser({ avatar: avatarUrl });
-      if (!res.ok) throw new Error("Failed to update user");
-      await refetchUser(); // Refetch context
+      await refetchUser(true); // Refetch context
     } catch (err) {
       console.error("❌ Error uploading avatar to S3:", err);
     }
@@ -144,7 +143,7 @@ const ProfileView = ({ user, insights = [], individuals = [], collections = [], 
         ...updatedData
       }));
       console.log('✅ User updated on server and locally:', updatedData);
-      await refetchUser(); // Refetch context
+      await refetchUser(true); // Refetch context
 
     } catch (error) {
       console.error('❌ Failed to update user:', error.message);
