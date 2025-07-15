@@ -66,30 +66,43 @@ const ProfileView = ({ user, insights = [], individuals = [], collections = [], 
     setCroppedAvatarImage(croppedImage);
     setShowAvatarCropper(false);
     setAvatarUploadTemp(null);
-    console.log('New avatar image:', croppedImage);
+    console.log('New avatar image (Data URL):', croppedImage);
 
     try {
-      // if (!session?.identityId) {
-      //   throw new Error("Cognito session not yet loaded");
-      // }
-
       const userId = userData?.cognitoId;
-      console.log("Cognito User Id:", userId);
       const fileName = `Users/Active/${userId}/images/avatar.jpg`;
 
+      // ✅ Convert base64 Data URL to Blob
+      const base64Data = croppedImage.split(',')[1];
+      const byteCharacters = atob(base64Data);
+      const byteArrays = [];
+
+      for (let i = 0; i < byteCharacters.length; i += 512) {
+        const slice = byteCharacters.slice(i, i + 512);
+        const byteNumbers = new Array(slice.length);
+        for (let j = 0; j < slice.length; j++) {
+          byteNumbers[j] = slice.charCodeAt(j);
+        }
+        const byteArray = new Uint8Array(byteNumbers);
+        byteArrays.push(byteArray);
+      }
+
+      const imageBlob = new Blob(byteArrays, { type: 'image/jpeg' });
+
+      // ✅ Upload Blob to S3
       await uploadData({
         key: fileName,
-        data: croppedImage,
+        data: imageBlob,
         options: {
           contentType: 'image/jpeg',
-          accessLevel: 'guest' // or 'private' depending on your needs
+          accessLevel: 'public' // or 'guest' if your app uses that
         }
       }).result;
 
       const { url: avatarUrl } = await getUrl({
         key: fileName,
         options: {
-          accessLevel: 'guest'
+          accessLevel: 'public'
         }
       });
 
@@ -187,7 +200,7 @@ const ProfileView = ({ user, insights = [], individuals = [], collections = [], 
 
       <div className="p-4">
         <UserProfileCard
-          user={{ ...user, avatarImage: user?.avatarUrl?.href }}
+          user={{ ...userData, avatarImage: userData?.avatarUrl?.href }}
           insightsCount={insights.length}
           peopleCount={individuals.length}
           booksCount={getPublishedBooksCount()}

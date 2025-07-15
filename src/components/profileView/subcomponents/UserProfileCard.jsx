@@ -8,14 +8,16 @@ const UserProfileCard = ({
   booksCount,
   className = '',
   avatarInitial = null,
-  joinDate = 'June 2025', // Default value
-  // Add these new props:
+  joinDate = 'June 2025',
   onAvatarUpload,
   croppedAvatarImage
 }) => {
   // Use provided initial or first letter of name
   const initial = avatarInitial || user?.name?.charAt(0) || 'U';
-
+  console.log("🧪 Avatar Image Debug:", {
+    croppedAvatarImage,
+    avatarUrl: user?.avatarUrl?.href
+  });
   // Add this handler
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
@@ -37,6 +39,7 @@ const UserProfileCard = ({
             src={croppedAvatarImage || user.avatarImage}
             className="w-full h-full rounded-full object-cover border-2 border-white shadow"
             alt="User avatar"
+            onError={() => console.error("❌ Failed to load avatar image:", user.avatarImage)}
           />
         ) : (
           <div className="w-full h-full bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center">
