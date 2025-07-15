@@ -12,12 +12,12 @@ const UserProfileCard = ({
   onAvatarUpload,
   croppedAvatarImage
 }) => {
-  // Use provided initial or first letter of name
-  const initial = avatarInitial || user?.name?.charAt(0) || 'U';
-  console.log("🧪 Avatar Image Debug:", {
-    croppedAvatarImage,
-    avatarUrl: user?.avatarUrl?.href
-  });
+  // // Use provided initial or first letter of name
+  // const initial = avatarInitial || user?.name?.charAt(0) || 'U';
+  // console.log("🧪 Avatar Image Debug:", {
+  //   croppedAvatarImage,
+  //   avatarUrl: user?.avatarUrl?.href
+  // });
   // Add this handler
   const handleImageUpload = (e) => {
     const file = e.target.files[0];

@@ -210,6 +210,12 @@ const ProfileView = ({ user, insights = [], individuals = [], collections = [], 
             setShowAvatarCropper(true);
           }}
           croppedAvatarImage={croppedAvatarImage}
+          joinDate={userData?.createdAt
+            ? new Date(userData.createdAt).toLocaleDateString('en-US', {
+                month: 'long',
+                year: 'numeric'
+              })
+            : 'Unknown'}
         />
 
         <div className="space-y-3">
