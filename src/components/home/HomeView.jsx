@@ -32,7 +32,7 @@ const HomeView = ({
   books,
   setBooks
 }) => {
-  const { userData, loadingUser } = useUser();
+  const { userData, loadingUser, refetchUser } = useUser();
 
   if (loadingUser) {
     return (
@@ -41,6 +41,8 @@ const HomeView = ({
       </div>
     );
   }
+
+
 
   const userName = userData?.name?.split(' ')[0] || 'Friend';
   const weeklyGoal = userData?.weeklyGoal ?? 5;

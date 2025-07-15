@@ -22,7 +22,7 @@ import { uploadData, getUrl } from 'aws-amplify/storage';
 
 const ProfileView = ({ user, insights = [], individuals = [], collections = [], setCurrentView }) => {
   // const [session, setSession] = useState(null);
-  const { userData, loadingUser } = useUser();
+  const { userData, loadingUser, refetchUser } = useUser();
   const { expandedId, toggleDisclosure } = UseDisclosureToggle();
   const [currentUser, setCurrentUser] = useState(user);
   const [showAccountSettings, setShowAccountSettings] = useState(false);
@@ -109,6 +109,8 @@ const ProfileView = ({ user, insights = [], individuals = [], collections = [], 
       console.log("🖼 Avatar uploaded to:", avatarUrl);
 
       await handleUpdateUser({ avatar: avatarUrl });
+      if (!res.ok) throw new Error("Failed to update user");
+      await refetchUser(); // Refetch context
     } catch (err) {
       console.error("❌ Error uploading avatar to S3:", err);
     }
@@ -142,6 +144,8 @@ const ProfileView = ({ user, insights = [], individuals = [], collections = [], 
         ...updatedData
       }));
       console.log('✅ User updated on server and locally:', updatedData);
+      await refetchUser(); // Refetch context
+
     } catch (error) {
       console.error('❌ Failed to update user:', error.message);
     }
@@ -164,7 +168,7 @@ const ProfileView = ({ user, insights = [], individuals = [], collections = [], 
   if (showAccountSettings) {
     return (
       <AccountSettings
-        user={currentUser}
+        user={userData}
         onBack={() => setShowAccountSettings(false)}
         onUpdateUser={handleUpdateUser}
         onDeleteAccount={handleDeleteAccount}
