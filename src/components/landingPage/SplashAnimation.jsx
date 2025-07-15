@@ -1,15 +1,14 @@
 import React, { useEffect, useRef } from 'react';
 import Lottie from 'lottie-react';
-import animationData from '../../assets/animations/TypeBounce.json'; // Update path if needed
+import animationData from '../../assets/animations/TypeBounce.json';
 
-const SplashAnimation = ({ onComplete }) => {
+const SplashAnimation = ({ onComplete = () => {} }) => {  // Add default empty function
   const animationRef = useRef();
 
   useEffect(() => {
-    // Optional: wait for animation duration or when animation completes
     const timeout = setTimeout(() => {
-      onComplete();
-    }, 3000); // Adjust this duration to match your animation length
+      onComplete(); // Safe to call now
+    }, 3000);
 
     return () => clearTimeout(timeout);
   }, [onComplete]);

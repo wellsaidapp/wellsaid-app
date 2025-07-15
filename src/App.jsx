@@ -62,11 +62,20 @@ const WellSaidApp = () => {
 
   useEffect(() => {
     const storedAuthState = localStorage.getItem('wellsaid-auth-state');
+
+    // Scenario 1: Already logged in user
+    if (storedAuthState === 'loggedIn') {
+      // Show splash while UserContext loads
+      setAuthState('loggedIn');
+      return;
+    }
+
+    // Scenario 2 & 3: New or returning user
     setAuthState(storedAuthState || 'new');
 
-    // Skip splash if already logged in
-    if (storedAuthState === 'loggedIn') {
-      setShowSplash(false);
+    // For new users, we'll let SplashScreen handle the flow
+    if (storedAuthState !== 'loggedIn') {
+      setShowSplash(true);
     }
   }, []);
 
@@ -124,50 +133,42 @@ const WellSaidApp = () => {
     }
   };
 
-  // Determine which component to render
+  const handleAuthComplete = () => {
+    localStorage.setItem('wellsaid-auth-state', 'loggedIn');
+    setAuthState('loggedIn');
+    setShowSplash(true); // Force splash to show again
+  };
+
+  const shouldShowSplash = () => {
+    // Show splash in these cases:
+    // 1. Initial app load (showSplash = true)
+    // 2. After login (authState = 'loggedIn' and loadingUser)
+    // 3. During user context hydration
+    return showSplash || (authState === 'loggedIn' && loadingUser);
+  };
+
   const renderContent = () => {
     if (authState === 'checking') {
+      return <LoadingSpinner />;
+    }
+
+    if (authState === 'loggedIn' && !loadingUser) {
       return (
-        <div className="fixed inset-0 flex items-center justify-center bg-white overflow-y-auto">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+        <div className="relative min-h-screen overflow-y-auto">
+          <main className="flex-grow">
+            {renderView()}
+          </main>
+          <BottomNav
+            currentView={currentView}
+            setCurrentView={setCurrentView}
+            setShowCaptureOptions={setShowCaptureOptions}
+          />
         </div>
       );
     }
 
-    if (authState === 'new') {
-      return (
-        <WellSaidOnboarding
-          onComplete={() => {
-            localStorage.setItem('wellsaid-auth-state', 'loggedIn');
-            setAuthState('loggedIn');
-            setShowSplash(false);
-          }}
-        />
-      );
-    }
-
-    // 👇 BLOCK here if user data hasn't finished loading yet
-    if (authState === 'loggedIn' && loadingUser) {
-      return null; // prevent premature view rendering
-    }
-
-    // ✅ Once userData is loaded, render the app
-    return (
-      <div className="relative min-h-screen overflow-y-auto">
-        <main className="flex-grow">
-          {renderView()}
-        </main>
-        <BottomNav
-          currentView={currentView}
-          setCurrentView={setCurrentView}
-          setShowCaptureOptions={setShowCaptureOptions}
-        />
-      </div>
-    );
+    return null;
   };
-
-  const shouldShowSplash =
-    showSplash || (authState === 'loggedIn' && loadingUser);
 
   return (
     <>
@@ -190,14 +191,11 @@ const WellSaidApp = () => {
         }}
       />
 
-      {/* Rest of your rendering logic */}
-      {shouldShowSplash ? (
+      {shouldShowSplash() ? (
         <SplashScreen
-          onComplete={() => {
-            const authState = localStorage.getItem('wellsaid-auth-state') || 'new';
-            setAuthState(authState);
-            setShowSplash(false);
-          }}
+          authState={authState}
+          onAuthComplete={handleAuthComplete}
+          onSkipSplash={() => setShowSplash(false)}
         />
       ) : (
         renderContent()

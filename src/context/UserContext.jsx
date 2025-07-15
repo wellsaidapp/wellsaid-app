@@ -11,8 +11,8 @@ export const UserProvider = ({ children }) => {
 
   useEffect(() => {
     const fetchUserData = async () => {
+      setLoadingUser(true); // Reset loading state whenever this runs
       try {
-        // ✅ Only continue if user is signed in
         const user = await getCurrentUser();
         if (!user) throw new Error("No signed-in user");
 

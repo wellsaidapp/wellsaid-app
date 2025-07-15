@@ -106,6 +106,7 @@ const LoginScreen = ({ onSuccess, onBack }) => {
 
       if (isSignedIn) {
         await fetchAuthSession(); // Optional but confirms session is ready
+        localStorage.setItem('wellsaid-auth-state', 'loggedIn'); // Set auth state
         toast.custom((t) => (
           <ToastMessage
             type="success"
