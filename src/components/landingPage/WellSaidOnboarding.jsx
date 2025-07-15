@@ -4,7 +4,10 @@ import { User, ArrowRight, Mail, Mic, MicOff, Plus, Check, Send } from 'lucide-r
 import {
   signUp,
   confirmSignUp,
-  resendSignUpCode, // Optional: if you add a "Resend code" option
+  resendSignUpCode,
+  fetchAuthSession,
+  confirmSignIn,
+  signIn
 } from '@aws-amplify/auth';
 
 // Assets
@@ -109,9 +112,11 @@ const WellSaidOnboarding = ({ onComplete }) => {
           password: '***' // Don't log actual password
         });
 
+        const tempPassword = generateTempPassword();
+
         const signUpResult = await signUp({
           username: value,
-          password: generateTempPassword(),
+          password: tempPassword,
           options: {
             userAttributes: {
               email: value,
@@ -119,6 +124,13 @@ const WellSaidOnboarding = ({ onComplete }) => {
             },
           },
         });
+
+        // ✅ Save password (and email, if not already saved) to state
+        setUserData(prev => ({
+          ...prev,
+          email: value,
+          password: tempPassword,
+        }));
 
         console.log('SignUp successful! Result:', {
           userId: signUpResult.userId,
@@ -163,24 +175,58 @@ const WellSaidOnboarding = ({ onComplete }) => {
         const runSequence = async () => {
           const username = userData.email;
           const confirmationCode = fullPin;
+          const password = userData.password;
 
           console.log('Attempting confirmSignUp with:', {
             username,
+            password,
             confirmationCode,
             userData: {
               ...userData,
-              pin: '***' // Don't log full pin
+              pin: '***' // Don’t log full pin
             }
           });
 
           try {
             await typeMessage("Verifying your code...", true, 0);
+
             const confirmResult = await confirmSignUp({
               username,
               confirmationCode
             });
+            console.log('✅ confirmSignUp successful! Result:', confirmResult);
 
-            console.log('confirmSignUp successful! Result:', confirmResult);
+            const signInResult = await signIn({ username, password });
+            console.log("📨 signIn() completed:", signInResult);
+
+            // ⏳ Wait for session to hydrate
+            let sessionReady = false;
+            for (let i = 0; i < 10; i++) {
+              try {
+                const session = await fetchAuthSession();
+                const idToken = session.tokens?.idToken?.toString();
+
+                console.log(
+                  `🔍 Session check ${i + 1}:`,
+                  idToken ? '✅ ID token present' : '❌ No ID token yet'
+                );
+
+                if (idToken) {
+                  sessionReady = true;
+                  break;
+                }
+              } catch (err) {
+                console.warn(`⚠️ Error during session fetch on attempt ${i + 1}:`, err);
+              }
+
+              await new Promise(res => setTimeout(res, 250));
+            }
+
+            if (!sessionReady) {
+              console.error("❌ Session was not ready after retries");
+            } else {
+              console.log("🎉 Session is ready — continuing to onboarding completion");
+            }
 
             await typeMessage("✓ Verified successfully!", true, 0);
             setIsVerifyingPin(false);
@@ -190,13 +236,9 @@ const WellSaidOnboarding = ({ onComplete }) => {
             setCurrentStep('conversation');
 
             await new Promise(res => setTimeout(res, 300));
-            await typeMessage(
-              "Great! Now let's get to work...",
-              true,
-              0
-            );
+            await typeMessage("Great! Now let's get to work...", true, 0);
           } catch (err) {
-            console.error('Verification failed:', {
+            console.error('❌ Verification failed:', {
               errorName: err.name,
               errorMessage: err.message,
               errorStack: err.stack,

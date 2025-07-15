@@ -13,9 +13,11 @@ export const UserProvider = ({ children }) => {
     setLoadingUser(true);
     try {
       const user = await getCurrentUser();
+      console.log("🧑 Current Cognito user:", user);
       if (!user) throw new Error("No signed-in user");
 
       const session = await fetchAuthSession();
+      console.log("🪪 Session tokens:", session.tokens);
       const idToken = session.tokens?.idToken?.toString();
 
       if (!idToken) throw new Error("Missing ID token");
