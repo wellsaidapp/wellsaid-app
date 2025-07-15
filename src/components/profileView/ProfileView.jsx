@@ -17,6 +17,7 @@ import NotificationSettings from './subcomponents/NotificationSettings';
 import HelpAndSupport from './subcomponents/HelpAndSupport';
 
 import { signOut, getCurrentUser, fetchUserAttributes, fetchAuthSession } from '@aws-amplify/auth';
+import { uploadData, getUrl } from 'aws-amplify/storage';
 
 const ProfileView = ({ user, insights = [], individuals = [], collections = [], setCurrentView }) => {
   const { expandedId, toggleDisclosure } = UseDisclosureToggle();
@@ -50,12 +51,38 @@ const ProfileView = ({ user, insights = [], individuals = [], collections = [], 
   ];
 
   // Add this handler for saving the cropped avatar
-  const handleAvatarSave = (croppedImage) => {
+  const handleAvatarSave = async (croppedImage) => {
     setCroppedAvatarImage(croppedImage);
     setShowAvatarCropper(false);
     setAvatarUploadTemp(null);
-    // Here you would typically also update the user's avatar in your database/state
     console.log('New avatar image:', croppedImage);
+
+    try {
+      const userId = user?.cognitoId || user?.id;
+      const fileName = `Users/Active/${userId}/images/avatar.jpg`;
+
+      await uploadData({
+        key: fileName,
+        data: croppedImage,
+        options: {
+          contentType: 'image/jpeg',
+          accessLevel: 'guest' // or 'private' depending on your needs
+        }
+      }).result;
+
+      const { url: avatarUrl } = await getUrl({
+        key: fileName,
+        options: {
+          accessLevel: 'guest' // must match the upload accessLevel
+        }
+      });
+
+      console.log("🖼 Avatar uploaded to:", avatarUrl);
+
+      await handleUpdateUser({ avatar: avatarUrl });
+    } catch (err) {
+      console.error("❌ Error uploading avatar to S3:", err);
+    }
   };
 
   const handleUpdateUser = async (updatedData) => {
