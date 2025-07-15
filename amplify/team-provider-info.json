@@ -31,7 +31,7 @@
         },
         "wellsaidDevAuthPostConfirmation": {
           "deploymentBucketName": "amplify-wellsaidapp-dev-0660a-deployment",
-          "s3Key": "amplify-builds/wellsaidDevAuthPostConfirmation-32766841726e4a665173-build.zip"
+          "s3Key": "amplify-builds/wellsaidDevAuthPostConfirmation-514d7273414264743445-build.zip"
         }
       }
     }
