@@ -9,9 +9,16 @@ import ImageCropperModal from '../library/BookCreation/ImageCropperModal';
 import PDFViewerWrapper from '../library/BooksView/PDFViewerWrapper';
 import BookPreviewModal from '../home/BookPreviewModal';
 import BookEditor from '../library/BooksView/BookEditor';
+import AddPersonFlow from './subcomponents/AddPersonFlow';
 
-const PeopleView = ({ individuals, insights, collections, sharedBooks }) => {
+const PeopleView = ({ individuals, insights, collections, sharedBooks, setCurrentView }) => {
   const [selectedPerson, setSelectedPerson] = useState(null);
+  const [showAddPerson, setShowAddPerson] = useState(false);
+  const handleAddPersonComplete = (newPerson) => {
+    setShowAddPerson(false);
+    // You might also refetch people list here if stored in context or local state
+  };
+
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedBook, setSelectedBook] = useState(null);
   const [currentPage, setCurrentPage] = useState(0);
@@ -200,6 +207,16 @@ const PeopleView = ({ individuals, insights, collections, sharedBooks }) => {
     isImageUsed: Boolean(p.avatarImage?.trim?.())
   })));
 
+
+  if (showAddPerson) {
+    return (
+      <AddPersonFlow
+        onComplete={handleAddPersonComplete}
+        onCancel={() => setShowAddPerson(false)}
+      />
+    );
+  }
+
   if (editingBook) {
     return (
       <BookEditor
@@ -246,6 +263,7 @@ const PeopleView = ({ individuals, insights, collections, sharedBooks }) => {
             setSortField={setSortField}
             sortDirection={sortDirection}
             setSortDirection={setSortDirection}
+            onAddNewPerson={() => setShowAddPerson(true)}
           />
         ) : (
           <PersonDetail

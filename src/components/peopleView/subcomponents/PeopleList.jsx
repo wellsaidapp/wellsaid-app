@@ -21,7 +21,8 @@ const PeopleList = ({
   sortField,
   setSortField,
   sortDirection,
-  setSortDirection
+  setSortDirection,
+  onAddNewPerson
 }) => {
 
   const toggleSortField = () => {
@@ -125,7 +126,10 @@ const PeopleList = ({
           </div>
         )}
 
-        <button className="w-full mt-2 py-2 border border-dashed border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 transition-colors flex items-center justify-center gap-2">
+        <button
+          onClick={onAddNewPerson}
+          className="w-full mt-2 py-2 border border-dashed border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
+        >
           <Plus size={16} />
           Add New Person
         </button>
