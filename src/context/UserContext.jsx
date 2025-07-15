@@ -1,6 +1,7 @@
 // context/UserContext.jsx
 import { createContext, useState, useEffect, useContext } from 'react';
 import { fetchAuthSession, getCurrentUser } from 'aws-amplify/auth';
+import { getUrl } from 'aws-amplify/storage';
 import { jwtDecode } from 'jwt-decode';
 
 export const UserContext = createContext();
@@ -32,6 +33,27 @@ export const UserProvider = ({ children }) => {
       if (!res.ok) throw new Error("Failed to fetch user");
 
       const data = await res.json();
+
+      const cognitoId = user.userId; // or data.cognitoId if your API returns it now
+
+      // 🖼 Try loading avatar image from S3
+      const avatarKey = `Users/Active/${cognitoId}/images/avatar.jpg`;
+
+      try {
+        const { url } = await getUrl({
+          key: avatarKey,
+          options: {
+            accessLevel: 'public', // or 'private' if using that
+            expiresIn: 3600
+          }
+        });
+
+        data.avatarUrl = url;
+      } catch (avatarErr) {
+        console.warn("⚠️ No avatar found or failed to load:", avatarErr.message);
+        data.avatarUrl = null;
+      }
+
       setUserData(data);
       console.log("✅ Loaded user data:", data);
     } catch (err) {

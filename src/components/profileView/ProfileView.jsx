@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect, useContext } from 'react';
+import { useUser } from '../../context/UserContext';
 import {
   Settings, Bell, Users, BookOpen, Lock, Wand2, X, XCircle
 } from 'lucide-react';
@@ -20,6 +21,8 @@ import { signOut, getCurrentUser, fetchUserAttributes, fetchAuthSession } from '
 import { uploadData, getUrl } from 'aws-amplify/storage';
 
 const ProfileView = ({ user, insights = [], individuals = [], collections = [], setCurrentView }) => {
+  // const [session, setSession] = useState(null);
+  const { userData, loadingUser } = useUser();
   const { expandedId, toggleDisclosure } = UseDisclosureToggle();
   const [currentUser, setCurrentUser] = useState(user);
   const [showAccountSettings, setShowAccountSettings] = useState(false);
@@ -50,6 +53,14 @@ const ProfileView = ({ user, insights = [], individuals = [], collections = [], 
     }
   ];
 
+  // useEffect(() => {
+  //   const loadSession = async () => {
+  //     const result = await fetchAuthSession();
+  //     setSession(result);
+  //   };
+  //   loadSession();
+  // }, []);
+
   // Add this handler for saving the cropped avatar
   const handleAvatarSave = async (croppedImage) => {
     setCroppedAvatarImage(croppedImage);
@@ -58,7 +69,12 @@ const ProfileView = ({ user, insights = [], individuals = [], collections = [], 
     console.log('New avatar image:', croppedImage);
 
     try {
-      const userId = user?.cognitoId || user?.id;
+      // if (!session?.identityId) {
+      //   throw new Error("Cognito session not yet loaded");
+      // }
+
+      const userId = userData?.cognitoId;
+      console.log("Cognito User Id:", userId);
       const fileName = `Users/Active/${userId}/images/avatar.jpg`;
 
       await uploadData({
@@ -73,7 +89,7 @@ const ProfileView = ({ user, insights = [], individuals = [], collections = [], 
       const { url: avatarUrl } = await getUrl({
         key: fileName,
         options: {
-          accessLevel: 'guest' // must match the upload accessLevel
+          accessLevel: 'guest'
         }
       });
 
@@ -171,7 +187,7 @@ const ProfileView = ({ user, insights = [], individuals = [], collections = [], 
 
       <div className="p-4">
         <UserProfileCard
-          user={user}
+          user={{ ...user, avatarImage: user?.avatarUrl?.href }}
           insightsCount={insights.length}
           peopleCount={individuals.length}
           booksCount={getPublishedBooksCount()}

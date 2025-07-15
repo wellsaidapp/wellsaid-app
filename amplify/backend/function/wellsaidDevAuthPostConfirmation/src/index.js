@@ -59,8 +59,8 @@ exports.handler = async (event) => {
     // Create S3 folders
     const bucket = process.env.S3_BUCKET_NAME;
     const folders = [
-      `Users/Active/${cognitoId}/images/`,
-      `Users/Active/${cognitoId}/books/`
+      `public/Users/Active/${cognitoId}/images/`,
+      `public/Users/Active/${cognitoId}/books/`
     ];
 
     console.log(`🪣 Bucket name: ${bucket}`);
