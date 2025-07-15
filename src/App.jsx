@@ -59,7 +59,7 @@ const WellSaidApp = () => {
   const [insights, setInsights] = useState(INSIGHTS);
   const [libraryDefaultViewMode, setLibraryDefaultViewMode] = useState('collections');
   const [books, setBooks] = useState(SHARED_BOOKS);
-
+  const { refetchUser } = useUser();
   useEffect(() => {
     const storedAuthState = localStorage.getItem('wellsaid-auth-state');
 
@@ -133,8 +133,9 @@ const WellSaidApp = () => {
     }
   };
 
-  const handleAuthComplete = () => {
+  const handleAuthComplete = async () => {
     localStorage.setItem('wellsaid-auth-state', 'loggedIn');
+    await refetchUser(); // ✅ Now valid
     setAuthState('loggedIn');
     setShowSplash(true); // Force splash to show again
   };
