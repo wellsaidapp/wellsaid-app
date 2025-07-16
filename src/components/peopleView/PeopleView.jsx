@@ -375,7 +375,7 @@ const PeopleView = ({ individuals, insights, collections, sharedBooks, setCurren
           <PersonDetail
             person={{
               ...selectedPerson,
-              avatarUrl: selectedPerson.avatarUrl?.href || null, // Use the URL href
+              avatarUrl: selectedPerson.avatarUrl?.toString?.().trim() || null, // Use the URL href
               avatarInitial: selectedPerson.avatar // Pass the initial separately
             }}
             insights={insights}

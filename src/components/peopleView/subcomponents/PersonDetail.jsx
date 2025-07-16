@@ -32,7 +32,7 @@ const PersonDetail = ({
 }) => {
 
   console.log("👤 PersonDetail received person:", person);
-  console.log("📸 Avatar image:", person?.avatarImage);
+  console.log("📸 Avatar image:", person.avatarUrl?.toString?.().trim());
 
   const [expandedCollection, setExpandedCollection] = useState(null);
   const [showInactiveCollections, setShowInactiveCollections] = useState(false);
