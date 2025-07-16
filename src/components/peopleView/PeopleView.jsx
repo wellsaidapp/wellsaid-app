@@ -182,30 +182,29 @@ const PeopleView = ({ individuals, insights, collections, sharedBooks, setCurren
         }
       }).result;
 
-      // ✅ Get URL
-      const { url: avatarUrl } = await getUrl({
-        key: fileName,
-        options: { accessLevel: 'public' }
-      });
+      // ✅ Get public URL
+      const avatarUrl = `https://wellsaidappdeva7ff28b66c7e4c6785e936c0092e78810660a-dev.s3.us-east-2.amazonaws.com/public/${fileName}`;
 
       console.log("🖼 Person avatar uploaded:", avatarUrl);
 
+      // ✅ Persist avatarUrl in RDS via API
+      await fetch(`https://aqaahphwfj.execute-api.us-east-2.amazonaws.com/dev/people/${personId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: idToken.toString()
+        },
+        body: JSON.stringify({ avatarUrl })
+      });
+
+      // ✅ Refresh PeopleContext
       await refetchPeople(true);
 
-      // Reselect person from new people context data
+      // ✅ Reselect person from updated people list
       const updatedPerson = people.find(p => p.id === personId);
       if (updatedPerson) {
         setSelectedPerson(updatedPerson);
       }
-
-      // ✅ Update the selected person in local state
-      // setSelectedPerson((prev) => ({
-      //   ...prev,
-      //   avatarImage: avatarUrl
-      // }));
-
-      // (Optional) Send avatarUrl to DB if you want to persist it server-side
-      // You can store it via PATCH /people/{personId} if you later want persistence
 
     } catch (err) {
       console.error("❌ Error uploading person avatar:", err);
