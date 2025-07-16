@@ -121,9 +121,9 @@ const AddPersonFlow = ({ onComplete, onCancel }) => {
 
     if (conversationState === 'ask_name') {
       setNewPerson(prev => ({ ...prev, name: value }));
-      await typeMessage(`Got it. What's your relationship with ${value}?`, true, 500);
-      setConversationState('ask_relationship');
-      setShowRelationshipModal(true); // Show modal instead of text input
+      // Immediately show the modal while the bot message is typing
+      setShowRelationshipModal(true);
+      await typeMessage(`Got it. What's your relationship with ${value}?`, true, 0);
     } else if (conversationState === 'ask_relationship') {
       // This will now handle the "Other" case where user needs to describe
       setNewPerson(prev => ({ ...prev, relationship: value }));
@@ -145,7 +145,8 @@ const AddPersonFlow = ({ onComplete, onCancel }) => {
 
     if (relationship === 'Other') {
       // For "Other", ask for description
-      await typeMessage(`How would you describe your relationship with ${newPerson.name}?`, true, 500);
+      setConversationState('ask_relationship');
+      await typeMessage(`How would you describe who ${newPerson.name} is to you?\n(For example: friend’s child, youth group member, athlete, etc.)`, true, 500);
       // Stay in 'ask_relationship' state until they provide description
     } else {
       // For predefined options, set relationship and move to next question
@@ -237,10 +238,12 @@ const AddPersonFlow = ({ onComplete, onCancel }) => {
         </div>
 
         {/* Input form section - now with conditional name input */}
-        {conversationState !== 'saving' && !showRelationshipModal && (
+        {conversationState !== 'saving' && !(conversationState === 'ask_name' && showRelationshipModal) && (
           <form
             onSubmit={handleSubmit}
-            className="fixed bottom-16 left-0 right-0 max-w-2xl mx-auto px-4 z-50"
+            className={`fixed bottom-16 left-0 right-0 max-w-2xl mx-auto px-4 z-50 transition-opacity duration-100 ${
+              conversationState === 'ask_name' && showRelationshipModal ? 'opacity-0 pointer-events-none' : 'opacity-100'
+            }`}
             style={{ bottom: BOTTOM_NAV_HEIGHT }}
           >
             <div className="bg-white rounded-2xl shadow-lg p-4">
@@ -288,6 +291,19 @@ const AddPersonFlow = ({ onComplete, onCancel }) => {
                       }}
                       disabled={isSubmitting}
                     />
+                    {/* Show microphone only for context question */}
+                    {conversationState === 'ask_context' && (
+                      <button
+                        type="button"
+                        onClick={toggleRecording}
+                        className={`p-3 rounded-xl ${
+                          isRecording ? 'bg-red-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                        }`}
+                        disabled={isSubmitting}
+                      >
+                        {isRecording ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
+                      </button>
+                    )}
                     <button
                       type="submit"
                       disabled={!inputValue.trim() || isSubmitting}
@@ -304,11 +320,15 @@ const AddPersonFlow = ({ onComplete, onCancel }) => {
 
         {/* Relationship modal */}
         {showRelationshipModal && (
-          <RelationshipModal
-            name={newPerson.name}
-            onSelect={handleRelationshipSelect}
-            onClose={() => setShowRelationshipModal(false)}
-          />
+          <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-[100] flex items-end transition-opacity duration-100">
+            <div className="w-full bg-white rounded-t-3xl p-6 animate-slide-up">
+            <RelationshipModal
+              name={newPerson.name}
+              onSelect={handleRelationshipSelect}
+              onClose={() => setShowRelationshipModal(false)}
+            />
+            </div>
+          </div>
         )}
       </div>
     </div>
