@@ -70,7 +70,7 @@ const ProfileView = ({ user, insights = [], individuals = [], collections = [], 
 
     try {
       const userId = userData?.cognitoId;
-      const fileName = `Users/Active/${userId}/images/avatar.jpg`;
+      const fileName = `Users/Active/${userId}/images/${userId}.jpg`;
 
       // ✅ Convert base64 Data URL to Blob
       const base64Data = croppedImage.split(',')[1];
