@@ -1,6 +1,6 @@
 // context/PeopleContext.jsx
-import { createContext, useState, useEffect, useContext } from 'react';
-import { fetchAuthSession } from 'aws-amplify/auth';
+import { createContext, useContext, useState, useEffect } from 'react';
+import { fetchAuthSession, getCurrentUser } from 'aws-amplify/auth';
 
 export const PeopleContext = createContext();
 
@@ -11,8 +11,10 @@ export const PeopleProvider = ({ children }) => {
   const fetchPeople = async () => {
     setLoadingPeople(true);
     try {
+      const user = await getCurrentUser();
       const session = await fetchAuthSession();
       const idToken = session.tokens?.idToken?.toString();
+      if (!idToken) throw new Error("Missing ID token");
 
       const res = await fetch('https://aqaahphwfj.execute-api.us-east-2.amazonaws.com/dev/people', {
         method: 'GET',
@@ -24,10 +26,11 @@ export const PeopleProvider = ({ children }) => {
       if (!res.ok) throw new Error("Failed to fetch people");
 
       const data = await res.json();
+      console.log("👥 Loaded people:", data);
       setPeople(data);
-      console.log("✅ People fetched:", data);
     } catch (err) {
       console.error("❌ Failed to load people:", err.message);
+      setPeople([]);
     } finally {
       setLoadingPeople(false);
     }
@@ -44,5 +47,4 @@ export const PeopleProvider = ({ children }) => {
   );
 };
 
-// Optional hook
 export const usePeople = () => useContext(PeopleContext);

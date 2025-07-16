@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { Toaster } from 'react-hot-toast';
 import { useUser } from './context/UserContext';
+import { usePeople } from './context/PeopleContext';
 
 import { Amplify } from 'aws-amplify';
 import amplifyconfig from './aws-exports';
@@ -50,6 +51,7 @@ import { SHARED_BOOKS } from './constants/sharedBooks';
 
 const WellSaidApp = () => {
   const { userData, loadingUser } = useUser();
+  const { people, loadingPeople } = usePeople();
   const [authState, setAuthState] = useState('checking');
   const [showLogin, setShowLogin] = useState(false);
   const [currentView, setCurrentView] = useState('home');
@@ -113,9 +115,10 @@ const WellSaidApp = () => {
           defaultViewMode={libraryDefaultViewMode}
         />;
       case 'people':
+        if (loadingPeople) return null;
         return <PeopleView
           insights={insights}
-          individuals={individuals}
+          individuals={people}
           collections={CUSTOM_COLLECTIONS}
           setCurrentView={setCurrentView}
           sharedBooks={SHARED_BOOKS}

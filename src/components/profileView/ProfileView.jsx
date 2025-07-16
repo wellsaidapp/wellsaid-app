@@ -61,6 +61,26 @@ const ProfileView = ({ user, insights = [], individuals = [], collections = [], 
   //   loadSession();
   // }, []);
 
+  const handleAddPersonComplete = async (result) => {
+    try {
+      // Immediately close the modal (instant UX)
+      setShowAddPerson(false);
+
+      // Wait for data hydration to complete
+      await result.hydrationPromise;
+
+      // Optional: Scroll to/show the new person
+      if (result.newPerson.id) {
+        setHighlightedPerson(result.newPerson.id);
+      }
+
+    } catch (err) {
+      // Optional: Reopen modal if needed
+      setShowAddPerson(true);
+      toast.error("Failed to refresh people list");
+    }
+  };
+
   // Add this handler for saving the cropped avatar
   const handleAvatarSave = async (croppedImage) => {
     setCroppedAvatarImage(croppedImage);
@@ -288,6 +308,16 @@ const ProfileView = ({ user, insights = [], individuals = [], collections = [], 
             setAvatarUploadTemp(null);
           }}
         />
+      )}
+      {showAddPerson ? (
+        <AddPersonFlow
+          onComplete={handleAddPersonComplete}
+          onCancel={() => setShowAddPerson(false)}
+        />
+      ) : (
+        <div className={highlightedPerson ? 'highlight-new' : ''}>
+          {/* Your regular people list */}
+        </div>
       )}
     </div>
   );

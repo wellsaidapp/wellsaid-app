@@ -6,6 +6,7 @@ import { Send, Mic, MicOff, X, User, ArrowRight } from 'lucide-react';
 import WellSaidIconOnboarding from '../../../assets/icons/WellSaidIconOnboarding';
 import Typewriter from '../../landingPage/utils/Typewriter';
 import logo from '../../../assets/wellsaid.svg';
+import { usePeople } from '../../../context/PeopleContext';
 
 const RelationshipModal = ({ name, onSelect, onClose }) => {
   const relationships = [
@@ -55,6 +56,7 @@ const RelationshipModal = ({ name, onSelect, onClose }) => {
 
 const AddPersonFlow = ({ onComplete, onCancel }) => {
   const { userData } = useUser();
+  const { refetchPeople } = usePeople();
   const [conversationState, setConversationState] = useState('ask_name');
   const [messages, setMessages] = useState([]);
   const [inputValue, setInputValue] = useState('');
@@ -129,10 +131,11 @@ const AddPersonFlow = ({ onComplete, onCancel }) => {
       setNewPerson(prev => ({ ...prev, relationship: value }));
       await typeMessage(`Thanks. Anything else you'd like us to know about ${newPerson.name}?`, true, 500);
       setConversationState('ask_context');
-    } else if (conversationState === 'ask_context') {
+    } else   if (conversationState === 'ask_context') {
       setNewPerson(prev => ({ ...prev, context: value }));
       setConversationState('saving');
-      await savePerson({ ...newPerson, context: value });
+
+      const createdPerson = await savePerson({ ...newPerson, context: value });
     }
   };
 
@@ -163,6 +166,7 @@ const AddPersonFlow = ({ onComplete, onCancel }) => {
 
       const session = await fetchAuthSession();
       const idToken = session.tokens?.idToken?.toString();
+      if (!idToken) throw new Error("Missing ID token");
 
       const response = await fetch('https://aqaahphwfj.execute-api.us-east-2.amazonaws.com/dev/people', {
         method: 'POST',
@@ -177,25 +181,24 @@ const AddPersonFlow = ({ onComplete, onCancel }) => {
         })
       });
 
-      if (!response.ok) {
-        throw new Error(`Server error: ${response.status}`);
-      }
+      if (!response.ok) throw new Error(`Server error: ${response.status}`);
 
       const newPerson = await response.json();
 
-      await typeMessage(`All set! ${personData.name} has been added.`, true, 500);
+      await typeMessage(`All set! ${personData.name} has been added.`, true, 0);
 
-      setTimeout(() => {
-        setMessages([]);
-        setInputValue('');
-        setNewPerson({ name: '', relationship: '', context: '' });
-        setConversationState('ask_name');
-        onComplete?.(newPerson); // Trigger UI refresh or navigation
-      }, 1500);
+      // ✅ Give breathing room after final message
+      await new Promise(resolve => setTimeout(resolve, 1200));
+
+      // ✅ Hydrate people context
+      await refetchPeople();
+
+      return newPerson;
 
     } catch (err) {
       console.error('❌ Error adding person:', err);
       await typeMessage("Something went wrong. Please try again later.", true);
+      return null;
     } finally {
       setIsSubmitting(false);
     }

@@ -12,11 +12,23 @@ import BookEditor from '../library/BooksView/BookEditor';
 import AddPersonFlow from './subcomponents/AddPersonFlow';
 
 const PeopleView = ({ individuals, insights, collections, sharedBooks, setCurrentView }) => {
+  const [isCompletingAddPerson, setIsCompletingAddPerson] = useState(false);
   const [selectedPerson, setSelectedPerson] = useState(null);
   const [showAddPerson, setShowAddPerson] = useState(false);
-  const handleAddPersonComplete = (newPerson) => {
-    setShowAddPerson(false);
-    // You might also refetch people list here if stored in context or local state
+  const handleAddPersonComplete = async (newPerson) => {
+    try {
+      setIsCompletingAddPerson(true);
+
+      // This will wait for ALL operations in AddPersonFlow to complete
+      // before closing the modal
+      setShowAddPerson(false);
+
+      // Optional: Do something with newPerson if needed
+      console.log("Added person:", newPerson);
+
+    } finally {
+      setIsCompletingAddPerson(false);
+    }
   };
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -344,6 +356,13 @@ const PeopleView = ({ individuals, insights, collections, sharedBooks, setCurren
             setShowAvatarCropper(false);
             setAvatarUploadTemp(null);
           }}
+        />
+      )}
+      {showAddPerson && (
+        <AddPersonFlow
+          onComplete={handleAddPersonComplete}
+          onCancel={() => setShowAddPerson(false)}
+          isCompleting={isCompletingAddPerson}
         />
       )}
     </div>
