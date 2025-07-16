@@ -4,6 +4,7 @@ import { SHARED_BOOKS, getRecentBooks, getPublishedBooksCount } from '../../cons
 import { INSIGHTS } from '../../constants/insights';
 // import { USER } from '../../constants/user';
 import { useUser } from '../../context/UserContext';
+import { usePeople } from '../../context/PeopleContext';
 import { UPCOMING_EVENTS } from '../../constants/upcomingEvents';
 import { INDIVIDUALS } from '../../constants/individuals';
 import { CUSTOM_COLLECTIONS } from '../../constants/collections';
@@ -33,6 +34,7 @@ const HomeView = ({
   setBooks
 }) => {
   const { userData, loadingUser, refetchUser } = useUser();
+  const { people, loadingPeople, refetchPeople } = usePeople();
 
   if (loadingUser) {
     return (
@@ -41,7 +43,7 @@ const HomeView = ({
       </div>
     );
   }
-
+  console.log("People Loaded:", people.length);
 
 
   const userName = userData?.name?.split(' ')[0] || 'Friend';
@@ -205,7 +207,7 @@ const HomeView = ({
 
         <LegacyStats
           insightsCount={insights.length}
-          individualsCount={INDIVIDUALS.length}
+          individualsCount={people.length}
           booksCount={getPublishedBooksCount()}
         />
       </div>
