@@ -29,7 +29,7 @@ const PeopleView = ({ individuals, insights, collections, sharedBooks, setCurren
   } else {
     console.warn("⚠️ individuals is not an array:", individuals);
   }
-  const { people, refetchPeople } = usePeople();
+  const { people, refetchPeople, updatePerson } = usePeople();
   const [isCompletingAddPerson, setIsCompletingAddPerson] = useState(false);
   const [selectedPerson, setSelectedPerson] = useState(null);
   const [showAddPerson, setShowAddPerson] = useState(false);
@@ -183,28 +183,25 @@ const PeopleView = ({ individuals, insights, collections, sharedBooks, setCurren
       }).result;
 
       // ✅ Get public URL
-      const avatarUrl = `https://wellsaidappdeva7ff28b66c7e4c6785e936c0092e78810660a-dev.s3.us-east-2.amazonaws.com/public/${fileName}`;
+      const avatarBaseUrl = `https://wellsaidappdeva7ff28b66c7e4c6785e936c0092e78810660a-dev.s3.us-east-2.amazonaws.com/public/${fileName}`;
+      const cacheBustedUrl = `${avatarBaseUrl}?t=${Date.now()}`;
 
-      console.log("🖼 Person avatar uploaded:", avatarUrl);
-
-      // ✅ Persist avatarUrl in RDS via API
+      // ✅ Store clean URL in DB
       await fetch(`https://aqaahphwfj.execute-api.us-east-2.amazonaws.com/dev/people/${personId}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
           Authorization: idToken.toString()
         },
-        body: JSON.stringify({ avatarUrl })
+        body: JSON.stringify({ avatarUrl: avatarBaseUrl }) // ✅ clean URL only
       });
 
-      // ✅ Refresh PeopleContext
-      await refetchPeople(true);
-
-      // ✅ Reselect person from updated people list
-      const updatedPerson = people.find(p => p.id === personId);
-      if (updatedPerson) {
-        setSelectedPerson(updatedPerson);
-      }
+      // ✅ Use cache-busted version locally
+      updatePerson({ id: personId, avatarUrl: cacheBustedUrl });
+      setSelectedPerson(prev => ({
+        ...prev,
+        avatarUrl: cacheBustedUrl
+      }));
 
     } catch (err) {
       console.error("❌ Error uploading person avatar:", err);

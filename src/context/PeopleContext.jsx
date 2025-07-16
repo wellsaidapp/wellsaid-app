@@ -8,6 +8,12 @@ export const PeopleProvider = ({ children }) => {
   const [people, setPeople] = useState([]);
   const [loadingPeople, setLoadingPeople] = useState(true);
 
+  const updatePerson = (updatedPerson) => {
+    setPeople(prev =>
+      prev.map(p => (p.id === updatedPerson.id ? { ...p, ...updatedPerson } : p))
+    );
+  };
+
   const fetchPeople = async () => {
     setLoadingPeople(true);
 
@@ -41,7 +47,7 @@ export const PeopleProvider = ({ children }) => {
   }, []);
 
   return (
-    <PeopleContext.Provider value={{ people, loadingPeople, refetchPeople: fetchPeople }}>
+    <PeopleContext.Provider value={{ people, loadingPeople, refetchPeople: fetchPeople, updatePerson }}>
       {children}
     </PeopleContext.Provider>
   );
