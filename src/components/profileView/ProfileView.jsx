@@ -309,16 +309,6 @@ const ProfileView = ({ user, insights = [], individuals = [], collections = [], 
           }}
         />
       )}
-      {showAddPerson ? (
-        <AddPersonFlow
-          onComplete={handleAddPersonComplete}
-          onCancel={() => setShowAddPerson(false)}
-        />
-      ) : (
-        <div className={highlightedPerson ? 'highlight-new' : ''}>
-          {/* Your regular people list */}
-        </div>
-      )}
     </div>
   );
 };
