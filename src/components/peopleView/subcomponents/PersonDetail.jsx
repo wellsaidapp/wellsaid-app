@@ -28,7 +28,8 @@ const PersonDetail = ({
   onAddToCollection,
   currentView,
   setCurrentView,
-  onEditDraftBook
+  onEditDraftBook,
+  onSavePerson
 }) => {
 
   console.log("👤 PersonDetail received person:", person);
@@ -88,10 +89,20 @@ const PersonDetail = ({
     }
   };
 
-  const handleSaveEdit = () => {
-    person.name = editedName;
-    person.relationship = editedRelationship;
-    setIsEditing(false);
+  const handleSaveEdit = async () => {
+    const trimmedName = editedName.trim();
+    const trimmedRelationship = editedRelationship.trim();
+    if (!trimmedName) return;
+
+    try {
+      await onSavePerson(person.id, {
+        name: trimmedName,
+        relationship: trimmedRelationship
+      });
+      setIsEditing(false);
+    } catch (err) {
+      console.error("❌ Failed to save person edit:", err);
+    }
   };
 
   const handleUploadPhoto = () => {
@@ -371,7 +382,8 @@ PersonDetail.propTypes = {
   onEntryDelete: PropTypes.func,
   onCollectionToggle: PropTypes.func,
   onRecipientToggle: PropTypes.func,
-  onAddToCollection: PropTypes.func
+  onAddToCollection: PropTypes.func,
+  onSavePerson: PropTypes.func.isRequired
 };
 
 PersonDetail.defaultProps = {

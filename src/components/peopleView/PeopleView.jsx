@@ -208,6 +208,38 @@ const PeopleView = ({ individuals, insights, collections, sharedBooks, setCurren
     }
   };
 
+  const handleSavePerson = async (personId, updatedFields) => {
+    try {
+      console.log("✏️ Saving person update:", personId, updatedFields);
+
+      const session = await fetchAuthSession();
+      const idToken = session?.tokens?.idToken?.toString();
+      if (!idToken) throw new Error("No ID token found");
+
+      await fetch(`https://aqaahphwfj.execute-api.us-east-2.amazonaws.com/dev/people/${personId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: idToken
+        },
+        body: JSON.stringify(updatedFields)
+      });
+
+      // Update context and local selectedPerson
+      updatePerson({ id: personId, ...updatedFields });
+
+      setSelectedPerson(prev => ({
+        ...prev,
+        ...updatedFields
+      }));
+
+      console.log("✅ Person update complete and UI refreshed");
+
+    } catch (err) {
+      console.error("❌ Error saving person update:", err);
+    }
+  };
+
   const [sortField, setSortField] = useState('name'); // name | insights | collections
   const [sortDirection, setSortDirection] = useState('asc'); // asc | desc
 
@@ -392,6 +424,7 @@ const PeopleView = ({ individuals, insights, collections, sharedBooks, setCurren
               setSelectedBook(book);
               setCurrentPage(0);
             }}
+            onSavePerson={handleSavePerson}
           />
         )}
       </div>
