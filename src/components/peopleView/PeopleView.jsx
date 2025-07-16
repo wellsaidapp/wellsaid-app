@@ -12,6 +12,7 @@ import BookEditor from '../library/BooksView/BookEditor';
 import AddPersonFlow from './subcomponents/AddPersonFlow';
 import { uploadData, getUrl } from 'aws-amplify/storage';
 import { fetchAuthSession } from 'aws-amplify/auth';
+import { usePeople } from '../../context/PeopleContext';
 
 const PeopleView = ({ individuals, insights, collections, sharedBooks, setCurrentView }) => {
 
@@ -28,7 +29,7 @@ const PeopleView = ({ individuals, insights, collections, sharedBooks, setCurren
   } else {
     console.warn("⚠️ individuals is not an array:", individuals);
   }
-
+  const { people, refetchPeople } = usePeople();
   const [isCompletingAddPerson, setIsCompletingAddPerson] = useState(false);
   const [selectedPerson, setSelectedPerson] = useState(null);
   const [showAddPerson, setShowAddPerson] = useState(false);
@@ -189,11 +190,19 @@ const PeopleView = ({ individuals, insights, collections, sharedBooks, setCurren
 
       console.log("🖼 Person avatar uploaded:", avatarUrl);
 
+      await refetchPeople(true);
+
+      // Reselect person from new people context data
+      const updatedPerson = people.find(p => p.id === personId);
+      if (updatedPerson) {
+        setSelectedPerson(updatedPerson);
+      }
+
       // ✅ Update the selected person in local state
-      setSelectedPerson((prev) => ({
-        ...prev,
-        avatarImage: avatarUrl
-      }));
+      // setSelectedPerson((prev) => ({
+      //   ...prev,
+      //   avatarImage: avatarUrl
+      // }));
 
       // (Optional) Send avatarUrl to DB if you want to persist it server-side
       // You can store it via PATCH /people/{personId} if you later want persistence

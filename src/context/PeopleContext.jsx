@@ -9,7 +9,7 @@ export const PeopleProvider = ({ children }) => {
   const [people, setPeople] = useState([]);
   const [loadingPeople, setLoadingPeople] = useState(true);
 
-  const fetchPeople = async () => {
+  const fetchPeople = async (suppressSplash = false) => {
     setLoadingPeople(true);
 
     try {
