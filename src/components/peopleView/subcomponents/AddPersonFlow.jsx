@@ -160,17 +160,39 @@ const AddPersonFlow = ({ onComplete, onCancel }) => {
     try {
       setIsSubmitting(true);
       await typeMessage("Saving...", true, 0);
+
       const session = await fetchAuthSession();
       const idToken = session.tokens?.idToken?.toString();
-      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      const response = await fetch('https://aqaahphwfj.execute-api.us-east-2.amazonaws.com/dev/people', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': idToken
+        },
+        body: JSON.stringify({
+          name: personData.name,
+          relationship: personData.relationship,
+          context: personData.context
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Server error: ${response.status}`);
+      }
+
+      const newPerson = await response.json();
+
       await typeMessage(`All set! ${personData.name} has been added.`, true, 500);
+
       setTimeout(() => {
         setMessages([]);
         setInputValue('');
         setNewPerson({ name: '', relationship: '', context: '' });
         setConversationState('ask_name');
-        onComplete?.(personData);
+        onComplete?.(newPerson); // Trigger UI refresh or navigation
       }, 1500);
+
     } catch (err) {
       console.error('❌ Error adding person:', err);
       await typeMessage("Something went wrong. Please try again later.", true);
