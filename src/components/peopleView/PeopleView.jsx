@@ -10,6 +10,8 @@ import PDFViewerWrapper from '../library/BooksView/PDFViewerWrapper';
 import BookPreviewModal from '../home/BookPreviewModal';
 import BookEditor from '../library/BooksView/BookEditor';
 import AddPersonFlow from './subcomponents/AddPersonFlow';
+import { uploadData, getUrl } from 'aws-amplify/storage';
+import { fetchAuthSession } from 'aws-amplify/auth';
 
 const PeopleView = ({ individuals, insights, collections, sharedBooks, setCurrentView }) => {
   const [isCompletingAddPerson, setIsCompletingAddPerson] = useState(false);
@@ -117,13 +119,67 @@ const PeopleView = ({ individuals, insights, collections, sharedBooks, setCurren
     return acc;
   }, {});
 
-  const handleAvatarSave = (croppedImage) => {
-    setSelectedPerson((prev) => ({
-      ...prev,
-      avatarImage: croppedImage
-    }));
-    setShowAvatarCropper(false);
-    setAvatarUploadTemp(null);
+  const handleAvatarSave = async (croppedImage) => {
+    if (!selectedPerson?.id) {
+      console.error("❌ No person selected");
+      return;
+    }
+
+    try {
+      setCroppedAvatarImage(croppedImage);
+      setShowAvatarCropper(false);
+      setAvatarUploadTemp(null);
+
+      const personId = selectedPerson.id;
+      const fileName = `Users/Active/${personId}/images/${personId}.jpg`;
+
+      // ✅ Convert base64 to Blob
+      const base64Data = croppedImage.split(',')[1];
+      const byteCharacters = atob(base64Data);
+      const byteArrays = [];
+
+      for (let i = 0; i < byteCharacters.length; i += 512) {
+        const slice = byteCharacters.slice(i, i + 512);
+        const byteNumbers = new Array(slice.length);
+        for (let j = 0; j < slice.length; j++) {
+          byteNumbers[j] = slice.charCodeAt(j);
+        }
+        const byteArray = new Uint8Array(byteNumbers);
+        byteArrays.push(byteArray);
+      }
+
+      const imageBlob = new Blob(byteArrays, { type: 'image/jpeg' });
+
+      // ✅ Upload to S3
+      await uploadData({
+        key: fileName,
+        data: imageBlob,
+        options: {
+          contentType: 'image/jpeg',
+          accessLevel: 'public'
+        }
+      }).result;
+
+      // ✅ Get URL
+      const { url: avatarUrl } = await getUrl({
+        key: fileName,
+        options: { accessLevel: 'public' }
+      });
+
+      console.log("🖼 Person avatar uploaded:", avatarUrl);
+
+      // ✅ Update the selected person in local state
+      setSelectedPerson((prev) => ({
+        ...prev,
+        avatarImage: avatarUrl
+      }));
+
+      // (Optional) Send avatarUrl to DB if you want to persist it server-side
+      // You can store it via PATCH /people/{personId} if you later want persistence
+
+    } catch (err) {
+      console.error("❌ Error uploading person avatar:", err);
+    }
   };
 
   const [sortField, setSortField] = useState('name'); // name | insights | collections
