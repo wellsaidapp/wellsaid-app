@@ -30,6 +30,10 @@ const PersonDetail = ({
   setCurrentView,
   onEditDraftBook
 }) => {
+
+  console.log("👤 PersonDetail received person:", person);
+  console.log("📸 Avatar image:", person?.avatarImage);
+
   const [expandedCollection, setExpandedCollection] = useState(null);
   const [showInactiveCollections, setShowInactiveCollections] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -165,14 +169,19 @@ const PersonDetail = ({
       {/* Avatar and Name */}
       <div className="flex flex-col items-center mb-4 relative">
         <div className="relative w-20 h-20 mb-3">
-          {person.avatarImage?.trim?.() ? (
+          {person.avatarUrl ? (
             <img
-              src={person.avatarImage}
-              alt="Avatar"
+              src={person.avatarUrl}
+              alt={`${person.name}'s avatar`}
               className="w-20 h-20 rounded-full object-cover"
+              onError={(e) => {
+                console.error(`❌ Failed to load avatar for ${person.name}:`, person.avatarUrl);
+                e.target.onerror = null;
+                e.target.src = ""; // fallback if needed
+              }}
             />
           ) : (
-            <div className={`w-20 h-20 rounded-full bg-gray-400 flex items-center justify-center text-white text-2xl font-medium`}>
+            <div className="w-20 h-20 rounded-full bg-gray-400 flex items-center justify-center text-white text-2xl font-medium">
               {person.avatar}
             </div>
           )}

@@ -1,6 +1,7 @@
 import { ChevronRight } from 'lucide-react';
 
 const PersonCard = ({ person, insights, onClick }) => {
+  console.log("Person Received:", person);
   const sharedInsightsCount = insights.filter(i =>
     i.personIds?.includes(person.id)
   ).length;
@@ -21,9 +22,9 @@ const PersonCard = ({ person, insights, onClick }) => {
     >
       <div className="flex items-start">
         <div className="w-20 h-20 rounded-full overflow-hidden mr-4 self-center">
-          {person.avatarImage?.trim?.() ? (
+          {person.avatarUrl?.toString?.().trim() ? (
             <img
-              src={person.avatarImage}
+              src={person.avatarUrl}
               alt="Avatar"
               className="w-20 h-20 object-cover rounded-full"
             />

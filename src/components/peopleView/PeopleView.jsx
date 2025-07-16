@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Header from '../appLayout/Header';
 import PeopleSearch from './subcomponents/PeopleSearch';
 import PeopleList from './subcomponents/PeopleList';
@@ -14,6 +14,21 @@ import { uploadData, getUrl } from 'aws-amplify/storage';
 import { fetchAuthSession } from 'aws-amplify/auth';
 
 const PeopleView = ({ individuals, insights, collections, sharedBooks, setCurrentView }) => {
+
+  if (Array.isArray(individuals)) {
+    console.log("🧑‍🤝‍🧑 Received individuals prop:", individuals.map(p => ({
+      name: p?.name,
+      id: p?.id,
+      avatarUrl: p?.avatarUrl,
+      hasImage:
+        typeof p.avatarUrl === 'string'
+          ? p.avatarUrl.trim() !== ''
+          : !!p.avatarUrl?.href
+    })));
+  } else {
+    console.warn("⚠️ individuals is not an array:", individuals);
+  }
+
   const [isCompletingAddPerson, setIsCompletingAddPerson] = useState(false);
   const [selectedPerson, setSelectedPerson] = useState(null);
   const [showAddPerson, setShowAddPerson] = useState(false);
@@ -131,7 +146,13 @@ const PeopleView = ({ individuals, insights, collections, sharedBooks, setCurren
       setAvatarUploadTemp(null);
 
       const personId = selectedPerson.id;
-      const fileName = `Users/Active/${personId}/images/${personId}.jpg`;
+      const session = await fetchAuthSession();
+      const idToken = session?.tokens?.idToken;
+      const userId = idToken?.payload?.sub;
+
+      if (!userId) throw new Error("User ID not found in session");
+
+      const fileName = `Users/Active/${userId}/images/${personId}.jpg`;
 
       // ✅ Convert base64 to Blob
       const base64Data = croppedImage.split(',')[1];
@@ -243,6 +264,16 @@ const PeopleView = ({ individuals, insights, collections, sharedBooks, setCurren
     });
   };
 
+  useEffect(() => {
+    const result = getSortedEnrichedIndividuals();
+    console.log("🔍 getSortedEnrichedIndividuals output:", result.map(p => ({
+      id: p.id,
+      name: p.name,
+      avatarUrl: p.avatarUrl,
+      activeCollectionsCount: p.activeCollectionsCount
+    })));
+  }, [individuals, insights, searchQuery, sortField, sortDirection]);
+
   const enrichedIndividuals = individuals.map(person => {
     const sharedSystemCollectionIds = new Set();
 
@@ -271,10 +302,9 @@ const PeopleView = ({ individuals, insights, collections, sharedBooks, setCurren
     id: p.id,
     activeCollectionsCount: p.activeCollectionsCount,
     totalCollectionsCount: p.totalCollectionsCount,
-    avatarImage: p.avatarImage,
-    isImageUsed: Boolean(p.avatarImage?.trim?.())
+    avatarUrl: p.avatarUrl,
+    isImageUsed: Boolean(p.avatarUrl?.trim?.())
   })));
-
 
   if (showAddPerson) {
     return (
@@ -335,7 +365,11 @@ const PeopleView = ({ individuals, insights, collections, sharedBooks, setCurren
           />
         ) : (
           <PersonDetail
-            person={selectedPerson}
+            person={{
+              ...selectedPerson,
+              avatarUrl: selectedPerson.avatarUrl?.href || null, // Use the URL href
+              avatarInitial: selectedPerson.avatar // Pass the initial separately
+            }}
             insights={insights}
             collections={[...SYSTEM_COLLECTIONS, ...collections]}
             onBack={() => setSelectedPerson(null)}

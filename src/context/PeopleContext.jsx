@@ -3,7 +3,6 @@ import { createContext, useContext, useState, useEffect } from 'react';
 import { fetchAuthSession, getCurrentUser } from 'aws-amplify/auth';
 import { getUrl, list } from 'aws-amplify/storage';
 
-
 export const PeopleContext = createContext();
 
 export const PeopleProvider = ({ children }) => {
@@ -13,84 +12,64 @@ export const PeopleProvider = ({ children }) => {
   const fetchPeople = async () => {
     setLoadingPeople(true);
 
-    const avatarExists = async (key) => {
-      try {
-        const result = await list({
-          path: key,
-          options: { accessLevel: 'public' }
-        });
-
-        return result.items.length > 0;
-      } catch (err) {
-        console.warn("❌ Failed to check avatar existence:", err.message);
-        return false;
-      }
-    };
-
     try {
+      // 1. Fetch the user and authentication token
       const user = await getCurrentUser();
       const session = await fetchAuthSession();
       const idToken = session.tokens?.idToken?.toString();
       if (!idToken) throw new Error("Missing ID token");
 
+      // 2. Fetch people data from your API
       const res = await fetch('https://aqaahphwfj.execute-api.us-east-2.amazonaws.com/dev/people', {
         method: 'GET',
-        headers: {
-          Authorization: idToken
-        }
+        headers: { Authorization: idToken }
       });
-
       if (!res.ok) throw new Error("Failed to fetch people");
-
       const data = await res.json();
       console.log("👥 Raw people from API:", data);
 
-      // 🔄 Enrich each person with avatar URL if it exists in S3
+      // 3. Enrich each person with avatar URL
       const enriched = await Promise.all(data.map(async person => {
-        const userId = user?.userId; // Cognito userId
-        const folderPath = `public/Users/Active/${userId}/images/`;
-        const avatarKey = `${folderPath}${person.id}.jpg`;
+        // Remove the duplicate 'public' from the path
+        const avatarKey = `Users/Active/${user.userId}/images/${person.id}.jpg`;
 
         try {
-          const result = await list({
-            path: folderPath,
-            options: { accessLevel: 'public' }
+          const { url } = await getUrl({
+            key: avatarKey,
+            options: {
+              accessLevel: 'public',  // This tells Amplify the file is in public storage
+              expiresIn: 3600,
+              validateObjectExistence: true
+            }
           });
 
-          const keys = result.items.map(item => {
-            console.log("🔎 Raw item:", item);
-            return item?.path || item;
-          });
-          console.log(`🧾 Files in S3 for ${person.name}:`, keys);
-          console.log(`🔍 Looking for:`, avatarKey);
+          // Enhanced logging for found avatars
+          console.groupCollapsed(`✅ Found avatar for ${person.name}`);
+          console.log('Person ID:', person.id);
+          console.log('S3 Key:', avatarKey);
+          console.log('Generated URL:', url);
 
-          const fileExists = keys.includes(avatarKey);
+          // Try to create a preview in the console
+          console.log('%c ', `
+            font-size: 100px;
+            background: url(${url}) no-repeat;
+            background-size: contain;
+            padding: 50px;
+          `);
+          console.groupEnd();
 
-          if (fileExists) {
-            const { url } = await getUrl({
-              key: avatarKey,
-              options: {
-                accessLevel: 'public',
-                expiresIn: 3600
-              }
-            });
-
-            console.log(`✅ Found avatar for ${person.name}:`, url);
-            return { ...person, avatarImage: url };
-          } else {
-            console.warn(`❌ No avatar found for ${person.name}`);
-            return { ...person, avatarImage: null };
-          }
-        } catch (err) {
-          console.warn(`⚠️ Error checking avatar for ${person.name}:`, err.message);
-          return { ...person, avatarImage: null };
+          return { ...person, avatarUrl: url };
+        } catch (error) {
+          console.log(`❌ No avatar found for ${person.name} (ID: ${person.id})`);
+          console.log('Full attempted path:', `public/${avatarKey}`);
+          return { ...person, avatarUrl: null };
         }
       }));
 
-      console.log("✅ All enriched people:", enriched);
       setPeople(enriched);
+      console.log("✅ Loaded people data:", enriched);
     } catch (err) {
-      console.error("❌ Failed to load people:", err.message);
+      console.error("❌ Failed to load people:", err);
       setPeople([]);
     } finally {
       setLoadingPeople(false);
