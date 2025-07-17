@@ -57,6 +57,7 @@ const PeopleView = ({ individuals, insights, collections, sharedBooks, setCurren
   const [returnToViewer, setReturnToViewer] = useState(false);
   const [previousViewerState, setPreviousViewerState] = useState(null);
 
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [avatarUploadTemp, setAvatarUploadTemp] = useState(null); // base64 temp image
   const [showAvatarCropper, setShowAvatarCropper] = useState(false);
   const [croppedAvatarImage, setCroppedAvatarImage] = useState(null); // Final cropped avatar image
@@ -141,6 +142,8 @@ const PeopleView = ({ individuals, insights, collections, sharedBooks, setCurren
       return;
     }
 
+    setIsUploadingAvatar(true); // 🌀 Start spinner here
+
     try {
       setCroppedAvatarImage(croppedImage);
       setShowAvatarCropper(false);
@@ -205,6 +208,8 @@ const PeopleView = ({ individuals, insights, collections, sharedBooks, setCurren
 
     } catch (err) {
       console.error("❌ Error uploading person avatar:", err);
+    } finally {
+      setIsUploadingAvatar(false); // ✅ Always stop spinner
     }
   };
 
@@ -425,6 +430,7 @@ const PeopleView = ({ individuals, insights, collections, sharedBooks, setCurren
               setCurrentPage(0);
             }}
             onSavePerson={handleSavePerson}
+            isUploadingAvatar={isUploadingAvatar}
           />
         )}
       </div>

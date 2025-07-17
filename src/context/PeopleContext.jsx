@@ -14,6 +14,10 @@ export const PeopleProvider = ({ children }) => {
     );
   };
 
+  const removePerson = (personId) => {
+    setPeople((prevPeople) => prevPeople.filter(p => p.id !== personId));
+  };
+
   const fetchPeople = async () => {
     setLoadingPeople(true);
 
@@ -47,7 +51,7 @@ export const PeopleProvider = ({ children }) => {
   }, []);
 
   return (
-    <PeopleContext.Provider value={{ people, loadingPeople, refetchPeople: fetchPeople, updatePerson }}>
+    <PeopleContext.Provider value={{ people, loadingPeople, refetchPeople: fetchPeople, updatePerson, removePerson }}>
       {children}
     </PeopleContext.Provider>
   );

@@ -1,10 +1,13 @@
 import React, { useRef, useState } from 'react';
-import { ChevronLeft, Edit3, Camera, Save, X } from 'lucide-react';
+import { ChevronLeft, Edit3, Camera, Save, X, Trash2 } from 'lucide-react';
 import SharedBooksSection from '../../home/SharedBooksSection';
 import CreateBook from '../../library/BookCreation/CreateBook';
 import CollectionsList from '../../library/CollectionsView/CollectionsList';
 import PropTypes from 'prop-types';
 import BookCreationModal from '../../library/BookCreation/BookCreationModal';
+import { fetchAuthSession } from 'aws-amplify/auth';
+import { useContext } from 'react';
+import { PeopleContext } from '../../../context/PeopleContext';
 
 import { SYSTEM_COLLECTIONS } from '../../../constants/systemCollections';
 import { CUSTOM_COLLECTIONS } from '../../../constants/collections';
@@ -29,7 +32,9 @@ const PersonDetail = ({
   currentView,
   setCurrentView,
   onEditDraftBook,
-  onSavePerson
+  onSavePerson,
+  isUploadingAvatar,
+  onDeletePerson
 }) => {
 
   console.log("👤 PersonDetail received person:", person);
@@ -51,6 +56,10 @@ const PersonDetail = ({
   const personBooks = books.filter(b => b.personId === person.id);
 
   const fileInputRef = useRef(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const { removePerson } = useContext(PeopleContext);
 
   // Group entries by collection for this person
   const groupedEntries = personInsights.reduce((acc, entry) => {
@@ -166,6 +175,44 @@ const PersonDetail = ({
     );
   };
 
+  const handleDeletePerson = async () => {
+    setIsDeleting(true);
+    try {
+      // Get the current auth session
+      const { idToken } = (await fetchAuthSession()).tokens ?? {};
+
+      if (!idToken) {
+        throw new Error('No authenticated user');
+      }
+
+      const response = await fetch(
+        `https://aqaahphwfj.execute-api.us-east-2.amazonaws.com/dev/people/${person.id}`,
+        {
+          method: 'DELETE',
+          headers: {
+            'Authorization': idToken.toString(),
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to delete person');
+      }
+
+      // Handle successful deletion
+      removePerson(person.id);
+      onBack(); // Navigate away
+    } catch (error) {
+      console.error('Delete error:', error);
+      // User-friendly error handling
+      alert(`Delete failed: ${error.message}`);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   return (
     <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-white/50 shadow-sm">
       {/* Back Button */}
@@ -200,7 +247,7 @@ const PersonDetail = ({
             onClick={handleUploadPhoto}
             className="absolute bottom-0 right-0 bg-white p-1 rounded-full shadow-sm"
           >
-            <Camera className="w-4 h-4 text-gray-600" />
+            <Camera className={`w-4 h-4 text-gray-600 ${isUploadingAvatar ? 'animate-spin' : ''}`} />
           </button>
         </div>
         <div className="text-center">
@@ -360,6 +407,44 @@ const PersonDetail = ({
         onChange={handleFileChange}
         className="hidden"
       />
+      {/* Delete Button */}
+     <div className="mt-8 flex justify-center">
+       <button
+         onClick={() => setShowDeleteModal(true)}
+         className="flex items-center gap-2 text-red-600 hover:text-red-800 text-sm font-medium"
+       >
+         <Trash2 size={16} />
+         Delete Person
+       </button>
+     </div>
+
+     {/* Delete Confirmation Modal */}
+     {showDeleteModal && (
+       <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+         <div className="bg-white rounded-xl p-6 max-w-sm w-full mx-4">
+           <h3 className="text-lg font-semibold text-gray-900 mb-2">Delete {person.name}?</h3>
+           <p className="text-gray-600 mb-6">
+             This will soft delete {person.name}. Their data will be permanently removed after 30 days.
+           </p>
+           <div className="flex justify-end gap-3">
+             <button
+               onClick={() => setShowDeleteModal(false)}
+               className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg"
+               disabled={isDeleting}
+             >
+               Cancel
+             </button>
+             <button
+               onClick={handleDeletePerson}
+               className="px-4 py-2 bg-red-600 text-white hover:bg-red-700 rounded-lg disabled:opacity-50"
+               disabled={isDeleting}
+             >
+               {isDeleting ? 'Deleting...' : 'Delete'}
+             </button>
+           </div>
+         </div>
+       </div>
+     )}
     </div>
   );
 };
@@ -383,7 +468,8 @@ PersonDetail.propTypes = {
   onCollectionToggle: PropTypes.func,
   onRecipientToggle: PropTypes.func,
   onAddToCollection: PropTypes.func,
-  onSavePerson: PropTypes.func.isRequired
+  onSavePerson: PropTypes.func.isRequired,
+  onDeletePerson: PropTypes.func.isRequired
 };
 
 PersonDetail.defaultProps = {
