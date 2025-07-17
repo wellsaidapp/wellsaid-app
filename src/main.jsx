@@ -5,13 +5,16 @@ import './index.css';
 import App from './App.jsx';
 import { UserProvider } from './context/UserContext';
 import { PeopleProvider } from './context/PeopleContext';
+import { SystemCollectionsProvider } from './context/SystemCollectionsContext';
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <BrowserRouter>
       <UserProvider>
         <PeopleProvider>
-          <App />
+          <SystemCollectionsProvider>
+            <App />
+          </SystemCollectionsProvider>
         </PeopleProvider>
       </UserProvider>
     </BrowserRouter>

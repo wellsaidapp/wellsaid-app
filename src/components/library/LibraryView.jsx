@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
-import { SYSTEM_COLLECTIONS } from '../../constants/systemCollections';
+import { useSystemCollections } from '../../context/SystemCollectionsContext';
 import { CUSTOM_COLLECTIONS } from '../../constants/collections';
 import { SHARED_BOOKS } from '../../constants/sharedBooks';
 import { X } from 'lucide-react';
@@ -27,6 +27,7 @@ const LibraryView = ({
   setIndividuals,
   defaultViewMode = 'collections'
 }) => {
+  const { systemCollections, loading } = useSystemCollections();
   const [viewMode, setViewMode] = useState(defaultViewMode);
   const [collectionFilter, setCollectionFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -114,7 +115,7 @@ const LibraryView = ({
   };
 
   // Derived state
-  const filteredSystemCollections = SYSTEM_COLLECTIONS.filter(collection => {
+  const filteredSystemCollections = systemCollections.filter(collection => {
     const hasEntries = groupedEntries[collection.id]?.length > 0;
     if (!hasEntries) return false;
 
@@ -377,7 +378,7 @@ const LibraryView = ({
             {viewMode === 'collections' ? (
               <CollectionsList
                 userCollections={CUSTOM_COLLECTIONS}
-                systemCollections={SYSTEM_COLLECTIONS}
+                systemCollections={systemCollections}
                 groupedEntries={groupedEntries}
                 expandedCollection={expandedCollection}
                 onToggleCollection={(collectionId) => {
@@ -487,7 +488,7 @@ const LibraryView = ({
               insights={insights}
               collections={CUSTOM_COLLECTIONS}
               groupedEntries={groupedEntries}
-              SYSTEM_COLLECTIONS={SYSTEM_COLLECTIONS}
+              SYSTEM_COLLECTIONS={systemCollections}
               currentView={currentView}
               setCurrentView={setCurrentView}
             />
