@@ -1,33 +1,5 @@
 // src/constants/sharedBooks.js
 
-// Helper functions for consistent page creation
-function createCoverPage(pageNumber, imageUrl) {
-  return {
-    type: "cover",
-    image: imageUrl,
-    pageNumber,
-    createdAt: new Date().toISOString()
-  };
-}
-
-function createPromptPage(pageNumber, content) {
-  return {
-    type: "question",
-    content,
-    pageNumber,
-    createdAt: new Date().toISOString()
-  };
-}
-
-function createResponsePage(pageNumber, text, points = []) {
-  return {
-    type: "answer",
-    content: { text },
-    pageNumber,
-    createdAt: new Date().toISOString()
-  };
-}
-
 // Main books data export
 export const SHARED_BOOKS = [
   {
