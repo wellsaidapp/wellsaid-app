@@ -8,6 +8,7 @@ import { Toaster } from 'react-hot-toast';
 import { useUser } from './context/UserContext';
 import { usePeople } from './context/PeopleContext';
 import { useUserCollections } from './context/UserCollectionsContext';
+import { useInsights } from './context/InsightContext';
 
 const MyComponent = () => {
   const { userCollections, loading } = useUserCollections();
@@ -57,7 +58,6 @@ import ProfileView from './components/profileView/ProfileView';
 import PeopleView from './components/peopleView/PeopleView';
 import WellSaidOnboarding from './components/landingPage/WellSaidOnboarding';
 
-import { INSIGHTS } from './constants/insights';
 import { SHARED_BOOKS } from './constants/sharedBooks';
 
 const WellSaidApp = () => {
@@ -69,7 +69,7 @@ const WellSaidApp = () => {
   const [currentView, setCurrentView] = useState('home');
   const [showSplash, setShowSplash] = useState(true);
   const [captureMode, setCaptureMode] = useState('quick');
-  const [insights, setInsights] = useState(INSIGHTS);
+  const { insights, loadingInsights } = useInsights();
   const [libraryDefaultViewMode, setLibraryDefaultViewMode] = useState('collections');
   const [books, setBooks] = useState(SHARED_BOOKS);
   const { refetchUser } = useUser();
@@ -121,7 +121,7 @@ const WellSaidApp = () => {
           insights={insights}
           individuals={people}
           setCurrentView={setCurrentView}
-          setInsights={setInsights}
+          // setInsights={setInsights}
           defaultViewMode={libraryDefaultViewMode}
         />;
       case 'people':

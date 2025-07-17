@@ -7,6 +7,7 @@ import { UserProvider } from './context/UserContext';
 import { PeopleProvider } from './context/PeopleContext';
 import { SystemCollectionsProvider } from './context/SystemCollectionsContext';
 import { UserCollectionsProvider } from './context/UserCollectionsContext';
+import { InsightProvider } from './context/InsightContext';
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
@@ -15,7 +16,9 @@ createRoot(document.getElementById('root')).render(
         <PeopleProvider>
           <SystemCollectionsProvider>
             <UserCollectionsProvider>
-              <App />
+              <InsightProvider>
+                <App />
+              </InsightProvider>
             </UserCollectionsProvider>
           </SystemCollectionsProvider>
         </PeopleProvider>
