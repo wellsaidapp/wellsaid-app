@@ -4,8 +4,8 @@ import { SHARED_BOOKS, getRecentBooks, getPublishedBooksCount } from '../../cons
 import { INSIGHTS } from '../../constants/insights';
 import { useUser } from '../../context/UserContext';
 import { usePeople } from '../../context/PeopleContext';
+import { useUserCollections } from '../../context/UserCollectionsContext';
 import { UPCOMING_EVENTS } from '../../constants/upcomingEvents';
-import { CUSTOM_COLLECTIONS } from '../../constants/collections';
 import { OCCASION_QUESTIONS } from '../../constants/occasionQuestions';
 import Header from '../appLayout/Header';
 import CaptureOptionsModal from '../capture/CaptureOptionsModal';
@@ -33,7 +33,7 @@ const HomeView = ({
 }) => {
   const { userData, loadingUser, refetchUser } = useUser();
   const { people, loadingPeople, refetchPeople } = usePeople();
-
+  const { userCollections, loading } = useUserCollections();
   if (loadingUser) {
     return (
       <div className="fixed inset-0 flex items-center justify-center bg-white">

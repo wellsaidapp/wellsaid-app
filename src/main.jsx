@@ -6,6 +6,7 @@ import App from './App.jsx';
 import { UserProvider } from './context/UserContext';
 import { PeopleProvider } from './context/PeopleContext';
 import { SystemCollectionsProvider } from './context/SystemCollectionsContext';
+import { UserCollectionsProvider } from './context/UserCollectionsContext';
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
@@ -13,7 +14,9 @@ createRoot(document.getElementById('root')).render(
       <UserProvider>
         <PeopleProvider>
           <SystemCollectionsProvider>
-            <App />
+            <UserCollectionsProvider>
+              <App />
+            </UserCollectionsProvider>
           </SystemCollectionsProvider>
         </PeopleProvider>
       </UserProvider>

@@ -10,7 +10,7 @@ import { useContext } from 'react';
 import { PeopleContext } from '../../../context/PeopleContext';
 
 import { useSystemCollections } from '../../../context/SystemCollectionsContext';
-import { CUSTOM_COLLECTIONS } from '../../../constants/collections';
+import { useUserCollections } from '../../../context/UserCollectionsContext';
 import { SHARED_BOOKS } from '../../../constants/sharedBooks';
 
 const PersonDetail = ({
@@ -39,7 +39,10 @@ const PersonDetail = ({
 
   console.log("👤 PersonDetail received person:", person);
   console.log("📸 Avatar image:", person.avatarUrl?.toString?.().trim());
+
   const { systemCollections } = useSystemCollections();
+  const { userCollections, loading } = useUserCollections();
+
   const [expandedCollection, setExpandedCollection] = useState(null);
   const [showInactiveCollections, setShowInactiveCollections] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -81,14 +84,14 @@ const PersonDetail = ({
   const activeSystemCollections = systemCollections.filter(c =>
     groupedEntries[c.id]?.length > 0
   );
-  const userCollections = CUSTOM_COLLECTIONS.filter(c =>
+  const activeUserCollections = userCollections.filter(c =>
     groupedEntries[c.id]?.length > 0
   );
   const inactiveCollections = collections.filter(c =>
     !groupedEntries[c.id]?.length
   );
   const totalCollections = collections.length;
-  const activeCollectionsCount = activeSystemCollections.length + userCollections.length;
+  const activeCollectionsCount = activeSystemCollections.length + activeUserCollections.length;
 
   const handleEditPerson = () => {
     setIsEditing(!isEditing);
@@ -370,7 +373,7 @@ const PersonDetail = ({
           setEntryOrder={setEntryOrder}
           individuals={[person]}
           insights={insights} // Make sure this contains ALL insights, not just person-specific ones
-          collections={newBook?.isDraft ? CUSTOM_COLLECTIONS : userCollections}
+          collections={newBook?.isDraft ? userCollections : userCollections}
           groupedEntries={newBook?.isDraft ?
             // For drafts, use all insights grouped by collection
             insights.reduce((acc, entry) => {

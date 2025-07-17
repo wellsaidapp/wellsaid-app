@@ -7,6 +7,21 @@ import {
 import { Toaster } from 'react-hot-toast';
 import { useUser } from './context/UserContext';
 import { usePeople } from './context/PeopleContext';
+import { useUserCollections } from './context/UserCollectionsContext';
+
+const MyComponent = () => {
+  const { userCollections, loading } = useUserCollections();
+
+  if (loading) return <div>Loading...</div>;
+
+  return (
+    <ul>
+      {userCollections.map((col) => (
+        <li key={col.id}>{col.name}</li>
+      ))}
+    </ul>
+  );
+};
 
 import { Amplify } from 'aws-amplify';
 import amplifyconfig from './aws-exports';
@@ -43,11 +58,11 @@ import PeopleView from './components/peopleView/PeopleView';
 import WellSaidOnboarding from './components/landingPage/WellSaidOnboarding';
 
 import { INSIGHTS } from './constants/insights';
-import { CUSTOM_COLLECTIONS } from './constants/collections';
 import { SHARED_BOOKS } from './constants/sharedBooks';
 
 const WellSaidApp = () => {
   const { userData, loadingUser } = useUser();
+  const { userCollections, loading } = useUserCollections();
   const { people, loadingPeople } = usePeople();
   const [authState, setAuthState] = useState('checking');
   const [showLogin, setShowLogin] = useState(false);
@@ -114,7 +129,7 @@ const WellSaidApp = () => {
         return <PeopleView
           insights={insights}
           individuals={people}
-          collections={CUSTOM_COLLECTIONS}
+          collections={userCollections}
           setCurrentView={setCurrentView}
           sharedBooks={SHARED_BOOKS}
         />;
@@ -122,7 +137,7 @@ const WellSaidApp = () => {
         return <ProfileView
           insights={insights}
           individuals={people}
-          collections={CUSTOM_COLLECTIONS}
+          collections={userCollections}
           user={userData}
           setCurrentView={setCurrentView}
         />;

@@ -2,8 +2,7 @@ import React from 'react';
 import { Book, Heart, FilePen, Library } from 'lucide-react';
 
 import { useSystemCollections } from '../../../context/SystemCollectionsContext';
-import { CUSTOM_COLLECTIONS } from '../../../constants/collections';
-
+import { useUserCollections } from '../../../context/UserCollectionsContext';
 
 const BookItem = ({
   book,
@@ -15,7 +14,7 @@ const BookItem = ({
 }) => {
 
   const { systemCollections } = useSystemCollections();
-
+  const { userCollections, loading } = useUserCollections();
   const formatDate = (dateString) => {
     if (!dateString) return '';
     const date = new Date(dateString);
@@ -51,7 +50,7 @@ const BookItem = ({
               {book.collections?.length > 0 && (
                 <div className="flex flex-wrap gap-2 mb-2">
                   {book.collections.map(collectionId => {
-                    const collection = [...systemCollections, ...CUSTOM_COLLECTIONS].find(c => c.id === collectionId);
+                    const collection = [...systemCollections, ...userCollections].find(c => c.id === collectionId);
                     return collection ? (
                       <span
                         key={`book-col-${collectionId}`}

@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useSystemCollections } from '../../context/SystemCollectionsContext';
-import { CUSTOM_COLLECTIONS } from '../../constants/collections';
+import { useUserCollections } from '../../context/UserCollectionsContext';
 import { SHARED_BOOKS } from '../../constants/sharedBooks';
 import { X } from 'lucide-react';
 
@@ -27,7 +27,8 @@ const LibraryView = ({
   defaultViewMode = 'collections'
 }) => {
   console.log("INDIVIDUALS IN LIBRARY:", individuals);
-  const { systemCollections, loading } = useSystemCollections();
+  const { systemCollections, loading: loadingSystem } = useSystemCollections();
+  const { userCollections, loading: loadingUser } = useUserCollections();
   const [viewMode, setViewMode] = useState(defaultViewMode);
   const [collectionFilter, setCollectionFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -128,7 +129,7 @@ const LibraryView = ({
     return true;
   });
 
-  const filteredUserCollections = CUSTOM_COLLECTIONS.filter(collection => {
+  const filteredUserCollections = userCollections.filter(collection => {
     const hasEntries = groupedEntries[collection.id]?.length > 0;
     if (!hasEntries) return false;
 
@@ -301,7 +302,7 @@ const LibraryView = ({
       searchResults :
       insights;
 
-    return CUSTOM_COLLECTIONS.filter(collection => {
+    return userCollections.filter(collection => {
       const hasEntries = insightsToUse.some(entry =>
         entry.collections?.includes(collection.id)
       );
@@ -377,7 +378,7 @@ const LibraryView = ({
 
             {viewMode === 'collections' ? (
               <CollectionsList
-                userCollections={CUSTOM_COLLECTIONS}
+                userCollections={userCollections}
                 systemCollections={systemCollections}
                 groupedEntries={groupedEntries}
                 expandedCollection={expandedCollection}
@@ -394,7 +395,7 @@ const LibraryView = ({
                 onCollectionToggle={handleCollectionToggle}
                 onPersonToggle={handlePersonToggle}
                 individuals={individuals}
-                collections={CUSTOM_COLLECTIONS}
+                collections={userCollections}
                 selectedFilters={selectedFilters}
                 onClearFilters={() => {
                   setSelectedFilters({ personIds: [], topics: [], entryTypes: [] });
@@ -486,7 +487,7 @@ const LibraryView = ({
               setEntryOrder={setEntryOrder}
               individuals={individuals}
               insights={insights}
-              collections={CUSTOM_COLLECTIONS}
+              collections={userCollections}
               groupedEntries={groupedEntries}
               SYSTEM_COLLECTIONS={systemCollections}
               currentView={currentView}
