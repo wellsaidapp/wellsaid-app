@@ -10,7 +10,7 @@ pdfjs.GlobalWorkerOptions.workerSrc =
 
 export default function PDFViewerWrapper({ book, onClose, onEdit }) {
   const file = book.status === "Published"
-    ? book.publishedState.pdfBase64
+    ? book.publishedBook
     : null;
 
   const [numPages, setNumPages] = useState(null);

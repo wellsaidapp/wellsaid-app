@@ -29,6 +29,7 @@ export const BooksProvider = ({ children }) => {
         const raw = await response.json();
         const books = Array.isArray(raw) ? raw : raw.books || [];
         setBooks(books);
+        console.log("Books Loaded:", books);
       } catch (err) {
         console.error("❌ Failed to load books:", err);
       } finally {
