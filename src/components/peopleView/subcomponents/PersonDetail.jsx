@@ -283,7 +283,7 @@ const PersonDetail = ({
               type="text"
               value={editedRelationship}
               onChange={(e) => setEditedRelationship(e.target.value)}
-              className="text-sm text-gray-500 border-b border-gray-300 px-2 py-1 text-center w-32"
+              className="text-base text-gray-500 border-b border-gray-300 px-2 py-1 text-center w-32"
             />
           ) : (
             <p className="text-sm text-gray-500">{person.relationship}</p>
