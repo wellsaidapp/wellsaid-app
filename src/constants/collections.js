@@ -5,7 +5,7 @@ export const CUSTOM_COLLECTIONS = [
     type: 'custom',
     color: 'bg-purple-500',
     metadata: {
-      personId: '1',
+      personId: 'f607fe87-31ae-4048-bc50-7fc07ffe4047',
       personName: 'Sage',
       created: '2025-05-01'
     }
@@ -16,7 +16,7 @@ export const CUSTOM_COLLECTIONS = [
     type: 'custom',
     color: 'bg-blue-500',
     metadata: {
-      personId: '2',
+      personId: 'a749593f-1425-4eda-8d15-87da50b4088e',
       personName: 'Cohen',
       created: '2025-10-01'
     }

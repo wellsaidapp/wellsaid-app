@@ -1,5 +1,4 @@
 import { jsPDF } from 'jspdf';
-import { USER } from '../../../constants/user';
 import logo from '../../../assets/wellsaid.svg';
 
 // Convert inches to points (72 points per inch)
@@ -330,7 +329,8 @@ export const generateBookPDF = async (
   entryOrder,
   insights,
   fontStyle = 'serif',
-  isBlackAndWhite = false
+  isBlackAndWhite = false,
+  userData = null
 ) => {
   const doc = new jsPDF({
     unit: 'pt',
@@ -410,7 +410,7 @@ export const generateBookPDF = async (
           contentWidth,
           contentHeight,
           newBook.fontStyle,
-          USER,
+          userData,
           logoBase64,
           newBook.isBlackAndWhite
         );
@@ -654,22 +654,54 @@ const renderBackCoverPage = async (
   contentWidth,
   contentHeight,
   fontStyle,
-  USER,
+  userData,
   logoBase64,
   isBlackAndWhite = false
 ) => {
   if (!backCoverNote) return;
 
-  const renderAvatar = (doc, avatarBase64, centerX, avatarY, avatarSize) => {
-    const avatarX = centerX - avatarSize / 2;
-    doc.saveGraphicsState();
-    doc.circle(centerX, avatarY + avatarSize / 2, avatarSize / 2);
-    doc.clip();
-    doc.addImage(avatarBase64, 'JPEG', avatarX, avatarY, avatarSize, avatarSize);
-    doc.restoreGraphicsState();
-    doc.setDrawColor(100);
-    doc.setLineWidth(0.5);
-    doc.circle(centerX, avatarY + avatarSize / 2, avatarSize / 2, 'S');
+  const renderAvatar = async (doc, avatarUrl, centerX, avatarY, avatarSize, isBlackAndWhite) => {
+    try {
+      // First convert the URL to a base64 image
+      const avatarBase64 = await urlToBase64(avatarUrl);
+      let processedAvatar = avatarBase64;
+
+      if (isBlackAndWhite) {
+        processedAvatar = await convertToBlackAndWhite(avatarBase64);
+      }
+
+      const circularAvatar = await cropImageToCircle(processedAvatar, avatarSize, isBlackAndWhite);
+      const avatarX = centerX - avatarSize / 2;
+
+      doc.saveGraphicsState();
+      doc.circle(centerX, avatarY + avatarSize / 2, avatarSize / 2);
+      doc.clip();
+      doc.addImage(circularAvatar, 'JPEG', avatarX, avatarY, avatarSize, avatarSize);
+      doc.restoreGraphicsState();
+      doc.setDrawColor(100);
+      doc.setLineWidth(0.5);
+      doc.circle(centerX, avatarY + avatarSize / 2, avatarSize / 2, 'S');
+    } catch (error) {
+      console.error('Failed to render avatar:', error);
+    }
+  };
+
+  // Add helper function to convert URL to base64
+  const urlToBase64 = async (url) => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.crossOrigin = 'Anonymous';
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        resolve(canvas.toDataURL('image/jpeg'));
+      };
+      img.onerror = reject;
+      img.src = url;
+    });
   };
 
   const centerX = margin + (contentWidth / 2);
@@ -695,10 +727,6 @@ const renderBackCoverPage = async (
 
   const totalTextHeight = lines.length * lineHeight;
   const textStartY = margin + 20 + (availableHeight - totalTextHeight) / 2;
-
-  // lines.forEach((line, i) => {
-  //   doc.text(line, centerX, textStartY + (i * lineHeight), { align: 'center' });
-  // });
 
   // Render each line with emoji support
   for (let i = 0; i < lines.length; i++) {
@@ -757,19 +785,19 @@ const renderBackCoverPage = async (
     }
   }
 
-  if (USER && USER.name) {
+  if (userData?.name) {
     doc.setFont(fontStyle === 'serif' ? 'times' : 'helvetica', 'italic');
     doc.setFontSize(10);
     doc.setTextColor(0, 0, 0);
-    doc.text(USER.name || 'Anonymous', centerX, adjustedNameY, { align: 'center' });
+    doc.text(userData.name, centerX, adjustedNameY, { align: 'center' });
   }
 
-  if (USER && USER.avatarImage) {
+  if (userData?.avatarUrl) {
     try {
       // Process avatar image (convert to B&W if needed)
-      let processedAvatar = USER.avatarImage;
+      let processedAvatar = userData.avatarUrl;
       if (isBlackAndWhite) {
-        processedAvatar = await convertToBlackAndWhite(USER.avatarImage);
+        processedAvatar = await convertToBlackAndWhite(userData.avatarUrl);
       }
 
       const circularAvatar = await cropImageToCircle(processedAvatar, avatarSize, isBlackAndWhite);

@@ -24,9 +24,9 @@ const LibraryView = ({
   setInsights,
   currentView,
   setCurrentView,
-  setIndividuals,
   defaultViewMode = 'collections'
 }) => {
+  console.log("INDIVIDUALS IN LIBRARY:", individuals);
   const { systemCollections, loading } = useSystemCollections();
   const [viewMode, setViewMode] = useState(defaultViewMode);
   const [collectionFilter, setCollectionFilter] = useState('all');

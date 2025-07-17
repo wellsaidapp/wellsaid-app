@@ -42,11 +42,8 @@ import ProfileView from './components/profileView/ProfileView';
 import PeopleView from './components/peopleView/PeopleView';
 import WellSaidOnboarding from './components/landingPage/WellSaidOnboarding';
 
-// Only keep constants you actually use
-import { INDIVIDUALS } from './constants/individuals';
 import { INSIGHTS } from './constants/insights';
 import { CUSTOM_COLLECTIONS } from './constants/collections';
-import { USER } from './constants/user';
 import { SHARED_BOOKS } from './constants/sharedBooks';
 
 const WellSaidApp = () => {
@@ -57,7 +54,6 @@ const WellSaidApp = () => {
   const [currentView, setCurrentView] = useState('home');
   const [showSplash, setShowSplash] = useState(true);
   const [captureMode, setCaptureMode] = useState('quick');
-  const [individuals, setIndividuals] = useState(INDIVIDUALS);
   const [insights, setInsights] = useState(INSIGHTS);
   const [libraryDefaultViewMode, setLibraryDefaultViewMode] = useState('collections');
   const [books, setBooks] = useState(SHARED_BOOKS);
@@ -108,10 +104,9 @@ const WellSaidApp = () => {
       case 'library':
         return <LibraryView
           insights={insights}
-          individuals={individuals}
+          individuals={people}
           setCurrentView={setCurrentView}
           setInsights={setInsights}
-          setIndividuals={setIndividuals}
           defaultViewMode={libraryDefaultViewMode}
         />;
       case 'people':
@@ -126,9 +121,9 @@ const WellSaidApp = () => {
       case 'profile':
         return <ProfileView
           insights={insights}
-          individuals={individuals}
+          individuals={people}
           collections={CUSTOM_COLLECTIONS}
-          user={USER}
+          user={userData}
           setCurrentView={setCurrentView}
         />;
       default:
