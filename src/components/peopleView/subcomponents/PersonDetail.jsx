@@ -9,7 +9,7 @@ import { fetchAuthSession } from 'aws-amplify/auth';
 import { useContext } from 'react';
 import { PeopleContext } from '../../../context/PeopleContext';
 
-import { SYSTEM_COLLECTIONS } from '../../../constants/systemCollections';
+import { useSystemCollections } from '../../../context/SystemCollectionsContext';
 import { CUSTOM_COLLECTIONS } from '../../../constants/collections';
 import { SHARED_BOOKS } from '../../../constants/sharedBooks';
 
@@ -39,7 +39,7 @@ const PersonDetail = ({
 
   console.log("👤 PersonDetail received person:", person);
   console.log("📸 Avatar image:", person.avatarUrl?.toString?.().trim());
-
+  const { systemCollections } = useSystemCollections();
   const [expandedCollection, setExpandedCollection] = useState(null);
   const [showInactiveCollections, setShowInactiveCollections] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -78,7 +78,7 @@ const PersonDetail = ({
   }, {});
 
   // Filter and calculate collection stats
-  const systemCollections = SYSTEM_COLLECTIONS.filter(c =>
+  const activeSystemCollections = systemCollections.filter(c =>
     groupedEntries[c.id]?.length > 0
   );
   const userCollections = CUSTOM_COLLECTIONS.filter(c =>
@@ -88,7 +88,7 @@ const PersonDetail = ({
     !groupedEntries[c.id]?.length
   );
   const totalCollections = collections.length;
-  const activeCollectionsCount = systemCollections.length + userCollections.length;
+  const activeCollectionsCount = activeSystemCollections.length + userCollections.length;
 
   const handleEditPerson = () => {
     setIsEditing(!isEditing);
@@ -318,7 +318,7 @@ const PersonDetail = ({
           </p>
         </div>
         <CollectionsList
-          systemCollections={systemCollections}
+          systemCollections={activeSystemCollections}
           userCollections={userCollections}
           groupedEntries={groupedEntries}
           expandedCollection={expandedCollection}
@@ -387,7 +387,7 @@ const PersonDetail = ({
             }, {})
             : groupedEntries // Otherwise use person-specific grouped entries
           }
-          SYSTEM_COLLECTIONS={SYSTEM_COLLECTIONS}
+          SYSTEM_COLLECTIONS={systemCollections}
           currentView={currentView}
           setCurrentView={setCurrentView}
         />

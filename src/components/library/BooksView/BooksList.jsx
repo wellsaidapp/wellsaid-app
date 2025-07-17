@@ -11,7 +11,7 @@ import {
   Book
 } from 'lucide-react';
 
-import { SYSTEM_COLLECTIONS } from '../../../constants/systemCollections';
+import { useSystemCollections } from '../../../context/SystemCollectionsContext';
 import { CUSTOM_COLLECTIONS } from '../../../constants/collections';
 
 const BooksList = ({
@@ -28,7 +28,7 @@ const BooksList = ({
   const [statusFilter, setStatusFilter] = useState('');
   const [personFilter, setPersonFilter] = useState('');
   const [collectionFilter, setCollectionFilter] = useState('');
-
+  const { systemCollections } = useSystemCollections();
   const filteredBooks = books.filter(book => {
     const matchesStatus = statusFilter ? book.status === statusFilter : true;
     const matchesPerson = personFilter ? book.personName === personFilter : true;
@@ -179,7 +179,7 @@ const BooksList = ({
                   <option value="">All collections</option>
                   {[...new Set(books.flatMap(b => b.collections || []))]
                     .map(collectionId => {
-                      const allCollections = [...SYSTEM_COLLECTIONS, ...CUSTOM_COLLECTIONS];
+                      const allCollections = [...systemCollections, ...CUSTOM_COLLECTIONS];
                       const collection = allCollections.find(c => c.id === collectionId);
                       return collection ? (
                         <option key={collection.id} value={collection.id}>
@@ -215,7 +215,7 @@ const BooksList = ({
             </span>
           )}
           {collectionFilter && (() => {
-            const allCollections = [...SYSTEM_COLLECTIONS, ...CUSTOM_COLLECTIONS];
+            const allCollections = [...systemCollections, ...CUSTOM_COLLECTIONS];
             const collection = allCollections.find(c => c.id === collectionFilter);
             return (
               <span className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm">

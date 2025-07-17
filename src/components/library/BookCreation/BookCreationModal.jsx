@@ -25,7 +25,7 @@ import Step8Publish from './Step8Publish';
 import ImageCropperModal from './ImageCropperModal';
 import DraggableEntry from './DraggableEntry';
 
-import { SYSTEM_COLLECTIONS } from '../../../constants/systemCollections';
+import { useSystemCollections } from '../../../context/SystemCollectionsContext';
 
 const BookCreationModal = ({
   onClose,
@@ -72,6 +72,8 @@ const BookCreationModal = ({
     setBookCreationStep(0);
     setCoverImageState({ tempImage: null, showCropModal: false });
   };
+
+  const { systemCollections, loading } = useSystemCollections();
 
   const [showExitConfirmation, setShowExitConfirmation] = useState(false);
 
@@ -366,7 +368,7 @@ const BookCreationModal = ({
                 <Step1Collections
                   newBook={newBook}
                   setNewBook={setNewBook}
-                  SYSTEM_COLLECTIONS={SYSTEM_COLLECTIONS}
+                  SYSTEM_COLLECTIONS={systemCollections}
                   collections={collections}
                   groupedEntries={groupedEntries}
                 />

@@ -4,7 +4,7 @@ import PeopleSearch from './subcomponents/PeopleSearch';
 import PeopleList from './subcomponents/PeopleList';
 import PersonDetail from './subcomponents/PersonDetail';
 import BookCreationModal from '../library/BookCreation/BookCreationModal';
-import { SYSTEM_COLLECTIONS } from '../../constants/systemCollections';
+import { useSystemCollections } from '../../context/SystemCollectionsContext';
 import ImageCropperModal from '../library/BookCreation/ImageCropperModal';
 import PDFViewerWrapper from '../library/BooksView/PDFViewerWrapper';
 import BookPreviewModal from '../home/BookPreviewModal';
@@ -15,7 +15,7 @@ import { fetchAuthSession } from 'aws-amplify/auth';
 import { usePeople } from '../../context/PeopleContext';
 
 const PeopleView = ({ individuals, insights, collections, sharedBooks, setCurrentView }) => {
-
+  const { systemCollections } = useSystemCollections();
   if (Array.isArray(individuals)) {
     console.log("🧑‍🤝‍🧑 Received individuals prop:", individuals.map(p => ({
       name: p?.name,
@@ -62,7 +62,7 @@ const PeopleView = ({ individuals, insights, collections, sharedBooks, setCurren
   const [showAvatarCropper, setShowAvatarCropper] = useState(false);
   const [croppedAvatarImage, setCroppedAvatarImage] = useState(null); // Final cropped avatar image
 
-  const systemCollectionIds = new Set(SYSTEM_COLLECTIONS.map(c => c.id));
+  const systemCollectionIds = new Set(systemCollections.map(c => c.id));
   const [showBookCreation, setShowBookCreation] = useState(false);
   const [bookCreationStep, setBookCreationStep] = useState(0);
   const [newBook, setNewBook] = useState({
@@ -413,7 +413,7 @@ const PeopleView = ({ individuals, insights, collections, sharedBooks, setCurren
               avatarInitial: selectedPerson.avatar // Pass the initial separately
             }}
             insights={insights}
-            collections={[...SYSTEM_COLLECTIONS, ...collections]}
+            collections={[...systemCollections, ...collections]}
             onBack={() => setSelectedPerson(null)}
             books={sharedBooks}
             setSelectedBook={setSelectedBook}
@@ -477,7 +477,7 @@ const PeopleView = ({ individuals, insights, collections, sharedBooks, setCurren
           insights={insights}
           collections={collections}
           groupedEntries={groupedEntries} // ✅ NOW INCLUDED
-          SYSTEM_COLLECTIONS={SYSTEM_COLLECTIONS} // ✅ Safe to import here too
+          SYSTEM_COLLECTIONS={systemCollections} // ✅ Safe to import here too
           currentView={'people'}
           setCurrentView={() => {}}
         />
