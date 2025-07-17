@@ -11,7 +11,6 @@ import { PeopleContext } from '../../../context/PeopleContext';
 
 import { useSystemCollections } from '../../../context/SystemCollectionsContext';
 import { useUserCollections } from '../../../context/UserCollectionsContext';
-import { SHARED_BOOKS } from '../../../constants/sharedBooks';
 
 const PersonDetail = ({
   person,

@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useSystemCollections } from '../../context/SystemCollectionsContext';
 import { useUserCollections } from '../../context/UserCollectionsContext';
-import { SHARED_BOOKS } from '../../constants/sharedBooks';
+import { useBooks } from '../../context/BooksContext';
 import { X } from 'lucide-react';
 
 // Component imports
@@ -29,6 +29,7 @@ const LibraryView = ({
   console.log("INDIVIDUALS IN LIBRARY:", individuals);
   const { systemCollections, loading: loadingSystem } = useSystemCollections();
   const { userCollections, loading: loadingUser } = useUserCollections();
+  const { books, loadingBooks } = useBooks();
   const [viewMode, setViewMode] = useState(defaultViewMode);
   const [collectionFilter, setCollectionFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -99,7 +100,7 @@ const LibraryView = ({
     setSortDirection(prev => (prev === 'desc' ? 'asc' : 'desc'));
   };
 
-  const sortedBooks = [...SHARED_BOOKS].sort((a, b) => {
+  const sortedBooks = [...books].sort((a, b) => {
     const dateA = new Date(a.savedOn);
     const dateB = new Date(b.savedOn);
     return sortDirection === 'asc' ? dateA - dateB : dateB - dateA;

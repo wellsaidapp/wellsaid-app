@@ -8,6 +8,7 @@ import { PeopleProvider } from './context/PeopleContext';
 import { SystemCollectionsProvider } from './context/SystemCollectionsContext';
 import { UserCollectionsProvider } from './context/UserCollectionsContext';
 import { InsightProvider } from './context/InsightContext';
+import { BooksProvider } from './context/BooksContext';
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
@@ -17,7 +18,9 @@ createRoot(document.getElementById('root')).render(
           <SystemCollectionsProvider>
             <UserCollectionsProvider>
               <InsightProvider>
-                <App />
+                <BooksProvider>
+                  <App />
+                </BooksProvider>
               </InsightProvider>
             </UserCollectionsProvider>
           </SystemCollectionsProvider>

@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { Lightbulb, ArrowRight, Pencil, Zap, Clock, Sparkles, Calendar, Trophy } from 'lucide-react';
-import { SHARED_BOOKS, getRecentBooks, getPublishedBooksCount } from '../../constants/sharedBooks';
 import { useUser } from '../../context/UserContext';
 import { usePeople } from '../../context/PeopleContext';
 import { useUserCollections } from '../../context/UserCollectionsContext';
 import { useInsights } from '../../context/InsightContext';
+import { useBooks } from '../../context/BooksContext';
 import { UPCOMING_EVENTS } from '../../constants/upcomingEvents';
 import { OCCASION_QUESTIONS } from '../../constants/occasionQuestions';
 import Header from '../appLayout/Header';
@@ -49,6 +49,11 @@ const HomeView = ({
   const userStreak = userData?.streak ?? 0;
 
   const { insights, loadingInsights } = useInsights();
+  const {
+    loadingBooks,
+    getRecentBooks,
+    getPublishedBooksCount
+  } = useBooks();
   const weekInsights = insights.filter(i => isThisWeek(parseISO(i.date))).length;
   // const weeklyGoal = 5;
   const [selectedBook, setSelectedBook] = useState(null);

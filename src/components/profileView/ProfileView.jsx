@@ -11,7 +11,7 @@ import UseDisclosureToggle from './utils/UseDisclosureToggle';
 import TermsOfUse from './disclosures/TermsOfUse';
 import PrivacyPolicy from './disclosures/PrivacyPolicy';
 import AIDisclosure from './disclosures/AIDisclosure';
-import { SHARED_BOOKS, getRecentBooks, getPublishedBooksCount } from '../../constants/sharedBooks';
+import { useBooks } from '../../context/BooksContext';
 import ImageCropperModal from '../library/BookCreation/ImageCropperModal';
 import AccountSettings from './subcomponents/AccountSettings';
 import NotificationSettings from './subcomponents/NotificationSettings';
@@ -21,8 +21,12 @@ import { signOut, getCurrentUser, fetchUserAttributes, fetchAuthSession } from '
 import { uploadData, getUrl } from 'aws-amplify/storage';
 
 const ProfileView = ({ user, insights = [], individuals = [], collections = [], setCurrentView }) => {
-  // const [session, setSession] = useState(null);
   const { userData, loadingUser, refetchUser } = useUser();
+  const {
+    loadingBooks,
+    getRecentBooks,
+    getPublishedBooksCount
+  } = useBooks();
   const { expandedId, toggleDisclosure } = UseDisclosureToggle();
   const [currentUser, setCurrentUser] = useState(user);
   const [showAccountSettings, setShowAccountSettings] = useState(false);
@@ -37,29 +41,21 @@ const ProfileView = ({ user, insights = [], individuals = [], collections = [], 
       id: 'terms',
       title: 'Terms of Use',
       icon: <BookOpen size={18} />,
-      content: <TermsOfUse /> // Using component directly
+      content: <TermsOfUse />
     },
     {
       id: 'privacy',
       title: 'Privacy Policy',
       icon: <Lock size={18} />,
-      content: <PrivacyPolicy /> // Using component directly
+      content: <PrivacyPolicy />
     },
     {
       id: 'ai-disclosure',
       title: 'AI Disclosure',
       icon: <Wand2 size={18} />,
-      content: <AIDisclosure /> // Using component directly
+      content: <AIDisclosure />
     }
   ];
-
-  // useEffect(() => {
-  //   const loadSession = async () => {
-  //     const result = await fetchAuthSession();
-  //     setSession(result);
-  //   };
-  //   loadSession();
-  // }, []);
 
   const handleAddPersonComplete = async (result) => {
     try {

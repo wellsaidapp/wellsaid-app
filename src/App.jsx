@@ -9,6 +9,7 @@ import { useUser } from './context/UserContext';
 import { usePeople } from './context/PeopleContext';
 import { useUserCollections } from './context/UserCollectionsContext';
 import { useInsights } from './context/InsightContext';
+import { useBooks } from './context/BooksContext';
 
 const MyComponent = () => {
   const { userCollections, loading } = useUserCollections();
@@ -58,8 +59,6 @@ import ProfileView from './components/profileView/ProfileView';
 import PeopleView from './components/peopleView/PeopleView';
 import WellSaidOnboarding from './components/landingPage/WellSaidOnboarding';
 
-import { SHARED_BOOKS } from './constants/sharedBooks';
-
 const WellSaidApp = () => {
   const { userData, loadingUser } = useUser();
   const { userCollections, loading } = useUserCollections();
@@ -71,7 +70,7 @@ const WellSaidApp = () => {
   const [captureMode, setCaptureMode] = useState('quick');
   const { insights, loadingInsights } = useInsights();
   const [libraryDefaultViewMode, setLibraryDefaultViewMode] = useState('collections');
-  const [books, setBooks] = useState(SHARED_BOOKS);
+  const { books } = useBooks();
   const { refetchUser } = useUser();
   useEffect(() => {
     const storedAuthState = localStorage.getItem('wellsaid-auth-state');
@@ -109,7 +108,6 @@ const WellSaidApp = () => {
           currentView={currentView}
           setLibraryDefaultViewMode={setLibraryDefaultViewMode}
           books={books}
-          setBooks={setBooks}
         />;
       case 'capture':
         return <CaptureView
@@ -131,7 +129,7 @@ const WellSaidApp = () => {
           individuals={people}
           collections={userCollections}
           setCurrentView={setCurrentView}
-          sharedBooks={SHARED_BOOKS}
+          sharedBooks={books}
         />;
       case 'profile':
         return <ProfileView
