@@ -19,13 +19,57 @@ const BookEditor = ({ book, onClose, onSave, onBackToViewer, returnToViewer, pre
   const [isBlackAndWhite, setIsBlackAndWhite] = useState(book.isBlackAndWhite || false);
   // Initialize editor with book content
   useEffect(() => {
-    if (book.publishedContent) {
-      setPages([...book.publishedContent]);
-    }
-    setDescription(book.description || '');
-    setBackCoverNote(book.backCoverNote || '');
-    setCoverImage(book.coverImage || null);
+    const initializeBookData = async () => {
+      if (book.publishedContent) {
+        setPages([...book.publishedContent]);
+      }
+      setDescription(book.description || '');
+      setBackCoverNote(book.backCoverNote || '');
+
+      // Handle cover image conversion if it's a URL
+      if (book.coverImage && book.coverImage.startsWith('http')) {
+        try {
+          const base64Image = await fetchImageAsBase64(book.coverImage);
+          setCoverImage(base64Image);
+        } catch (error) {
+          console.error('Failed to convert cover image:', error);
+          setCoverImage(null);
+        }
+      } else {
+        setCoverImage(book.coverImage || null);
+      }
+    };
+
+    initializeBookData();
   }, [book]);
+
+  // Add this utility function at the top of BookEditor.jsx
+  const fetchImageAsBase64 = async (url) => {
+    // If already base64, return as-is
+    if (url.startsWith('data:')) return url;
+
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.crossOrigin = 'Anonymous'; // This is the critical line
+
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        resolve(canvas.toDataURL('image/jpeg'));
+      };
+
+      img.onerror = () => {
+        console.warn('Image load failed, falling back to original URL');
+        resolve(url); // Fallback to original URL
+      };
+
+      // Add cache busting parameter
+      img.src = url.includes('?') ? `${url}&ts=${Date.now()}` : `${url}?ts=${Date.now()}`;
+    });
+  };
 
   const handlePageReorder = (index, direction) => {
     const newPages = [...pages];

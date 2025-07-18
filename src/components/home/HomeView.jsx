@@ -27,9 +27,7 @@ const HomeView = ({
   setCurrentView,
   setCaptureMode,
   currentView,
-  setLibraryDefaultViewMode,
-  books,
-  setBooks
+  setLibraryDefaultViewMode
 }) => {
   const { userData, loadingUser, refetchUser } = useUser();
   const { people, loadingPeople, refetchPeople } = usePeople();
@@ -50,9 +48,11 @@ const HomeView = ({
 
   const { insights, loadingInsights } = useInsights();
   const {
+    books,
+    setBooks,
     loadingBooks,
     getRecentBooks,
-    getPublishedBooksCount
+    getPublishedBooksCount,
   } = useBooks();
   const weekInsights = insights.filter(i => isThisWeek(parseISO(i.date))).length;
   // const weeklyGoal = 5;

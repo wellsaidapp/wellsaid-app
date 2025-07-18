@@ -64,6 +64,7 @@ export const BooksProvider = ({ children }) => {
         getPublishedBooksCount,
         getBooksByRecipient,
         getRecentBooks,
+        setBooks,
       }}
     >
       {children}
