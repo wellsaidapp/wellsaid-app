@@ -4,6 +4,7 @@ import Header from '../../appLayout/Header';
 import { generateBookPDF } from '../BookCreation/BookPDFGenerator';
 import ImageCropperModal from '../BookCreation/ImageCropperModal';
 import { uploadData } from 'aws-amplify/storage';
+import { fetchAuthSession } from 'aws-amplify/auth';
 
 const BookEditor = ({ book, onClose, onSave, onBackToViewer, returnToViewer, previousViewerState, editingBook }) => {
   const [pages, setPages] = useState([]);
@@ -140,6 +141,9 @@ const BookEditor = ({ book, onClose, onSave, onBackToViewer, returnToViewer, pre
           .replace('https://', '')
           .split('.amazonaws.com/')[1];
 
+        // 🔥 Strip any ?ts=... query string from the key
+        keyFromUrl = keyFromUrl.split('?')[0];
+
         // Remove redundant 'public/' prefix if present
         if (keyFromUrl.startsWith('public/')) {
           keyFromUrl = keyFromUrl.replace('public/', '');
@@ -164,18 +168,48 @@ const BookEditor = ({ book, onClose, onSave, onBackToViewer, returnToViewer, pre
         console.error("❌ PDF upload to S3 failed:", uploadError);
       }
 
-      // 3. Save book without changing publishedBook URL
-      const savedBook = await onSave(updatedBook);
+      // 3. Persist book changes to RDS via PATCH
+      try {
+        const token = (await fetchAuthSession()).tokens?.idToken?.toString();
+        const patchResponse = await fetch(
+          `https://aqaahphwfj.execute-api.us-east-2.amazonaws.com/dev/books/${book.id}`,
+          {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": token
+            },
+            body: JSON.stringify({
+              bookId: book.id,
+              name: title,
+              description,
+              backCoverNote,
+              fontStyle,
+              isBlackAndWhite,
+              publishedContent: updatedBook.publishedState.contentSnapshot
+            })
+          }
+        );
 
-      // 4. Navigation handling
+        if (!patchResponse.ok) {
+          const error = await patchResponse.text();
+          throw new Error(`RDS update failed: ${error}`);
+        }
+
+        console.log("📝 RDS book update succeeded");
+      } catch (rdsError) {
+        console.error("❌ Error updating book in RDS:", rdsError);
+      }
+
+      // 4. Final UI handling
       if (returnToViewer) {
-        onBackToViewer(savedBook || updatedBook);
+        onBackToViewer(updatedBook);
       } else {
         onClose();
       }
 
     } catch (error) {
-      console.error("❌ Error saving book:", error);
+      console.error("❌ Save flow error:", error);
     } finally {
       setIsSaving(false);
     }
