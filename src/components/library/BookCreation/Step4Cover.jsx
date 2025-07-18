@@ -1,19 +1,17 @@
-
 import React, { useRef, useState, useEffect } from 'react';
-import { ImageIcon } from 'lucide-react'; // Or wherever your icons are sourced from
+import { ImageIcon } from 'lucide-react';
 import { fetchAuthSession } from 'aws-amplify/auth';
 
 const Step4Cover = ({ newBook, setNewBook, coverImageState, setCoverImageState }) => {
   const fileInputRef = useRef(null);
   const [isLoading, setIsLoading] = useState(false);
-
-  const [coverPreviewUrl, setCoverPreviewUrl] = useState(null); // ← new
+  const [coverPreviewUrl, setCoverPreviewUrl] = useState(null);
 
   useEffect(() => {
     const fetchCoverImage = async (bookId) => {
       try {
         const session = await fetchAuthSession();
-        const token = session.tokens?.idToken?.toString(); // or accessToken
+        const token = session.tokens?.idToken?.toString();
 
         const res = await fetch(
           `https://aqaahphwfj.execute-api.us-east-2.amazonaws.com/dev/books/${bookId}/coverImage`,
@@ -27,12 +25,11 @@ const Step4Cover = ({ newBook, setNewBook, coverImageState, setCoverImageState }
 
         if (!res.ok) throw new Error('Failed to fetch cover image');
 
-        const base64 = await res.text(); // ← response body is base64-encoded JPEG
+        const base64 = await res.text();
         const contentType = 'image/jpeg';
         const blob = b64toBlob(base64, contentType);
         const blobUrl = URL.createObjectURL(blob);
 
-        // 👇 Set both preview and safe blob into state
         setCoverPreviewUrl(blobUrl);
         setNewBook(prev => ({
           ...prev,
@@ -47,13 +44,10 @@ const Step4Cover = ({ newBook, setNewBook, coverImageState, setCoverImageState }
     };
 
     const loadImage = async () => {
-      console.log("📸 Step4Cover loadImage running");
-      console.log("This is newBook:", newBook);
       if (
         newBook.existingBookId &&
-        ( !newBook.coverImage || newBook.coverImage.startsWith('https://') )
+        (!newBook.coverImage || newBook.coverImage.startsWith('https://'))
       ) {
-        console.log("📘 Attempting to fetch cover image for:", newBook.existingBookId);
         setIsLoading(true);
         await fetchCoverImage(newBook.existingBookId);
       }
@@ -61,6 +55,13 @@ const Step4Cover = ({ newBook, setNewBook, coverImageState, setCoverImageState }
 
     loadImage();
   }, [newBook.existingBookId]);
+
+  useEffect(() => {
+    // This effect handles both initial load and crop updates
+    if (newBook.coverImage) {
+      setCoverPreviewUrl(newBook.coverImage);
+    }
+  }, [newBook.coverImage]);
 
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
@@ -71,20 +72,10 @@ const Step4Cover = ({ newBook, setNewBook, coverImageState, setCoverImageState }
 
     reader.onload = (event) => {
       const base64 = event.target.result;
-
-      // Used in crop modal
       setCoverImageState({
         tempImage: base64,
         showCropModal: true
       });
-
-      // Set preview and override coverImage
-      setCoverPreviewUrl(base64);
-      setNewBook(prev => ({
-        ...prev,
-        coverImage: base64
-      }));
-
       setIsLoading(false);
     };
 
@@ -105,11 +96,10 @@ const Step4Cover = ({ newBook, setNewBook, coverImageState, setCoverImageState }
       </p>
 
       <div className="flex flex-col items-center">
-        {/* Changed to square container w-64 h-64 */}
         <div className="w-full max-w-xs aspect-square border-2 border-dashed border-gray-300 rounded-lg mb-4 flex items-center justify-center overflow-hidden bg-gray-50 relative">
-          {coverPreviewUrl ? (
+          {newBook.coverImage ? (
             <img
-              src={coverPreviewUrl}
+              src={newBook.coverImage}
               alt="Book cover"
               className="w-full h-full object-contain"
             />
