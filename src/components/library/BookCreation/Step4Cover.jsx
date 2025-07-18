@@ -1,14 +1,66 @@
 
 import React, { useRef, useState, useEffect } from 'react';
 import { ImageIcon } from 'lucide-react'; // Or wherever your icons are sourced from
+import { fetchAuthSession } from 'aws-amplify/auth';
 
 const Step4Cover = ({ newBook, setNewBook, coverImageState, setCoverImageState }) => {
   const fileInputRef = useRef(null);
   const [isLoading, setIsLoading] = useState(false);
 
+  const [coverPreviewUrl, setCoverPreviewUrl] = useState(null); // ← new
+
   useEffect(() => {
-    console.log('coverImageState changed:', coverImageState);
-  }, [coverImageState]);
+    const fetchCoverImage = async (bookId) => {
+      try {
+        const session = await fetchAuthSession();
+        const token = session.tokens?.idToken?.toString(); // or accessToken
+
+        const res = await fetch(
+          `https://aqaahphwfj.execute-api.us-east-2.amazonaws.com/dev/books/${bookId}/coverImage`,
+          {
+            method: 'GET',
+            headers: {
+              Authorization: token,
+            }
+          }
+        );
+
+        if (!res.ok) throw new Error('Failed to fetch cover image');
+
+        const base64 = await res.text(); // ← response body is base64-encoded JPEG
+        const contentType = 'image/jpeg';
+        const blob = b64toBlob(base64, contentType);
+        const blobUrl = URL.createObjectURL(blob);
+
+        // 👇 Set both preview and safe blob into state
+        setCoverPreviewUrl(blobUrl);
+        setNewBook(prev => ({
+          ...prev,
+          coverImage: blobUrl,
+        }));
+      } catch (err) {
+        console.error("🔴 Error fetching cover image:", err);
+        setCoverPreviewUrl(null);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    const loadImage = async () => {
+      console.log("📸 Step4Cover loadImage running");
+      console.log("This is newBook:", newBook);
+      if (
+        newBook.existingBookId &&
+        ( !newBook.coverImage || newBook.coverImage.startsWith('https://') )
+      ) {
+        console.log("📘 Attempting to fetch cover image for:", newBook.existingBookId);
+        setIsLoading(true);
+        await fetchCoverImage(newBook.existingBookId);
+      }
+    };
+
+    loadImage();
+  }, [newBook.existingBookId]);
 
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
@@ -18,11 +70,21 @@ const Step4Cover = ({ newBook, setNewBook, coverImageState, setCoverImageState }
     const reader = new FileReader();
 
     reader.onload = (event) => {
-      console.log('FileReader result:', event.target.result);
+      const base64 = event.target.result;
+
+      // Used in crop modal
       setCoverImageState({
-        tempImage: event.target.result,
+        tempImage: base64,
         showCropModal: true
       });
+
+      // Set preview and override coverImage
+      setCoverPreviewUrl(base64);
+      setNewBook(prev => ({
+        ...prev,
+        coverImage: base64
+      }));
+
       setIsLoading(false);
     };
 
@@ -45,11 +107,11 @@ const Step4Cover = ({ newBook, setNewBook, coverImageState, setCoverImageState }
       <div className="flex flex-col items-center">
         {/* Changed to square container w-64 h-64 */}
         <div className="w-full max-w-xs aspect-square border-2 border-dashed border-gray-300 rounded-lg mb-4 flex items-center justify-center overflow-hidden bg-gray-50 relative">
-          {newBook.coverImage ? (
+          {coverPreviewUrl ? (
             <img
-              src={newBook.coverImage}
+              src={coverPreviewUrl}
               alt="Book cover"
-              className="w-full h-full object-contain"  // Changed to object-contain
+              className="w-full h-full object-contain"
             />
           ) : isLoading ? (
             <div className="flex flex-col items-center">
@@ -83,5 +145,24 @@ const Step4Cover = ({ newBook, setNewBook, coverImageState, setCoverImageState }
     </div>
   );
 };
+
+function b64toBlob(b64Data, contentType = '', sliceSize = 512) {
+  const byteCharacters = atob(b64Data);
+  const byteArrays = [];
+
+  for (let offset = 0; offset < byteCharacters.length; offset += sliceSize) {
+    const slice = byteCharacters.slice(offset, offset + sliceSize);
+
+    const byteNumbers = new Array(slice.length);
+    for (let i = 0; i < slice.length; i++) {
+      byteNumbers[i] = slice.charCodeAt(i);
+    }
+
+    const byteArray = new Uint8Array(byteNumbers);
+    byteArrays.push(byteArray);
+  }
+
+  return new Blob(byteArrays, { type: contentType });
+}
 
 export default Step4Cover;

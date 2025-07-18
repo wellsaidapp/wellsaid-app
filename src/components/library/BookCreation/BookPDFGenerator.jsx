@@ -40,6 +40,22 @@ async function convertToBlackAndWhite(imageSrc) {
   });
 }
 
+async function loadImageForPdf(url) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.crossOrigin = 'Anonymous'; // Force CORS request
+    img.src = url + '?cache=' + Date.now(); // Bypass cache
+
+    img.onload = () => resolve(img);
+    img.onerror = () => {
+      // Fallback to cached version if available
+      img.crossOrigin = null;
+      img.src = url;
+      img.onload = () => resolve(img);
+    };
+  });
+}
+
 async function cropImageToCircle(imageSrc, size, isBlackAndWhite = false) {
   const scaleFactor = 2;
   const canvas = document.createElement('canvas');
