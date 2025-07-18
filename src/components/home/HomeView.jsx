@@ -159,11 +159,22 @@ const HomeView = ({
           }
         }}
         onBackToViewer={(savedBook) => {
-          setSelectedBook(savedBook || previousViewerState?.book);
+          const bookToShow = savedBook || previousViewerState?.book;
+
+          // Remove any old ?ts= from the URL
+          const cleanPublishedBookUrl = bookToShow.publishedBook.split('?')[0];
+
+          setSelectedBook({
+            ...bookToShow,
+            publishedBook: `${cleanPublishedBookUrl}?ts=${Date.now()}`
+          });
+
           setEditingBook(null);
           setReturnToViewer(false);
           setShowPdfViewer(true);
-          setCurrentPage(prev => prev + 1); // Temporary workaround
+
+          // Force re-render of viewer by nudging page
+          setCurrentPage(prev => prev + 1);
           setTimeout(() => setCurrentPage(prev => prev - 1), 10);
         }}
       />
