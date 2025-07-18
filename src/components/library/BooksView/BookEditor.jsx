@@ -238,6 +238,8 @@ const BookEditor = ({ book, onClose, onSave, onBackToViewer, returnToViewer, pre
         console.error("❌ Error updating book in RDS:", rdsError);
       }
 
+      onSave(updatedBook);
+
       // 4. Final UI handling
       if (returnToViewer) {
         onBackToViewer(updatedBook);

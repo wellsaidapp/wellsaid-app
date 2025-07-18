@@ -119,8 +119,8 @@ const WellSaidApp = () => {
           insights={insights}
           individuals={people}
           setCurrentView={setCurrentView}
-          // setInsights={setInsights}
           defaultViewMode={libraryDefaultViewMode}
+          user={userData}
         />;
       case 'people':
         if (loadingPeople) return null;

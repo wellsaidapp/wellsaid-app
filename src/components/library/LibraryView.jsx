@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect, useMemo } from 'react';
+import { useUser } from '../../context/UserContext';
 import { useLocation } from 'react-router-dom';
 import { useSystemCollections } from '../../context/SystemCollectionsContext';
 import { useUserCollections } from '../../context/UserCollectionsContext';
@@ -29,7 +30,8 @@ const LibraryView = ({
   console.log("INDIVIDUALS IN LIBRARY:", individuals);
   const { systemCollections, loading: loadingSystem } = useSystemCollections();
   const { userCollections, loading: loadingUser } = useUserCollections();
-  const { books, loadingBooks } = useBooks();
+  const { books, loadingBooks, updateBook } = useBooks();
+  const { userData, loading: loadingAppUser, refetchUser } = useUser();
   const [viewMode, setViewMode] = useState(defaultViewMode);
   const [collectionFilter, setCollectionFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -65,6 +67,7 @@ const LibraryView = ({
   });
   const [editingBook, setEditingBook] = useState(null);
   const [returnToViewer, setReturnToViewer] = useState(false);
+  const [showPdfViewer, setShowPdfViewer] = useState(false);
   const [previousViewerState, setPreviousViewerState] = useState(null);
 
   const shouldUseSearchResults =
@@ -100,11 +103,13 @@ const LibraryView = ({
     setSortDirection(prev => (prev === 'desc' ? 'asc' : 'desc'));
   };
 
-  const sortedBooks = [...books].sort((a, b) => {
-    const dateA = new Date(a.savedOn);
-    const dateB = new Date(b.savedOn);
-    return sortDirection === 'asc' ? dateA - dateB : dateB - dateA;
-  });
+  const sortedBooks = useMemo(() => {
+    return [...books].sort((a, b) => {
+      const dateA = new Date(a.savedOn);
+      const dateB = new Date(b.savedOn);
+      return sortDirection === 'asc' ? dateA - dateB : dateB - dateA;
+    });
+  }, [books, sortDirection]); // ← important dependencies!
 
   const handleEditBook = (book) => {
     setPreviousViewerState({
@@ -243,7 +248,7 @@ const LibraryView = ({
       prevInsights.map(entry =>
         entry.id === updatedEntry.id ? updatedEntry : entry
       )
-  );
+    );
   };
 
   const handleEntryDelete = (entryId) => {
@@ -323,28 +328,45 @@ const LibraryView = ({
   const filteredInsights = isFiltering ? searchResults : insights;
   const noMatchesFound = hasPerformedSearch && isFiltering && searchResults.length === 0;
 
+  console.log("📚 Books in LibraryView:", books);
+  console.log("🧮 Sorted Books:", sortedBooks.map(b => ({ id: b.id, name: b.name })));
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-blue-50 to-indigo-50 pb-20">
       {editingBook ? (
         <BookEditor
           key={editingBook.id}
           book={editingBook}
+          returnToViewer={returnToViewer}
+          previousViewerState={previousViewerState}
           onClose={() => {
             setEditingBook(null);
             setReturnToViewer(false);
           }}
           onSave={async (updatedBook) => {
-            // Your save logic
+            updateBook({ ...updatedBook, _renderNonce: Date.now() }); // force uniqueness
             setEditingBook(null);
             setReturnToViewer(false);
           }}
-          onBackToViewer={() => {
-            if (returnToViewer && previousViewerState) {
-              setSelectedBook(previousViewerState.book);
-            }
+          onBackToViewer={(savedBook) => {
+            const bookToShow = savedBook || previousViewerState?.book;
+
+            const cleanUrl = bookToShow.publishedBook?.split('?')[0] || '';
+            const cacheBustedUrl = `${cleanUrl}?ts=${Date.now()}`;
+
+            setSelectedBook({
+              ...bookToShow,
+              publishedBook: cacheBustedUrl
+            });
+
             setEditingBook(null);
             setReturnToViewer(false);
+            setShowPdfViewer(true); // ⬅️ Ensure this is defined in LibraryView
+
+            setCurrentPage(prev => prev + 1);
+            setTimeout(() => setCurrentPage(prev => prev - 1), 10);
           }}
+          userData={userData}
         />
       ) : (
         <>
@@ -411,34 +433,36 @@ const LibraryView = ({
               <BooksList
                 books={sortedBooks}
                 onViewBook={(book) => {
-                  if (book.status === "Draft") {
-                    const draftInsights = book.insightIds.map(id =>
+                  const latestBook = books.find(b => b.id === book.id) || book; // fallback to original
+
+                  if (latestBook.status === "Draft") {
+                    const draftInsights = latestBook.insightIds.map(id =>
                       insights.find(insight => insight.id === id)
                     ).filter(Boolean);
 
                     setNewBook({
-                      title: book.name,
-                      description: book.description,
-                      selectedCollections: book.collections || [],
-                      selectedEntries: book.insightIds,
-                      coverImage: book.coverImage || null,
-                      backCoverNote: book.backCoverNote || '',
-                      recipient: book.personId || null,
-                      recipientName: book.personName || '',
+                      title: latestBook.name,
+                      description: latestBook.description,
+                      selectedCollections: latestBook.collections || [],
+                      selectedEntries: latestBook.insightIds,
+                      coverImage: latestBook.coverImage || null,
+                      backCoverNote: latestBook.backCoverNote || '',
+                      recipient: latestBook.personId || null,
+                      recipientName: latestBook.personName || '',
                       showTags: true,
-                      fontStyle: book.fontStyle || 'serif',
-                      isBlackAndWhite: book.isBlackAndWhite || false,
+                      fontStyle: latestBook.fontStyle || 'serif',
+                      isBlackAndWhite: latestBook.isBlackAndWhite || false,
                       isDraft: true,
-                      color: book.color || 'bg-blue-500',
-                      existingBookId: book.id,
-                      coverMode: book.coverMode || 'color'
+                      color: latestBook.color || 'bg-blue-500',
+                      existingBookId: latestBook.id,
+                      coverMode: latestBook.coverMode || 'color'
                     });
 
-                    setEntryOrder(book.insightIds);
+                    setEntryOrder(latestBook.insightIds);
                     setBookCreationStep(0);
                     setShowBookCreation(true);
                   } else {
-                    setSelectedBook(book);
+                    setSelectedBook(latestBook); // ✅ Use latest reference
                   }
                 }}
                 onStartNewBook={handleStartNewBook}
