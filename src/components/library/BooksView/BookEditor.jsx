@@ -3,6 +3,7 @@ import { X, ChevronLeft, ChevronUp, ChevronDown, Save, Trash2, Palette, Type, Im
 import Header from '../../appLayout/Header';
 import { generateBookPDF } from '../BookCreation/BookPDFGenerator';
 import ImageCropperModal from '../BookCreation/ImageCropperModal';
+import { uploadData } from 'aws-amplify/storage';
 
 const BookEditor = ({ book, onClose, onSave, onBackToViewer, returnToViewer, previousViewerState, editingBook }) => {
   const [pages, setPages] = useState([]);
@@ -126,39 +127,55 @@ const BookEditor = ({ book, onClose, onSave, onBackToViewer, returnToViewer, pre
         }
       };
 
-      // Generate the new PDF
+      // 1. Generate PDF
       const pdfBlob = await generateBookPDF(
         updatedBook,
         updatedBook.publishedState.entryOrder || [],
         updatedBook.publishedState.contentSnapshot || []
       );
 
-      // Convert blob to base64 for storage
-      const pdfBase64 = await new Promise((resolve) => {
-        const reader = new FileReader();
-        reader.onloadend = () => resolve(reader.result);
-        reader.readAsDataURL(pdfBlob);
-      });
+      // 2. Overwrite existing PDF in S3 using the known key
+      try {
+        let keyFromUrl = book.publishedBook
+          .replace('https://', '')
+          .split('.amazonaws.com/')[1];
 
-      // Update the book with the new PDF
-      const finalBook = {
-        ...updatedBook,
-        publishedState: {
-          ...updatedBook.publishedState,
-          pdfBase64: pdfBase64,
-          contentSnapshot: pages // Save the current pages as snapshot
+        // Remove redundant 'public/' prefix if present
+        if (keyFromUrl.startsWith('public/')) {
+          keyFromUrl = keyFromUrl.replace('public/', '');
         }
-      };
 
-      // Save the updated book
-      const savedBook = await onSave(finalBook);
+        console.log("📦 Attempting to upload PDF to:", keyFromUrl);
 
-      // Handle navigation back to viewer
+        const uploadResult = await uploadData({
+          key: keyFromUrl,
+          data: pdfBlob,
+          options: {
+            contentType: 'application/pdf',
+            accessLevel: 'public',
+          }
+        });
+
+        await uploadResult.result; // 🧠 Await upload completion
+
+        console.log("✅ Upload completed successfully");
+
+      } catch (uploadError) {
+        console.error("❌ PDF upload to S3 failed:", uploadError);
+      }
+
+      // 3. Save book without changing publishedBook URL
+      const savedBook = await onSave(updatedBook);
+
+      // 4. Navigation handling
       if (returnToViewer) {
-        onBackToViewer(savedBook || finalBook);
+        onBackToViewer(savedBook || updatedBook);
       } else {
         onClose();
       }
+
+    } catch (error) {
+      console.error("❌ Error saving book:", error);
     } finally {
       setIsSaving(false);
     }
