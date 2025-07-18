@@ -41,7 +41,7 @@ const HomeView = ({
   }
   console.log("People Loaded:", people.length);
 
-
+  const [pdfTimestamp, setPdfTimestamp] = useState(null);
   const userName = userData?.name?.split(' ')[0] || 'Friend';
   const weeklyGoal = userData?.weeklyGoal ?? 5;
   const userStreak = userData?.streak ?? 0;
@@ -149,6 +149,7 @@ const HomeView = ({
         onSave={async (updatedBook) => {
           try {
             const savedBook = await updatePublishedBook(updatedBook);
+            setPdfTimestamp(Date.now());
             setEditingBook(null);
             setReturnToViewer(false);
             return savedBook; // Make sure to return the saved book
@@ -231,12 +232,18 @@ const HomeView = ({
       {showPdfViewer && selectedBook && (
         selectedBook.status === "Published" && selectedBook.publishedBook ? (
           <PDFViewerWrapper
-            book={selectedBook}
+            book={{
+              ...selectedBook,
+              publishedBook: pdfTimestamp
+                ? `${selectedBook.publishedBook}?ts=${pdfTimestamp}`
+                : selectedBook.publishedBook
+            }}
             onClose={() => {
               setSelectedBook(null);
               setShowPdfViewer(false);
+              setPdfTimestamp(null);
             }}
-            onEdit={(book) => {  // <-- THIS IS WHERE YOU ADD IT
+            onEdit={(book) => {
               setPreviousViewerState({
                 book: selectedBook,
                 showPdfViewer: true
