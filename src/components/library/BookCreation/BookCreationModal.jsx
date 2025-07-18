@@ -263,6 +263,22 @@ const BookCreationModal = ({
     }
   };
 
+  const handleCropComplete = (croppedImage) => {
+    console.log("Cropped image received in BookCreationModal:", croppedImage);
+
+    // Update the newBook state with the cropped image
+    setNewBook(prev => ({
+      ...prev,
+      coverImage: croppedImage
+    }));
+
+    // Close the cropper modal and clear temp image
+    setCoverImageState({
+      tempImage: null,
+      showCropModal: false
+    });
+  };
+
   // Add this useEffect hook right after your other state declarations
   useEffect(() => {
     // Filter entryOrder to only include insights that are still selected
@@ -548,15 +564,8 @@ const BookCreationModal = ({
             {coverImageState.showCropModal && coverImageState.tempImage && (
               <ImageCropperModal
                 image={coverImageState.tempImage}
-                onCropComplete={(croppedImage) => {
-                  console.log("Cropped image received:", croppedImage);
-                  setNewBook((prev) => {
-                    if (prev.coverImage === croppedImage) return prev; // 👈 avoid redundant update
-                    return { ...prev, coverImage: croppedImage };
-                  });
-                  setCoverImageState({ tempImage: null, showCropModal: false });
-                }}
-                onClose={() => setCoverImageState((prev) => ({ ...prev, showCropModal: false }))}
+                onCropComplete={handleCropComplete}  // Use the new handler
+                onClose={() => setCoverImageState(prev => ({ ...prev, showCropModal: false }))}
               />
             )}
           </div>

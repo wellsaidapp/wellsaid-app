@@ -35,11 +35,6 @@ const Step4Cover = ({ newBook, setNewBook, coverImageState, setCoverImageState }
     reader.readAsDataURL(file);
   };
 
-  const handleCropComplete = (croppedImage) => {
-    setNewBook(prev => ({ ...prev, coverImage: croppedImage }));
-    setCoverImageState({ tempImage: null, showCropModal: false });
-  };
-
   return (
     <div>
       <h3 className="text-lg font-semibold text-gray-800 mb-4">Upload a cover image</h3>
