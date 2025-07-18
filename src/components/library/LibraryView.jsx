@@ -412,7 +412,7 @@ const LibraryView = ({
                 books={sortedBooks}
                 onViewBook={(book) => {
                   if (book.status === "Draft") {
-                    const draftInsights = book.draftState.insightIds.map(id =>
+                    const draftInsights = book.insightIds.map(id =>
                       insights.find(insight => insight.id === id)
                     ).filter(Boolean);
 
@@ -420,8 +420,8 @@ const LibraryView = ({
                       title: book.name,
                       description: book.description,
                       selectedCollections: book.collections || [],
-                      selectedEntries: book.draftState.insightIds,
-                      coverImage: book.draftState.coverImage || null,
+                      selectedEntries: book.insightIds,
+                      coverImage: book.coverImage || null,
                       backCoverNote: book.backCoverNote || '',
                       recipient: book.personId || null,
                       recipientName: book.personName || '',
@@ -434,7 +434,7 @@ const LibraryView = ({
                       coverMode: book.coverMode || 'color'
                     });
 
-                    setEntryOrder(book.draftState.insightIds);
+                    setEntryOrder(book.insightIds);
                     setBookCreationStep(0);
                     setShowBookCreation(true);
                   } else {

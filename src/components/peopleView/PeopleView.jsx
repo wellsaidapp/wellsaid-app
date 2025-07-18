@@ -435,7 +435,7 @@ const PeopleView = ({ individuals, insights, collections, sharedBooks, setCurren
         )}
       </div>
       {selectedBook && (
-        selectedBook.status === "Published" && selectedBook.publishedState?.pdfBase64 ? (
+        selectedBook.status === "Published" && selectedBook.publishedBook ? (
           <PDFViewerWrapper
             book={selectedBook}
             onClose={() => {
