@@ -330,7 +330,7 @@ export const generateBookPDF = async (
   insights,
   fontStyle = 'serif',
   isBlackAndWhite = false,
-  userData = null
+  userData
 ) => {
   const doc = new jsPDF({
     unit: 'pt',
@@ -366,9 +366,9 @@ export const generateBookPDF = async (
   // Handle both creation and editing cases
   let orderedEntries = [];
 
-  if (newBook.publishedState?.contentSnapshot) {
+  if (newBook.publishedContent) {
     // EDITING CASE: Use the static contentSnapshot
-    orderedEntries = [...newBook.publishedState.contentSnapshot];
+    orderedEntries = [...newBook.publishedContent];
   } else {
     // CREATION CASE: Use insights + entryOrder
     orderedEntries = entryOrder

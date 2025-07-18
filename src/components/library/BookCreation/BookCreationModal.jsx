@@ -26,6 +26,7 @@ import ImageCropperModal from './ImageCropperModal';
 import DraggableEntry from './DraggableEntry';
 
 import { useSystemCollections } from '../../../context/SystemCollectionsContext';
+import { useUser } from '../../../context/UserContext';
 
 const BookCreationModal = ({
   onClose,
@@ -74,7 +75,7 @@ const BookCreationModal = ({
   };
 
   const { systemCollections, loading } = useSystemCollections();
-
+  const { userData } = useUser();
   const [showExitConfirmation, setShowExitConfirmation] = useState(false);
 
   const isTouchDevice = () =>
@@ -117,7 +118,7 @@ const BookCreationModal = ({
       try {
         if (actionType === 'publish') {
           // Only generate PDF for publishing
-          const pdfBlob = await generateBookPDF(newBook, entryOrder, insights);
+          const pdfBlob = await generateBookPDF(newBook, entryOrder, insights, userData);
 
           // Create download link
           const url = URL.createObjectURL(pdfBlob);
@@ -232,7 +233,7 @@ const BookCreationModal = ({
   // Add this inside your BookCreationModal component, before the return statement
   const handlePublish = async () => {
     try {
-      const pdfBlob = await generateBookPDF(newBook, entryOrder, insights);
+      const pdfBlob = await generateBookPDF(newBook, entryOrder, insights, userData);
 
       // Create download link
       const url = URL.createObjectURL(pdfBlob);
