@@ -328,10 +328,27 @@ export const generateBookPDF = async (
   newBook,
   entryOrder,
   insights,
-  fontStyle = 'serif',
-  isBlackAndWhite = false,
-  userData
+  userData,         // Now 4th parameter
+  fontStyle = 'serif', // Default if not provided
+  isBlackAndWhite = false
 ) => {
+  console.log('[PDF Generation] Starting PDF creation with parameters:', {
+    newBook: {
+      title: newBook.title,
+      description: newBook.description,
+      coverImage: !!newBook.coverImage,
+      isBlackAndWhite
+    },
+    entryOrderLength: entryOrder.length,
+    insightsLength: insights.length,
+    fontStyle,
+    userData: {
+      name: userData?.name,
+      hasAvatar: !!userData?.avatarUrl,
+      avatarInitial: userData?.avatar
+    }
+  });
+
   const doc = new jsPDF({
     unit: 'pt',
     format: [inchToPt(5), inchToPt(5)]

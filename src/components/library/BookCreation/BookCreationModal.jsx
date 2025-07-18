@@ -118,7 +118,14 @@ const BookCreationModal = ({
       try {
         if (actionType === 'publish') {
           // Only generate PDF for publishing
-          const pdfBlob = await generateBookPDF(newBook, entryOrder, insights, userData);
+          const pdfBlob = await generateBookPDF(
+            newBook,          // 1st param
+            entryOrder,       // 2nd param
+            insights,         // 3rd param
+            userData,         // 4th param (NEW - was missing)
+            newBook.fontStyle, // 5th param (moved from 4th)
+            newBook.isBlackAndWhite // 6th param
+          );
 
           // Create download link
           const url = URL.createObjectURL(pdfBlob);
