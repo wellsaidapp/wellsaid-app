@@ -168,6 +168,39 @@ const BookEditor = ({ book, onClose, onSave, onBackToViewer, returnToViewer, pre
         console.error("❌ PDF upload to S3 failed:", uploadError);
       }
 
+      // 2.5 Upload updated cover image if changed
+      try {
+        if (coverImage && coverImage.startsWith("data:")) {
+          const session = await fetchAuthSession();
+          const userId = session.tokens?.idToken?.payload?.sub;
+          const coverKey = `Users/Active/${userId}/books/${book.id}-cover.jpeg`;
+
+          console.log("📸 Uploading cover image to:", coverKey);
+
+          const coverBlob = await (await fetch(coverImage)).blob();
+
+          const coverUploadResult = await uploadData({
+            key: coverKey,
+            data: coverBlob,
+            options: {
+              contentType: 'image/jpeg',
+              accessLevel: 'public',
+            },
+          });
+
+          await coverUploadResult.result;
+          console.log("✅ Cover image uploaded successfully");
+          // Bust cache by updating the coverImage field with a timestamped URL
+          if (book.coverImage) {
+            updatedBook.coverImage = `${book.coverImage.split('?')[0]}?ts=${Date.now()}`;
+          }
+        } else {
+          console.log("📸 No new cover image to upload (existing URL)");
+        }
+      } catch (coverError) {
+        console.error("❌ Error uploading cover image:", coverError);
+      }
+
       // 3. Persist book changes to RDS via PATCH
       try {
         const token = (await fetchAuthSession()).tokens?.idToken?.toString();
