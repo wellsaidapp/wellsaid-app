@@ -1,6 +1,6 @@
 // BooksContext.jsx
 
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { fetchAuthSession } from 'aws-amplify/auth';
 
 const BooksContext = createContext();
@@ -10,43 +10,75 @@ export const BooksProvider = ({ children }) => {
   const [books, setBooks] = useState([]);
   const [loadingBooks, setLoadingBooks] = useState(true);
 
-  const updateBook = (updatedBook) => {
-    setBooks((prevBooks) =>
-      prevBooks.map((book) =>
+  // 1. Make fetchBooks reusable and dependent on auth
+  const fetchBooks = useCallback(async () => {
+    try {
+      setLoadingBooks(true);
+      const session = await fetchAuthSession();
+      const idToken = session.tokens?.idToken?.toString();
+
+      if (!idToken) {
+        setBooks([]); // Clear books if no token
+        return;
+      }
+
+      const response = await fetch(
+        'https://aqaahphwfj.execute-api.us-east-2.amazonaws.com/dev/books',
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': idToken
+          }
+        }
+      );
+
+      const raw = await response.json();
+      const books = Array.isArray(raw) ? raw : raw.books || [];
+      setBooks(books);
+      console.log("Books Loaded:", books);
+    } catch (err) {
+      console.error("❌ Failed to load books:", err);
+      setBooks([]); // Clear on error
+    } finally {
+      setLoadingBooks(false);
+    }
+  }, []); // No dependencies - uses latest state automatically
+
+  // 2. Add refresh capability
+  const refreshBooks = useCallback(() => {
+    console.log("Manually refreshing books...");
+    return fetchBooks();
+  }, [fetchBooks]);
+
+  // 3. Enhanced update function
+  const updateBook = useCallback((updatedBook) => {
+    setBooks(prevBooks =>
+      prevBooks.map(book =>
         book.id === updatedBook.id ? { ...book, ...updatedBook } : book
       )
     );
-  };
+  }, []);
 
+  // 4. Fetch when mounted AND when auth changes
   useEffect(() => {
-    const fetchBooks = async () => {
+    const checkAuthAndFetch = async () => {
       try {
         const session = await fetchAuthSession();
-        const idToken = session.tokens?.idToken?.toString();
-        if (!idToken) throw new Error("No ID token");
-
-        const response = await fetch(
-          'https://aqaahphwfj.execute-api.us-east-2.amazonaws.com/dev/books',
-          {
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': idToken
-            }
-          }
-        );
-        const raw = await response.json();
-        const books = Array.isArray(raw) ? raw : raw.books || [];
-        setBooks(books);
-        console.log("Books Loaded:", books);
+        if (session.tokens?.idToken) {
+          await fetchBooks();
+        }
       } catch (err) {
-        console.error("❌ Failed to load books:", err);
-      } finally {
-        setLoadingBooks(false);
+        console.error("Auth check failed:", err);
       }
     };
 
-    fetchBooks();
-  }, []);
+    checkAuthAndFetch();
+
+    // Optional: Add event listener for auth changes
+    const listener = () => checkAuthAndFetch();
+    window.addEventListener('authChange', listener);
+    return () => window.removeEventListener('authChange', listener);
+  }, [fetchBooks]);
 
   // 🔧 Utility methods (use dynamic books state)
   const getBookById = (id) => books.find(book => book.id === id);
@@ -68,6 +100,7 @@ export const BooksProvider = ({ children }) => {
       value={{
         books,
         loadingBooks,
+        refreshBooks,
         getBookById,
         getPublishedBooksCount,
         getBooksByRecipient,

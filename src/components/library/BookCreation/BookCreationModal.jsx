@@ -12,6 +12,7 @@ import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { TouchBackend } from 'react-dnd-touch-backend';
 import { generateBookPDF } from './BookPDFGenerator';
+import { uploadData } from 'aws-amplify/storage';
 
 import ToastMessage from './ToastMessage';
 import Step1Collections from './Step1Collections';
@@ -92,6 +93,37 @@ const BookCreationModal = ({
     });
   };
 
+  const uploadCoverImageToS3 = async (coverImage, userId, bookId) => {
+    if (!coverImage || coverImage.startsWith("https://")) return; // Already stored in S3
+
+    const blob = await (await fetch(coverImage)).blob(); // Convert base64/dataURL to blob
+
+    const key = `public/Users/${userId}/books/${bookId}-cover.jpeg`;
+    await uploadData({
+      key,
+      data: blob,
+      options: {
+        contentType: 'image/jpeg'
+      }
+    }).result;
+
+    return `https://wellsaidappdeva7ff28b66c7e4c6785e936c0092e78810660a-dev.s3.us-east-2.amazonaws.com/${key}`;
+  };
+
+  const uploadPDFToS3 = async (pdfBlob, userId, bookId) => {
+    const key = `public/Users/${userId}/books/${bookId}.pdf`;
+
+    await uploadData({
+      key,
+      data: pdfBlob,
+      options: {
+        contentType: 'application/pdf'
+      }
+    }).result;
+
+    return `https://wellsaidappdeva7ff28b66c7e4c6785e936c0092e78810660a-dev.s3.us-east-2.amazonaws.com/${key}`;
+  };
+
   const [coverImageState, setCoverImageState] = useState({
     tempImage: null,
     showCropModal: false
@@ -127,6 +159,11 @@ const BookCreationModal = ({
             newBook.isBlackAndWhite // 6th param
           );
 
+          const [coverImageUrl, pdfUrl] = await Promise.all([
+            uploadCoverImageToS3(newBook.coverImage, userData.id, newBook.existingBookId),
+            uploadPDFToS3(pdfBlob, userData.id, newBook.existingBookId)
+          ]);
+
           // Create download link
           const url = URL.createObjectURL(pdfBlob);
           const a = document.createElement('a');
@@ -147,18 +184,16 @@ const BookCreationModal = ({
             color: newBook.color,
             fontStyle: newBook.fontStyle,
             status: 'Published',
+            coverImage: newBook.coverImage?.startsWith("https://") ? newBook.coverImage : coverImageUrl,
             savedOn: new Date().toISOString().split('T')[0],
-            publishedState: {
-              pdfBase64: url,
-              contentSnapshot: entryOrder.map(id => {
-                const insight = insights.find(i => i.id === id);
-                return insight ? {
-                  insightId: insight.id,
-                  prompt: insight.prompt,
-                  response: insight.response
-                } : null;
-              }).filter(Boolean)
-            }
+            publishedBook: pdfUrl,
+            publishedContent: entryOrder.map(id => {
+              const insight = insights.find(i => i.id === id);
+              return insight ? {
+                prompt: insight.prompt,
+                response: insight.response
+              } : null;
+            }).filter(Boolean)
           };
 
           console.log('Published book data:', updatedBookData);
@@ -292,6 +327,30 @@ const BookCreationModal = ({
       }
     }
   }, [bookCreationStep, newBook.selectedEntries]);
+
+  // Add this useEffect right after your other effects in BookCreationModal
+  useEffect(() => {
+    // Only run in Step 1 when collections change
+    if (bookCreationStep !== 0) return;
+
+    // Get all valid entry IDs from selected collections
+    const validEntryIds = newBook.selectedCollections.flatMap(collectionId =>
+      (groupedEntries[collectionId] || []).map(entry => entry.id)
+    );
+
+    // Filter selectedEntries to only keep valid ones
+    const filteredEntries = newBook.selectedEntries.filter(entryId =>
+      validEntryIds.includes(entryId)
+    );
+
+    // Only update if there's a mismatch
+    if (filteredEntries.length !== newBook.selectedEntries.length) {
+      setNewBook(prev => ({
+        ...prev,
+        selectedEntries: filteredEntries
+      }));
+    }
+  }, [newBook.selectedCollections, bookCreationStep, groupedEntries]);
 
   return (
     <>

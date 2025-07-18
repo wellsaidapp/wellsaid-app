@@ -70,7 +70,7 @@ const WellSaidApp = () => {
   const [captureMode, setCaptureMode] = useState('quick');
   const { insights, loadingInsights } = useInsights();
   const [libraryDefaultViewMode, setLibraryDefaultViewMode] = useState('collections');
-  const { books } = useBooks();
+  const { books, refreshBooks } = useBooks();
   const { refetchUser } = useUser();
   useEffect(() => {
     const storedAuthState = localStorage.getItem('wellsaid-auth-state');
@@ -208,6 +208,7 @@ const WellSaidApp = () => {
           authState={authState}
           onAuthComplete={handleAuthComplete}
           onSkipSplash={() => setShowSplash(false)}
+          refreshBooks={refreshBooks}
         />
       ) : (
         renderContent()

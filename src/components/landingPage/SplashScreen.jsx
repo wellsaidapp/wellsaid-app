@@ -4,7 +4,7 @@ import LoginScreen from './LoginScreen';
 import WellSaidOnboarding from './WellSaidOnboarding';
 import LandingPage from './LandingPage';
 
-const SplashScreen = ({ authState, onAuthComplete, onSkipSplash }) => {
+const SplashScreen = ({ authState, onAuthComplete, onSkipSplash, refreshBooks }) => {
   const [stage, setStage] = useState('animation');
 
   // Scenario 1: Already logged in - just show animation while UserContext loads
@@ -42,9 +42,9 @@ const SplashScreen = ({ authState, onAuthComplete, onSkipSplash }) => {
   if (stage === 'login') {
     return (
       <LoginScreen
-        onSuccess={() => {
-          // This triggers the authState change in App.jsx
-          onAuthComplete(); 
+        onSuccess={async () => {
+          await onAuthComplete(); // Complete auth flow first
+          await refreshBooks(); // Then refresh books
         }}
         onBack={() => setStage('landing')}
       />

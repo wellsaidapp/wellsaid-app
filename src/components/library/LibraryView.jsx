@@ -328,8 +328,13 @@ const LibraryView = ({
   const filteredInsights = isFiltering ? searchResults : insights;
   const noMatchesFound = hasPerformedSearch && isFiltering && searchResults.length === 0;
 
-  console.log("📚 Books in LibraryView:", books);
-  console.log("🧮 Sorted Books:", sortedBooks.map(b => ({ id: b.id, name: b.name })));
+  // console.log("📚 Books in LibraryView:", books);
+  // console.log("🧮 Sorted Books:", sortedBooks.map(b => ({ id: b.id, name: b.name })));
+  //
+  // Add this to your LibraryView component (where setNewBook is called)
+  useEffect(() => {
+    console.log('📘 newBook state updated:', newBook);
+  }, [newBook]); // This will run every time newBook changes
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-blue-50 to-indigo-50 pb-20">
@@ -433,14 +438,23 @@ const LibraryView = ({
               <BooksList
                 books={sortedBooks}
                 onViewBook={(book) => {
-                  const latestBook = books.find(b => b.id === book.id) || book; // fallback to original
+                  // Enhanced initial log
+                  console.groupCollapsed('📘 Book Clicked:', book.name);
+                  console.log('📚 Raw book data:', JSON.parse(JSON.stringify(book)));
+
+                  const latestBook = books.find(b => b.id === book.id) || book;
+                  console.log('🔍 Latest book from context:', {
+                    id: latestBook.id,
+                    status: latestBook.status,
+                    insights: latestBook.insightIds?.length,
+                    hasCover: !!latestBook.coverImage
+                  });
 
                   if (latestBook.status === "Draft") {
-                    const draftInsights = latestBook.insightIds.map(id =>
-                      insights.find(insight => insight.id === id)
-                    ).filter(Boolean);
+                    console.log('✏️ Editing DRAFT book');
 
-                    setNewBook({
+                    // Pre-process the data before setting state
+                    const draftPayload = {
                       title: latestBook.name,
                       description: latestBook.description,
                       selectedCollections: latestBook.collections || [],
@@ -456,14 +470,28 @@ const LibraryView = ({
                       color: latestBook.color || 'bg-blue-500',
                       existingBookId: latestBook.id,
                       coverMode: latestBook.coverMode || 'color'
+                    };
+
+                    console.log('🔄 Draft payload prepared:', {
+                      keyFields: {
+                        existingId: draftPayload.existingBookId,
+                        entries: draftPayload.selectedEntries.length,
+                        coverType: draftPayload.coverImage ? 'image' : `color: ${draftPayload.color}`
+                      }
                     });
 
+                    setNewBook(draftPayload);
                     setEntryOrder(latestBook.insightIds);
                     setBookCreationStep(0);
                     setShowBookCreation(true);
+
+                    console.log('🏁 Modal opening with draft data');
                   } else {
-                    setSelectedBook(latestBook); // ✅ Use latest reference
+                    console.log('👀 Viewing PUBLISHED book');
+                    setSelectedBook(latestBook);
                   }
+
+                  console.groupEnd();
                 }}
                 onStartNewBook={handleStartNewBook}
                 isCreating={currentView === 'arrangeBook'}
