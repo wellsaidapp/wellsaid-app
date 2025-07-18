@@ -159,9 +159,11 @@ const BooksList = ({
                   className="w-full bg-white border border-gray-300 rounded-lg px-3 py-2 pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="">All people</option>
-                  {[...new Set(books.map(b => b.personName))].map(name => (
-                    <option key={name} value={name}>{name}</option>
-                  ))}
+                  {[...new Set(books.map(b => b.personName))]
+                    .filter(name => name && name.trim() !== '') // ✅ remove null, undefined, and empty string
+                    .map(name => (
+                      <option key={name} value={name}>{name}</option>
+                    ))}
                 </select>
                 <ChevronDown className="absolute right-2 top-2.5 w-4 h-4 text-gray-400 pointer-events-none" />
               </div>
