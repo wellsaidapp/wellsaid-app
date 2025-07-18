@@ -13,6 +13,7 @@ import { HTML5Backend } from 'react-dnd-html5-backend';
 import { TouchBackend } from 'react-dnd-touch-backend';
 import { generateBookPDF } from './BookPDFGenerator';
 import { uploadData } from 'aws-amplify/storage';
+import { fetchAuthSession } from 'aws-amplify/auth';
 
 import ToastMessage from './ToastMessage';
 import Step1Collections from './Step1Collections';
@@ -93,12 +94,34 @@ const BookCreationModal = ({
     });
   };
 
+  const saveBookToRDS = async (bookData) => {
+    const session = await fetchAuthSession();
+    const token = session.tokens?.idToken?.toString();
+
+    const res = await fetch('https://aqaahphwfj.execute-api.us-east-2.amazonaws.com/dev/books', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: token
+      },
+      body: JSON.stringify(bookData)
+    });
+
+    if (!res.ok) throw new Error('Failed to save book to database');
+
+    const result = await res.json();
+    return result;
+  };
+
   const uploadCoverImageToS3 = async (coverImage, userId, bookId) => {
     if (!coverImage || coverImage.startsWith("https://")) return; // Already stored in S3
 
+    const session = await fetchAuthSession();
+    const cognitoId = session.userSub;
+
     const blob = await (await fetch(coverImage)).blob(); // Convert base64/dataURL to blob
 
-    const key = `public/Users/${userId}/books/${bookId}-cover.jpeg`;
+    const key = `Users/Active/${cognitoId}/books/${bookId}-cover.jpeg`;
     await uploadData({
       key,
       data: blob,
@@ -107,11 +130,14 @@ const BookCreationModal = ({
       }
     }).result;
 
-    return `https://wellsaidappdeva7ff28b66c7e4c6785e936c0092e78810660a-dev.s3.us-east-2.amazonaws.com/${key}`;
+    return `https://wellsaidappdeva7ff28b66c7e4c6785e936c0092e78810660a-dev.s3.us-east-2.amazonaws.com/public/${key}`;
   };
 
   const uploadPDFToS3 = async (pdfBlob, userId, bookId) => {
-    const key = `public/Users/${userId}/books/${bookId}.pdf`;
+    const session = await fetchAuthSession();
+    const cognitoId = session.userSub;
+
+    const key = `Users/Active/${cognitoId}/books/${bookId}.pdf`;
 
     await uploadData({
       key,
@@ -121,7 +147,7 @@ const BookCreationModal = ({
       }
     }).result;
 
-    return `https://wellsaidappdeva7ff28b66c7e4c6785e936c0092e78810660a-dev.s3.us-east-2.amazonaws.com/${key}`;
+    return `https://wellsaidappdeva7ff28b66c7e4c6785e936c0092e78810660a-dev.s3.us-east-2.amazonaws.com/public/${key}`;
   };
 
   const [coverImageState, setCoverImageState] = useState({
@@ -196,7 +222,20 @@ const BookCreationModal = ({
             }).filter(Boolean)
           };
 
-          console.log('Published book data:', updatedBookData);
+          await saveBookToRDS({
+            existingBookId: newBook.existingBookId,
+            name: updatedBookData.name,
+            description: updatedBookData.description,
+            backCoverNote: newBook.backCoverNote,
+            fontStyle: updatedBookData.fontStyle,
+            isBlackAndWhite: newBook.isBlackAndWhite,
+            color: newBook.color,
+            status: updatedBookData.status,
+            personId: updatedBookData.personId,
+            coverImage: updatedBookData.coverImage,
+            publishedBook: updatedBookData.publishedBook,
+            publishedContent: updatedBookData.publishedContent
+          });
 
           toast.success(
             (t) => (
@@ -211,22 +250,20 @@ const BookCreationModal = ({
           );
         } else if (actionType === 'draft') {
           // Handle draft saving without PDF generation
-          const updatedBookData = {
-            id: newBook.existingBookId,
-            name: newBook.title,
-            description: newBook.description,
-            collections: newBook.selectedCollections,
-            personId: newBook.recipient?.id,
-            personName: newBook.recipient?.name,
-            color: newBook.color,
-            fontStyle: newBook.fontStyle,
-            status: 'Draft',
-            savedOn: new Date().toISOString().split('T')[0],
-            draftState: {
-              insightIds: entryOrder,
-              coverImage: newBook.coverImage
-            }
-          };
+          await saveBookToRDS({
+            existingBookId: newBook.existingBookId,
+            name: updatedBookData.name,
+            description: updatedBookData.description,
+            backCoverNote: newBook.backCoverNote,
+            fontStyle: updatedBookData.fontStyle,
+            isBlackAndWhite: newBook.isBlackAndWhite,
+            colorTheme: newBook.color,
+            status: updatedBookData.status,
+            personId: updatedBookData.personId,
+            coverImage: updatedBookData.coverImage,
+            publishedBook: null, // not saving PDF yet for draft
+            publishedContent: null
+          });
 
           console.log('Draft book data:', updatedBookData);
 
