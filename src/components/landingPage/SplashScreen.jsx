@@ -43,8 +43,9 @@ const SplashScreen = ({ authState, onAuthComplete, onSkipSplash, refreshBooks })
     return (
       <LoginScreen
         onSuccess={async () => {
-          await onAuthComplete(); // Complete auth flow first
-          await refreshBooks(); // Then refresh books
+          await onAuthComplete(); // 1. Complete auth flow
+          window.dispatchEvent(new Event('authChange')); // 2. Trigger all contexts
+          await refreshBooks(); // 3. Explicit books refresh (optional safety)
         }}
         onBack={() => setStage('landing')}
       />

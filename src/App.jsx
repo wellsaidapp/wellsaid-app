@@ -62,7 +62,7 @@ import WellSaidOnboarding from './components/landingPage/WellSaidOnboarding';
 const WellSaidApp = () => {
   const { userData, loadingUser } = useUser();
   const { userCollections, loading } = useUserCollections();
-  const { people, loadingPeople } = usePeople();
+  const { people, loadingPeople, refetchPeople } = usePeople();
   const [authState, setAuthState] = useState('checking');
   const [showLogin, setShowLogin] = useState(false);
   const [currentView, setCurrentView] = useState('home');
