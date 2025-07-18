@@ -8,6 +8,7 @@ const BookItem = ({
   book,
   onViewBook,
   onStartNewBook,
+  userData,
   isCreating = false,
   entryOrder = [],
   insights = []

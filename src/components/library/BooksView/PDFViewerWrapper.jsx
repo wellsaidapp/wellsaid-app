@@ -27,20 +27,6 @@ export default function PDFViewerWrapper({ book, onClose, onEdit }) {
   });
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  // const handleEdit = () => {
-  //   if (book.status === "Draft") {
-  //     // Open in editor with draft state
-  //     openBookEditor(book.id);
-  //   } else {
-  //     // Convert published book to draft first
-  //     if (confirm("Editing will convert this published book to a draft. Continue?")) {
-  //       convertToDraft(book.id);
-  //       openBookEditor(book.id);
-  //     }
-  //   }
-  //   onClose();
-  // };
-
   if (book.status === "Draft" && !file) {
     return (
       <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center p-4 z-[100]">

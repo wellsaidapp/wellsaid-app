@@ -6,7 +6,7 @@ import ImageCropperModal from '../BookCreation/ImageCropperModal';
 import { uploadData } from 'aws-amplify/storage';
 import { fetchAuthSession } from 'aws-amplify/auth';
 
-const BookEditor = ({ book, onClose, onSave, onBackToViewer, returnToViewer, previousViewerState, editingBook }) => {
+const BookEditor = ({ book, onClose, onSave, onBackToViewer, returnToViewer, previousViewerState, editingBook, userData }) => {
   const [pages, setPages] = useState([]);
   const [title, setTitle] = useState(book.name);
   const [description, setDescription] = useState(book.description || '');
@@ -16,10 +16,12 @@ const BookEditor = ({ book, onClose, onSave, onBackToViewer, returnToViewer, pre
   const [activeTab, setActiveTab] = useState('content'); // 'content' or 'design'
   const [showCropper, setShowCropper] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
-  // Inside the BookEditor component, add these state variables:
+  console.log("User Data from Book Editor:", userData);
   const [fontStyle, setFontStyle] = useState(book.fontStyle || 'serif');
   const [isBlackAndWhite, setIsBlackAndWhite] = useState(book.isBlackAndWhite || false);
   // Initialize editor with book content
+
+
   useEffect(() => {
     const initializeBookData = async () => {
       if (book.publishedContent) {
@@ -27,7 +29,7 @@ const BookEditor = ({ book, onClose, onSave, onBackToViewer, returnToViewer, pre
       }
       setDescription(book.description || '');
       setBackCoverNote(book.backCoverNote || '');
-
+      console.log("📘 UserData at save time:", userData);
       // Handle cover image conversion if it's a URL
       if (book.coverImage && book.coverImage.startsWith('http')) {
         try {
@@ -111,6 +113,7 @@ const BookEditor = ({ book, onClose, onSave, onBackToViewer, returnToViewer, pre
   };
 
   const handleSave = async () => {
+    console.log("📘 UserData at save time:", userData);
     setIsSaving(true);
     try {
       const updatedBook = {
@@ -132,7 +135,8 @@ const BookEditor = ({ book, onClose, onSave, onBackToViewer, returnToViewer, pre
       const pdfBlob = await generateBookPDF(
         updatedBook,
         updatedBook.publishedState.entryOrder || [],
-        updatedBook.publishedState.contentSnapshot || []
+        updatedBook.publishedState.contentSnapshot || [],
+        userData
       );
 
       // 2. Overwrite existing PDF in S3 using the known key
@@ -290,7 +294,7 @@ const BookEditor = ({ book, onClose, onSave, onBackToViewer, returnToViewer, pre
         </div>
 
         {/* Add this new section right here - below the tab buttons but above the content sections */}
-        {activeTab === 'design' && (
+        {activeTab === 'design' && !showCropper && (
           <div className="flex justify-end gap-2 mb-4">
             {/* Font Style Toggle */}
             <button

@@ -143,6 +143,7 @@ const HomeView = ({
         editingBook={editingBook}
         returnToViewer={returnToViewer}
         previousViewerState={previousViewerState}
+        userData={userData}
         onClose={() => {
           setEditingBook(null);
           setReturnToViewer(false);
@@ -220,6 +221,7 @@ const HomeView = ({
           }}
           setCurrentView={setCurrentView}
           setLibraryDefaultViewMode={setLibraryDefaultViewMode}
+          userData={userData}
         />
 
         <LegacyStats

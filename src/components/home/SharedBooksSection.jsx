@@ -6,6 +6,7 @@ const SharedBooksSection = ({
   onViewBook,
   setCurrentView,
   setLibraryDefaultViewMode,
+  userData,
   showViewAll = true
 }) => {
   return (
@@ -41,6 +42,7 @@ const SharedBooksSection = ({
               key={book.id}
               book={book}
               onViewBook={onViewBook}
+              userData={userData}
             />
           ))}
         </div>
