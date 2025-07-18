@@ -1,9 +1,13 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { BookOpen, Bookmark, CheckCircle } from 'lucide-react';
 import { Switch } from 'antd';
 
 const Step8Publish = ({ newBook, setNewBook, individuals, entryOrder, setBookCreationStep }) => {
-  const recipient = individuals.find(p => p.id === newBook.recipient);
+
+  // 🔍 Log all book data for inspection
+  useEffect(() => {
+    console.log('🟦 newBook:', newBook);
+  }, [newBook]);
 
   return (
     <div>
@@ -35,7 +39,7 @@ const Step8Publish = ({ newBook, setNewBook, individuals, entryOrder, setBookCre
             <div className="flex items-center text-sm text-gray-500">
               <span>{entryOrder.length} pages</span>
               <span className="mx-2">•</span>
-              <span>For {recipient?.name || 'No recipient selected'}</span>
+              <span>For {newBook.recipientName || 'No recipient selected'}</span>
             </div>
           </div>
         </div>

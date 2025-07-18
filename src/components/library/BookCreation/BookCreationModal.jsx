@@ -205,8 +205,9 @@ const BookCreationModal = ({
             name: newBook.title,
             description: newBook.description,
             collections: newBook.selectedCollections,
-            personId: newBook.recipient?.id,
-            personName: newBook.recipient?.name,
+            insightIds: newBook.selectedEntries,
+            personId: newBook.recipient,
+            personName: newBook.recipientName,
             color: newBook.color,
             fontStyle: newBook.fontStyle,
             status: 'Published',
@@ -230,11 +231,15 @@ const BookCreationModal = ({
             fontStyle: updatedBookData.fontStyle,
             isBlackAndWhite: newBook.isBlackAndWhite,
             color: newBook.color,
+            coverMode: newBook.coverMode,
             status: updatedBookData.status,
             personId: updatedBookData.personId,
+            personName: updatedBookData.personName,
             coverImage: updatedBookData.coverImage,
             publishedBook: updatedBookData.publishedBook,
-            publishedContent: updatedBookData.publishedContent
+            publishedContent: updatedBookData.publishedContent,
+            insightIds: newBook.selectedEntries,
+            savedOn: updatedBookData.savedOn
           });
 
           toast.success(
@@ -262,7 +267,8 @@ const BookCreationModal = ({
             personId: updatedBookData.personId,
             coverImage: updatedBookData.coverImage,
             publishedBook: null, // not saving PDF yet for draft
-            publishedContent: null
+            publishedContent: null,
+            insightIds: newBook.selectedEntries
           });
 
           console.log('Draft book data:', updatedBookData);

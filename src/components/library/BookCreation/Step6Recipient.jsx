@@ -2,6 +2,7 @@ import React from 'react';
 import { CheckCircle, Circle } from 'lucide-react';
 
 const Step6Recipient = ({ newBook, setNewBook, individuals }) => {
+  console.log("Step6Recipient individuals:", individuals);
   return (
     <div>
       <h3 className="text-lg font-semibold text-gray-800 mb-4">Who is this book for?</h3>
@@ -16,7 +17,7 @@ const Step6Recipient = ({ newBook, setNewBook, individuals }) => {
           return (
             <div
               key={person.id}
-              onClick={() => setNewBook((prev) => ({ ...prev, recipient: person.id }))}
+              onClick={() => setNewBook((prev) => ({ ...prev, recipient: person.id, recipientName: person.name }))}
               className={`relative p-4 border rounded-lg cursor-pointer transition-all duration-200 text-center ${
                 isSelected ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:bg-gray-50'
               }`}
