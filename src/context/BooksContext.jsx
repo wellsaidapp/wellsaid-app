@@ -10,6 +10,14 @@ export const BooksProvider = ({ children }) => {
   const [books, setBooks] = useState([]);
   const [loadingBooks, setLoadingBooks] = useState(true);
 
+  const updateBook = (updatedBook) => {
+    setBooks((prevBooks) =>
+      prevBooks.map((book) =>
+        book.id === updatedBook.id ? { ...book, ...updatedBook } : book
+      )
+    );
+  };
+
   useEffect(() => {
     const fetchBooks = async () => {
       try {
@@ -65,6 +73,7 @@ export const BooksProvider = ({ children }) => {
         getBooksByRecipient,
         getRecentBooks,
         setBooks,
+        updateBook
       }}
     >
       {children}

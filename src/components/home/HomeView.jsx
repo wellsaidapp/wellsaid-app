@@ -53,6 +53,7 @@ const HomeView = ({
     loadingBooks,
     getRecentBooks,
     getPublishedBooksCount,
+    updateBook
   } = useBooks();
   const weekInsights = insights.filter(i => isThisWeek(parseISO(i.date))).length;
   // const weeklyGoal = 5;
@@ -149,6 +150,7 @@ const HomeView = ({
         onSave={async (updatedBook) => {
           try {
             const savedBook = await updatePublishedBook(updatedBook);
+            updateBook(savedBook);
             setPdfTimestamp(Date.now());
             setEditingBook(null);
             setReturnToViewer(false);
