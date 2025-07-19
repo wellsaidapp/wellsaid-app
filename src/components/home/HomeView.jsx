@@ -184,6 +184,26 @@ const HomeView = ({
     );
   }
 
+  useEffect(() => {
+    if (showPdfViewer) {
+      document.body.style.overflow = 'hidden';
+      document.body.style.touchAction = 'none';
+
+      // Prevent iOS pull-to-refresh if at top
+      if (window.scrollY === 0) {
+        window.scrollTo(0, 1);
+      }
+    } else {
+      document.body.style.overflow = '';
+      document.body.style.touchAction = '';
+    }
+
+    return () => {
+      document.body.style.overflow = '';
+      document.body.style.touchAction = '';
+    };
+  }, [showPdfViewer]);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-blue-50 to-indigo-50 pb-20 overflow-y-auto">
       <Header showLogo={true} />
