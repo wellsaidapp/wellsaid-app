@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import CaptureCard from './CaptureCard'; // Make sure this import exists
 import { ChevronDown, ChevronUp, PlusCircle, FolderOpen, Calendar, Plus, Save, X } from 'lucide-react';
+import { fetchAuthSession } from 'aws-amplify/auth';
 
 const CollectionItem = ({
   collection,
@@ -31,20 +32,60 @@ const CollectionItem = ({
     setIsCreating(true);
   };
 
-  const handleSaveDraft = () => {
+  const handleSaveDraft = async () => {
+    const session = await fetchAuthSession();
+    const token = session.tokens?.accessToken?.toString();
+
+    if (!token) {
+      console.error("🔒 Missing access token");
+      return;
+    }
+
     const newEntry = {
-      ...draftEntry,
-      date: new Date().toISOString(),
-      isDraft: false
+      prompt: draftEntry.prompt,
+      response: draftEntry.response,
+      collections: [
+        {
+          id: collection.id,
+          type: collection.type === 'system' ? 'system' : 'custom'
+        }
+      ]
     };
-    onEntryUpdate(newEntry);
-    setIsCreating(false);
-    setDraftEntry({
-      prompt: '',
-      response: '',
-      collections: [collection.id],
-      isDraft: true
-    });
+
+    try {
+      const res = await fetch(
+        'https://aqaahphwfj.execute-api.us-east-2.amazonaws.com/dev/insights',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: token
+          },
+          body: JSON.stringify(newEntry)
+        }
+      );
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        console.error("❌ API error:", data.error || 'Unknown error');
+        return;
+      }
+
+      // Inject the new insight directly into UI
+      onEntryUpdate(data);
+
+      // Reset form
+      setIsCreating(false);
+      setDraftEntry({
+        prompt: '',
+        response: '',
+        collections: [collection.id],
+        isDraft: true
+      });
+    } catch (err) {
+      console.error("❌ Failed to save insight:", err);
+    }
   };
 
   const handleCancelDraft = () => {

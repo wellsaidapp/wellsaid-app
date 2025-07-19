@@ -4,6 +4,8 @@ import { useLocation } from 'react-router-dom';
 import { useSystemCollections } from '../../context/SystemCollectionsContext';
 import { useUserCollections } from '../../context/UserCollectionsContext';
 import { useBooks } from '../../context/BooksContext';
+import { useInsights } from '../../context/InsightContext';
+
 import { X } from 'lucide-react';
 
 // Component imports
@@ -20,14 +22,13 @@ import PDFViewerWrapper from './BooksView/PDFViewerWrapper';
 import BookEditor from './BooksView/BookEditor';
 
 const LibraryView = ({
-  insights,
   individuals,
-  setInsights,
   currentView,
   setCurrentView,
   defaultViewMode = 'collections'
 }) => {
   console.log("INDIVIDUALS IN LIBRARY:", individuals);
+  const { insights, setInsights } = useInsights();
   const { systemCollections, loading: loadingSystem } = useSystemCollections();
   const { userCollections, loading: loadingUser } = useUserCollections();
   const { books, loadingBooks, updateBook } = useBooks();
@@ -242,7 +243,6 @@ const LibraryView = ({
     );
   };
 
-  // Add these state handlers to your LibraryView component
   const handleEntryUpdate = (updatedEntry) => {
     setInsights(prevInsights =>
       prevInsights.map(entry =>
