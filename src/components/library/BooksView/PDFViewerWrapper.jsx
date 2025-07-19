@@ -295,39 +295,39 @@ export default function PDFViewerWrapper({ book, onClose, onEdit }) {
         {showShareModal && (
           <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-[110]">
             <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
-              <h2 className="text-lg font-semibold mb-4">Share this book</h2>
+              <h2 className="text-xl font-semibold mb-4">Share this book</h2>
 
-              <label className="block mb-3">
-                <span className="text-sm font-medium text-gray-700">Recipient Email</span>
+              <label className="block mb-4">
+                <span className="text-base font-medium text-gray-700">Recipient Email</span>
                 <input
                   type="email"
-                  className="mt-1 block w-full border rounded px-3 py-2 text-sm"
+                  className="mt-2 block w-full border rounded px-4 py-3 text-[16px]"
                   placeholder="email@example.com"
                   value={recipientEmail}
                   onChange={e => setRecipientEmail(e.target.value)}
                 />
               </label>
 
-              <label className="block mb-4">
-                <span className="text-sm font-medium text-gray-700">Personal Message</span>
+              <label className="block mb-5">
+                <span className="text-base font-medium text-gray-700">Personal Message</span>
                 <textarea
-                  className="mt-1 block w-full border rounded px-3 py-2 text-sm"
-                  rows={3}
+                  className="mt-2 block w-full border rounded px-4 py-3 text-[16px]"
+                  rows={4}
                   placeholder="Write something thoughtful..."
                   value={personalMessage}
                   onChange={e => setPersonalMessage(e.target.value)}
                 />
               </label>
 
-              <div className="flex justify-end space-x-2">
+              <div className="flex justify-end space-x-3">
                 <button
-                  className="px-4 py-2 text-sm rounded bg-gray-200 hover:bg-gray-300"
+                  className="px-5 py-3 text-base rounded-lg bg-gray-200 hover:bg-gray-300"
                   onClick={() => setShowShareModal(false)}
                 >
                   Cancel
                 </button>
                 <button
-                  className="px-4 py-2 text-sm rounded bg-blue-600 text-white hover:bg-blue-700"
+                  className="px-5 py-3 text-base rounded-lg bg-blue-600 text-white hover:bg-blue-700"
                   onClick={handleShareBook}
                 >
                   Send
@@ -372,7 +372,7 @@ export default function PDFViewerWrapper({ book, onClose, onEdit }) {
             />
           ))}
         </div>
-        
+
       </div>
     </div>
   );
