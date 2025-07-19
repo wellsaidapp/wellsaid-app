@@ -178,20 +178,48 @@ const BookCreationModal = ({
         loadingToast = toast.custom(
           (t) => (
             <ToastMessage
-              type="info"  // Add this type to your ToastMessage styles
+              type="info"
               title={actionType === 'publish' ? "Publishing..." : "Saving Draft..."}
               message="Please wait while we process your book"
               onDismiss={() => toast.dismiss(t.id)}
             />
           ),
           {
-            duration: Infinity, // Loading toast stays until manually dismissed
+            duration: Infinity,
             position: 'bottom-center',
             style: { zIndex: 9999 }
           }
         );
 
+        // First create/update the book record to get the book ID
+        const bookResponse = await saveBookToRDS({
+          existingBookId: newBook.existingBookId,
+          name: newBook.title,
+          description: newBook.description,
+          backCoverNote: newBook.backCoverNote,
+          fontStyle: newBook.fontStyle,
+          isBlackAndWhite: newBook.isBlackAndWhite,
+          color: newBook.color || 'bg-blue-500',
+          status: actionType === 'publish' ? 'Published' : 'Draft',
+          personId: newBook.recipient,
+          personName: newBook.recipientName,
+          coverImage: newBook.coverImage?.startsWith("https://") ? newBook.coverImage : null,
+          publishedBook: null,
+          publishedContent: null,
+          insightIds: newBook.selectedEntries,
+          collectionIds: newBook.selectedCollections,
+          savedOn: new Date().toISOString().split('T')[0]
+        });
+
+        const bookId = bookResponse.bookId;
+
+        // Update local state with the book ID if it's new
+        if (!newBook.existingBookId) {
+          setNewBook(prev => ({ ...prev, existingBookId: bookId }));
+        }
+
         if (actionType === 'publish') {
+          // Generate PDF and upload assets only for publishing
           const pdfBlob = await generateBookPDF(
             newBook,
             entryOrder,
@@ -201,17 +229,42 @@ const BookCreationModal = ({
             newBook.isBlackAndWhite
           );
 
-          // Get user ID safely (this fixes the null error)
           const userId = userData?.id || (await fetchAuthSession())?.userSub;
 
+          // Upload assets in parallel
           const [coverImageUrl, pdfUrl] = await Promise.all([
-            uploadCoverImageToS3(newBook.coverImage, userId, newBook.existingBookId),
-            uploadPDFToS3(pdfBlob, userId, newBook.existingBookId)
+            uploadCoverImageToS3(newBook.coverImage, userId, bookId),
+            uploadPDFToS3(pdfBlob, userId, bookId)
           ]);
 
-          // MOBILE-ONLY CHANGE: Remove all download logic
+          // Update the book record with the S3 URLs
+          await saveBookToRDS({
+            existingBookId: bookId,
+            name: newBook.title,
+            description: newBook.description,
+            backCoverNote: newBook.backCoverNote,
+            fontStyle: newBook.fontStyle,
+            isBlackAndWhite: newBook.isBlackAndWhite,
+            color: newBook.color || 'bg-blue-500',
+            status: 'Published',
+            personId: newBook.recipient,
+            personName: newBook.recipientName,
+            coverImage: coverImageUrl,
+            publishedBook: pdfUrl,
+            publishedContent: entryOrder.map(id => {
+              const insight = insights.find(i => i.id === id);
+              return insight ? {
+                prompt: insight.prompt,
+                response: insight.response
+              } : null;
+            }).filter(Boolean),
+            insightIds: newBook.selectedEntries,
+            collectionIds: newBook.selectedCollections,
+            savedOn: new Date().toISOString().split('T')[0]
+          });
+
+          // Desktop download behavior
           if (!isTouchDevice()) {
-            // Desktop behavior remains unchanged
             const url = URL.createObjectURL(pdfBlob);
             const a = document.createElement('a');
             a.href = url;
@@ -223,138 +276,63 @@ const BookCreationModal = ({
               URL.revokeObjectURL(url);
             }, 100);
           }
-
-          const updatedBookData = {
-            id: newBook.existingBookId,
-            name: newBook.title,
-            description: newBook.description,
-            collections: newBook.selectedCollections,
-            insightIds: newBook.selectedEntries,
-            personId: newBook.recipient,
-            personName: newBook.recipientName,
-            color: newBook.color,
-            fontStyle: newBook.fontStyle,
-            status: 'Published',
-            coverImage: newBook.coverImage?.startsWith("https://") ? newBook.coverImage : coverImageUrl,
-            savedOn: new Date().toISOString().split('T')[0],
-            publishedBook: pdfUrl,
-            publishedContent: entryOrder.map(id => {
-              const insight = insights.find(i => i.id === id);
-              return insight ? {
-                prompt: insight.prompt,
-                response: insight.response
-              } : null;
-            }).filter(Boolean)
-          };
-
-          await saveBookToRDS({
-            existingBookId: newBook.existingBookId,
-            name: updatedBookData.name,
-            description: updatedBookData.description,
-            backCoverNote: newBook.backCoverNote,
-            fontStyle: updatedBookData.fontStyle,
-            isBlackAndWhite: newBook.isBlackAndWhite,
-            color: newBook.color || 'bg-blue-500',
-            status: updatedBookData.status,
-            personId: updatedBookData.personId,
-            personName: updatedBookData.personName,
-            coverImage: updatedBookData.coverImage,
-            publishedBook: updatedBookData.publishedBook,
-            publishedContent: updatedBookData.publishedContent,
-            insightIds: newBook.selectedEntries,
-            collectionIds: updatedBookData.collections,
-            savedOn: updatedBookData.savedOn
-          });
-
-          // MOBILE-ONLY CHANGE: Different success message
-          toast.success(
-            (t) => (
-              <ToastMessage
-                type="success"
-                title={isTouchDevice() ? "Book Published!" : "Book Published"}
-                message={
-                  isTouchDevice()
-                    ? <div className="space-y-1">
-                        <p>Your book "{newBook.title || 'Untitled Book'}" is ready!</p>
-                        <p>
-                          Access it anytime from <span className="font-semibold">My Books</span>.
-                        </p>
-                      </div>
-                    : `"${newBook.title || 'Untitled Book'}" has been published.`
-                }
-                onDismiss={() => toast.dismiss(t.id)}
-              />
-            ),
-            {
-              id: loadingToast,
-              duration: isTouchDevice() ? 5000 : 4000,
-              position: 'bottom-center', // Ensures consistent positioning
-              style: {
-                marginBottom: '2rem', // Prevents toast from appearing at the very bottom
-                zIndex: 9999 // Additional z-index for the toast container
-              }
-            }
-          );
-        } else if (actionType === 'draft') {
-          // Handle draft saving without PDF generation
-          await saveBookToRDS({
-            existingBookId: newBook.existingBookId,
-            name: updatedBookData.name,
-            description: updatedBookData.description,
-            backCoverNote: newBook.backCoverNote,
-            fontStyle: updatedBookData.fontStyle,
-            isBlackAndWhite: newBook.isBlackAndWhite,
-            status: updatedBookData.status,
-            personId: updatedBookData.personId,
-            personName: updatedBookData.personName,
-            coverImage: updatedBookData.coverImage,
-            publishedBook: null, // not saving PDF yet for draft
-            publishedContent: null,
-            insightIds: newBook.selectedEntries,
-            color: newBook.color || 'bg-blue-500',
-          });
-
-          console.log('Draft book data:', updatedBookData);
-
-          toast.success(
-            (t) => (
-              <ToastMessage
-                type="draft"
-                title="Draft Saved"
-                message={`"${newBook.title || 'Untitled Book'}" has been saved.`}
-                onDismiss={() => toast.dismiss(t.id)}
-              />
-            ),
-            { duration: 4000 }
-          );
         }
+
+        // Success toast
+        toast.success(
+          (t) => (
+            <ToastMessage
+              type="success"
+              title={isTouchDevice() ? "Book Published!" : "Book Published"}
+              message={
+                isTouchDevice()
+                  ? <span className="block space-y-1">
+                      <span className="block">Your book "{newBook.title || 'Untitled Book'}" is ready!</span>
+                      <span className="block">
+                        Access it anytime from <span className="font-semibold">My Books</span>.
+                      </span>
+                    </span>
+                  : `"${newBook.title || 'Untitled Book'}" has been published.`
+              }
+              onDismiss={() => toast.dismiss(t.id)}
+            />
+          ),
+          {
+            id: loadingToast,
+            duration: isTouchDevice() ? 5000 : 4000,
+            position: 'bottom-center',
+            style: {
+              marginBottom: '2rem',
+              zIndex: 9999
+            }
+          }
+        );
+
         await refreshBooks();
         resetCreationState();
         onClose();
-        return;
       } catch (error) {
         console.error('Error during book completion:', error);
         toast.error(`Failed to ${actionType === 'publish' ? 'publish' : 'save'} book`);
-        return;
       }
-    }
-
-    // For cancel actions, check if we should show confirmation
-    const hasChanges = (
-      newBook.title ||
-      newBook.description ||
-      newBook.selectedCollections.length > 0 ||
-      newBook.selectedEntries.length > 0 ||
-      newBook.coverImage ||
-      newBook.backCoverNote ||
-      newBook.recipient
-    );
-
-    if (hasChanges) {
-      setShowExitConfirmation(true);
     } else {
-      resetCreationState();
-      onClose();
+      // Cancel logic remains the same
+      const hasChanges = (
+        newBook.title ||
+        newBook.description ||
+        newBook.selectedCollections.length > 0 ||
+        newBook.selectedEntries.length > 0 ||
+        newBook.coverImage ||
+        newBook.backCoverNote ||
+        newBook.recipient
+      );
+
+      if (hasChanges) {
+        setShowExitConfirmation(true);
+      } else {
+        resetCreationState();
+        onClose();
+      }
     }
   };
 
