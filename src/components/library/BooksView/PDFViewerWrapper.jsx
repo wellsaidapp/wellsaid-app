@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
-import { X, ChevronLeft, ChevronRight, MoreHorizontal, Download, ShoppingCart, Edit, Share } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, MoreHorizontal, Download, ShoppingCart, Edit, Share, Share2 } from 'lucide-react';
 import BookEditor from './BookEditor';
 import { fetchAuthSession } from 'aws-amplify/auth';
 import ToastMessage from '../BookCreation/ToastMessage';
@@ -18,6 +18,7 @@ export default function PDFViewerWrapper({ book, onClose, onEdit }) {
   const [numPages, setNumPages] = useState(null);
   const [pageNumber, setPageNumber] = useState(1);
   const [toasts, setToasts ] = useState([]);
+  const [isSending, setIsSending] = useState(false);
 
   const addToast = (toast) => {
     const id = Math.random().toString(36).substring(2, 9);
@@ -146,8 +147,8 @@ export default function PDFViewerWrapper({ book, onClose, onEdit }) {
   const [personalMessage, setPersonalMessage] = useState('');
 
   const handleShareBook = async () => {
-    if (!recipientEmail || !book.publishedBook) return;
-
+    if (!recipientEmail || !book.publishedBook || isSending) return;
+    setIsSending(true); // Start loading
     const session = await fetchAuthSession();
     const token = session.tokens?.idToken?.toString();
 
@@ -198,6 +199,8 @@ export default function PDFViewerWrapper({ book, onClose, onEdit }) {
         title: 'Unexpected Error',
         message: 'Error sharing book. Please try again.'
       });
+    } finally {
+      setIsSending(false); // Always stop loading
     }
   };
 
@@ -221,28 +224,28 @@ export default function PDFViewerWrapper({ book, onClose, onEdit }) {
             <div className={`flex items-center ml-2 transition-all duration-200 ${isMenuOpen ? 'opacity-100' : 'opacity-0 w-0'}`}>
               <div className="flex gap-2 bg-white rounded-full pl-2 pr-3 py-1 shadow-lg">
                 <button
+                  onClick={() => setShowShareModal(true)}
+                  className="p-1.5 hover:bg-gray-100 rounded-full"
+                  title="Share Book"
+                >
+                  <Share2 className="w-5 h-5 text-gray-600" />
+                </button>
+                <button
                   onClick={handleDownload}
                   className="p-1.5 hover:bg-gray-100 rounded-full"
                   title="Download"
                 >
-                  <Download className="w-4 h-4 text-gray-600" />
-                </button>
-                <button className="p-1.5 hover:bg-gray-100 rounded-full" title="Add to Cart">
-                  <ShoppingCart className="w-4 h-4 text-gray-600" />
+                  <Download className="w-5 h-5 text-gray-600" />
                 </button>
                 <button
                   onClick={handleEdit}
                   className="p-1.5 hover:bg-gray-100 rounded-full"
                   title={book.status === "Draft" ? "Continue Editing" : "Convert to Draft & Edit"}
                 >
-                  <Edit className="w-4 h-4 text-gray-600" />
+                  <Edit className="w-5 h-5 text-gray-600" />
                 </button>
-                <button
-                  onClick={() => setShowShareModal(true)}
-                  className="p-1.5 hover:bg-gray-100 rounded-full"
-                  title="Share Book"
-                >
-                  <Share className="w-4 h-4 text-gray-600" />
+                <button className="p-1.5 hover:bg-gray-100 rounded-full" title="Add to Cart">
+                  <ShoppingCart className="w-5 h-5 text-gray-600" />
                 </button>
               </div>
             </div>
@@ -327,10 +330,30 @@ export default function PDFViewerWrapper({ book, onClose, onEdit }) {
                   Cancel
                 </button>
                 <button
-                  className="px-5 py-3 text-base rounded-lg bg-blue-600 text-white hover:bg-blue-700"
                   onClick={handleShareBook}
+                  disabled={isSending}
+                  className={`px-5 py-3 text-base rounded-lg flex items-center justify-center gap-2 ${
+                    isSending
+                      ? 'bg-blue-400 cursor-not-allowed'
+                      : 'bg-blue-600 hover:bg-blue-700'
+                  } text-white transition-colors`}
                 >
-                  Send
+                  {isSending ? (
+                    <>
+                      <svg
+                        className="animate-spin h-5 w-5 text-white"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Sending...
+                    </>
+                  ) : (
+                    'Send'
+                  )}
                 </button>
               </div>
             </div>

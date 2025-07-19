@@ -193,38 +193,34 @@ const CollectionItem = ({
           {isCreating && (
             <div className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100 mb-4">
               {/* Header */}
-              <div className="flex items-center p-3 border-b border-gray-100 bg-gray-50">
-                <div className="flex-1 flex items-center space-x-2">
-                  <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-orange-100 text-orange-800">
+              <div className="flex items-center justify-between p-3 border-b border-gray-100 bg-gray-50">
+                {/* Left side - Save button */}
+                <button
+                  onClick={handleSaveDraft}
+                  disabled={isSaving}
+                  className="flex items-center justify-center gap-2 px-3 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm"
+                >
+                  {isSaving ? (
+                    <>
+                      <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      <span>Saving...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-4 h-4" />
+                      <span>Save</span>
+                    </>
+                  )}
+                </button>
+
+                {/* Right side - New pill and Cancel button */}
+                <div className="flex items-center gap-2">
+                  <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">
                     New
                   </span>
-                </div>
-                {/* Action Buttons */}
-                <div className="flex space-x-2">
-                  <button
-                    onClick={handleSaveDraft}
-                    disabled={isSaving}
-                    className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  >
-                    {isSaving ? (
-                      <>
-                        {/* Spinner icon - replaces the save icon while loading */}
-                        <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        <span>Saving...</span>
-                      </>
-                    ) : (
-                      <>
-                        {/* Your original save icon */}
-                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
-                        </svg>
-                        <span>Save</span>
-                      </>
-                    )}
-                  </button>
                   <button
                     onClick={handleCancelDraft}
                     className="p-1.5 text-gray-500 hover:text-gray-600 hover:bg-gray-50 rounded-md transition-colors"
@@ -235,7 +231,7 @@ const CollectionItem = ({
                 </div>
               </div>
 
-              {/* Content */}
+              {/* Content - unchanged */}
               <div className="p-4">
                 {/* Prompt */}
                 <div className="mb-4">
