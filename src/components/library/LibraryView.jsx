@@ -305,8 +305,14 @@ const LibraryView = ({
 
   useEffect(() => {
     if (showBookCreation) {
+      // Lock scroll and gestures
       document.body.style.overflow = 'hidden';
       document.body.style.touchAction = 'none';
+
+      // 👇 Prevent pull-to-refresh on iOS by scrolling 1px down
+      if (window.scrollY === 0) {
+        window.scrollTo(0, 1);
+      }
     } else {
       document.body.style.overflow = '';
       document.body.style.touchAction = '';
@@ -391,130 +397,132 @@ const LibraryView = ({
       ) : (
         <>
           <Header />
-          <div className="p-4">
-            <ViewModeToggle
-              viewMode={viewMode}
-              setViewMode={setViewMode}
-              collectionFilter={collectionFilter}
-              setCollectionFilter={setCollectionFilter}
-            />
+          <div className={showBookCreation ? 'pointer-events-none' : ''}>
+            <div className="p-4">
+              <ViewModeToggle
+                viewMode={viewMode}
+                setViewMode={setViewMode}
+                collectionFilter={collectionFilter}
+                setCollectionFilter={setCollectionFilter}
+              />
 
-            {viewMode !== 'books' && (
-              <SearchAndFilterBar
-                searchQuery={searchQuery}
-                setSearchQuery={(query) => {
-                  setSearchQuery(query);
-                  if (query === '') {
+              {viewMode !== 'books' && (
+                <SearchAndFilterBar
+                  searchQuery={searchQuery}
+                  setSearchQuery={(query) => {
+                    setSearchQuery(query);
+                    if (query === '') {
+                      setHasPerformedSearch(false);
+                      setSearchResults([]);
+                    }
+                  }}
+                  handleSearch={handleSearch}
+                  isSearching={isSearching}
+                  selectedFilters={selectedFilters}
+                  toggleFilter={toggleFilter}
+                  allPersonIds={individuals.map(p => p.id)}
+                  individuals={individuals}
+                  insights={insights}
+                />
+              )}
+
+              {viewMode === 'collections' ? (
+                <CollectionsList
+                  userCollections={userCollections}
+                  systemCollections={systemCollections}
+                  groupedEntries={groupedEntries}
+                  expandedCollection={expandedCollection}
+                  onToggleCollection={(collectionId) => {
+                    setExpandedCollection(prev =>
+                      prev === collectionId ? null : collectionId
+                    );
+                  }}
+                  showInactiveCollections={showInactiveCollections}
+                  onToggleInactiveCollections={() => setShowInactiveCollections(!showInactiveCollections)}
+                  startQuickCaptureFromCollection={startQuickCaptureFromCollection}
+                  onEntryUpdate={handleEntryUpdate}
+                  onEntryDelete={handleEntryDelete}
+                  onCollectionToggle={handleCollectionToggle}
+                  onPersonToggle={handlePersonToggle}
+                  individuals={individuals}
+                  collections={userCollections}
+                  selectedFilters={selectedFilters}
+                  onClearFilters={() => {
+                    setSelectedFilters({ personIds: [], topics: [], entryTypes: [] });
                     setHasPerformedSearch(false);
-                    setSearchResults([]);
-                  }
-                }}
-                handleSearch={handleSearch}
-                isSearching={isSearching}
-                selectedFilters={selectedFilters}
-                toggleFilter={toggleFilter}
-                allPersonIds={individuals.map(p => p.id)}
-                individuals={individuals}
-                insights={insights}
-              />
-            )}
+                    setSearchQuery('');
+                  }}
+                  isPersonView={false}
+                  filteredInsights={filteredInsights}
+                  noMatchesFound={noMatchesFound}
+                />
+              ) : (
+                <BooksList
+                  books={sortedBooks}
+                  onViewBook={(book) => {
+                    // Enhanced initial log
+                    console.groupCollapsed('📘 Book Clicked:', book.name);
+                    console.log('📚 Raw book data:', JSON.parse(JSON.stringify(book)));
 
-            {viewMode === 'collections' ? (
-              <CollectionsList
-                userCollections={userCollections}
-                systemCollections={systemCollections}
-                groupedEntries={groupedEntries}
-                expandedCollection={expandedCollection}
-                onToggleCollection={(collectionId) => {
-                  setExpandedCollection(prev =>
-                    prev === collectionId ? null : collectionId
-                  );
-                }}
-                showInactiveCollections={showInactiveCollections}
-                onToggleInactiveCollections={() => setShowInactiveCollections(!showInactiveCollections)}
-                startQuickCaptureFromCollection={startQuickCaptureFromCollection}
-                onEntryUpdate={handleEntryUpdate}
-                onEntryDelete={handleEntryDelete}
-                onCollectionToggle={handleCollectionToggle}
-                onPersonToggle={handlePersonToggle}
-                individuals={individuals}
-                collections={userCollections}
-                selectedFilters={selectedFilters}
-                onClearFilters={() => {
-                  setSelectedFilters({ personIds: [], topics: [], entryTypes: [] });
-                  setHasPerformedSearch(false);
-                  setSearchQuery('');
-                }}
-                isPersonView={false}
-                filteredInsights={filteredInsights}
-                noMatchesFound={noMatchesFound}
-              />
-            ) : (
-              <BooksList
-                books={sortedBooks}
-                onViewBook={(book) => {
-                  // Enhanced initial log
-                  console.groupCollapsed('📘 Book Clicked:', book.name);
-                  console.log('📚 Raw book data:', JSON.parse(JSON.stringify(book)));
-
-                  const latestBook = books.find(b => b.id === book.id) || book;
-                  console.log('🔍 Latest book from context:', {
-                    id: latestBook.id,
-                    status: latestBook.status,
-                    insights: latestBook.insightIds?.length,
-                    hasCover: !!latestBook.coverImage
-                  });
-
-                  if (latestBook.status === "Draft") {
-                    console.log('✏️ Editing DRAFT book');
-
-                    // Pre-process the data before setting state
-                    const draftPayload = {
-                      title: latestBook.name,
-                      description: latestBook.description,
-                      selectedCollections: latestBook.collections || [],
-                      selectedEntries: latestBook.insightIds,
-                      coverImage: latestBook.coverImage || null,
-                      backCoverNote: latestBook.backCoverNote || '',
-                      recipient: latestBook.personId || null,
-                      recipientName: latestBook.personName || '',
-                      showTags: true,
-                      fontStyle: latestBook.fontStyle || 'serif',
-                      isBlackAndWhite: latestBook.isBlackAndWhite || false,
-                      isDraft: true,
-                      color: latestBook.color || 'bg-blue-500',
-                      existingBookId: latestBook.id,
-                    };
-
-                    console.log('🔄 Draft payload prepared:', {
-                      keyFields: {
-                        existingId: draftPayload.existingBookId,
-                        entries: draftPayload.selectedEntries.length,
-                        coverType: draftPayload.coverImage ? 'image' : `color: ${draftPayload.color}`
-                      }
+                    const latestBook = books.find(b => b.id === book.id) || book;
+                    console.log('🔍 Latest book from context:', {
+                      id: latestBook.id,
+                      status: latestBook.status,
+                      insights: latestBook.insightIds?.length,
+                      hasCover: !!latestBook.coverImage
                     });
 
-                    setNewBook(draftPayload);
-                    setEntryOrder(latestBook.insightIds);
-                    setBookCreationStep(0);
-                    setShowBookCreation(true);
+                    if (latestBook.status === "Draft") {
+                      console.log('✏️ Editing DRAFT book');
 
-                    console.log('🏁 Modal opening with draft data');
-                  } else {
-                    console.log('👀 Viewing PUBLISHED book');
-                    setSelectedBook(latestBook);
-                  }
+                      // Pre-process the data before setting state
+                      const draftPayload = {
+                        title: latestBook.name,
+                        description: latestBook.description,
+                        selectedCollections: latestBook.collections || [],
+                        selectedEntries: latestBook.insightIds,
+                        coverImage: latestBook.coverImage || null,
+                        backCoverNote: latestBook.backCoverNote || '',
+                        recipient: latestBook.personId || null,
+                        recipientName: latestBook.personName || '',
+                        showTags: true,
+                        fontStyle: latestBook.fontStyle || 'serif',
+                        isBlackAndWhite: latestBook.isBlackAndWhite || false,
+                        isDraft: true,
+                        color: latestBook.color || 'bg-blue-500',
+                        existingBookId: latestBook.id,
+                      };
 
-                  console.groupEnd();
-                }}
-                onStartNewBook={handleStartNewBook}
-                isCreating={currentView === 'arrangeBook'}
-                entryOrder={entryOrder}
-                insights={insights}
-                sortDirection={sortDirection}
-                onToggleSortDirection={toggleSortDirection}
-              />
-            )}
+                      console.log('🔄 Draft payload prepared:', {
+                        keyFields: {
+                          existingId: draftPayload.existingBookId,
+                          entries: draftPayload.selectedEntries.length,
+                          coverType: draftPayload.coverImage ? 'image' : `color: ${draftPayload.color}`
+                        }
+                      });
+
+                      setNewBook(draftPayload);
+                      setEntryOrder(latestBook.insightIds);
+                      setBookCreationStep(0);
+                      setShowBookCreation(true);
+
+                      console.log('🏁 Modal opening with draft data');
+                    } else {
+                      console.log('👀 Viewing PUBLISHED book');
+                      setSelectedBook(latestBook);
+                    }
+
+                    console.groupEnd();
+                  }}
+                  onStartNewBook={handleStartNewBook}
+                  isCreating={currentView === 'arrangeBook'}
+                  entryOrder={entryOrder}
+                  insights={insights}
+                  sortDirection={sortDirection}
+                  onToggleSortDirection={toggleSortDirection}
+                />
+              )}
+            </div>
           </div>
 
           {/* Modals */}
@@ -541,6 +549,16 @@ const LibraryView = ({
                 onClose={() => setSelectedBook(null)}
               />
             )
+          )}
+
+          {showBookCreation && (
+            <div
+              className="fixed inset-0 z-40 bg-transparent"
+              style={{
+                touchAction: 'none',
+                overscrollBehavior: 'none'
+              }}
+            />
           )}
 
           {showBookCreation && (
