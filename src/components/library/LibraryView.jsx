@@ -304,12 +304,12 @@ const LibraryView = ({
   }, [selectedBook]);
 
   useEffect(() => {
-    if (showBookCreation) {
-      // Lock scroll and gestures
+    const modalIsOpen = showBookCreation || showPdfViewer;
+
+    if (modalIsOpen) {
       document.body.style.overflow = 'hidden';
       document.body.style.touchAction = 'none';
 
-      // 👇 Prevent pull-to-refresh on iOS by scrolling 1px down
       if (window.scrollY === 0) {
         window.scrollTo(0, 1);
       }
@@ -322,7 +322,7 @@ const LibraryView = ({
       document.body.style.overflow = '';
       document.body.style.touchAction = '';
     };
-  }, [showBookCreation]);
+  }, [showBookCreation, showPdfViewer]);
 
   const getFilteredCollections = useCallback(() => {
     const insightsToUse = searchQuery || selectedFilters.personIds.length > 0 ?
@@ -397,7 +397,7 @@ const LibraryView = ({
       ) : (
         <>
           <Header />
-          <div className={showBookCreation ? 'pointer-events-none' : ''}>
+          <div className={(showBookCreation || showPdfViewer) ? 'pointer-events-none' : ''}>
             <div className="p-4">
               <ViewModeToggle
                 viewMode={viewMode}
@@ -510,6 +510,7 @@ const LibraryView = ({
                     } else {
                       console.log('👀 Viewing PUBLISHED book');
                       setSelectedBook(latestBook);
+                      setShowPdfViewer(true);
                     }
 
                     console.groupEnd();
@@ -530,7 +531,10 @@ const LibraryView = ({
             selectedBook.status === "Published" ? (
               <PDFViewerWrapper
                 book={selectedBook}
-                onClose={() => setSelectedBook(null)}
+                onClose={() => {
+                  setSelectedBook(null);
+                  setShowPdfViewer(false); // ← 🔒 Triggers the scroll-lock cleanup
+                }}
                 onEdit={(book) => {
                   setPreviousViewerState({
                     book: selectedBook,
@@ -546,12 +550,15 @@ const LibraryView = ({
                 book={selectedBook}
                 currentPage={currentPage}
                 setCurrentPage={setCurrentPage}
-                onClose={() => setSelectedBook(null)}
+                onClose={() => {
+                  setSelectedBook(null);
+                  setShowPdfViewer(false); // ← 🔒 Triggers the scroll-lock cleanup
+                }}
               />
             )
           )}
 
-          {showBookCreation && (
+          {(showBookCreation || showPdfViewer) && (
             <div
               className="fixed inset-0 z-40 bg-transparent"
               style={{
