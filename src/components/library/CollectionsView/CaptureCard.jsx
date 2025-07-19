@@ -147,7 +147,7 @@ const CaptureCard = ({
                   handleChange('prompt', e.target.value);
                   autoResizeTextarea(promptRef);
                 }}
-                className="w-full bg-blue-50 rounded-lg p-3 text-sm text-gray-800 border border-blue-200 resize-none overflow-hidden"
+                className="w-full bg-blue-50 rounded-lg p-3 text-[16px] text-gray-800 border border-blue-200 resize-none overflow-hidden"
               />
             ) : (
               <div className="bg-blue-50 rounded-lg p-3 text-sm text-gray-800">
@@ -172,7 +172,7 @@ const CaptureCard = ({
                 handleChange('response', e.target.value);
                 autoResizeTextarea(responseRef);
               }}
-              className={`w-full rounded-lg p-3 text-sm resize-none overflow-hidden ${
+              className={`w-full rounded-lg p-3 text-[16px] resize-none overflow-hidden ${
                 currentEntry.isDraft || currentEntry.isVoiceNote
                   ? "bg-gray-50 italic text-gray-600 border border-gray-200"
                   : "bg-green-50 text-gray-800 border border-green-200"
