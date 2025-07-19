@@ -303,6 +303,21 @@ const LibraryView = ({
     console.log('Selected book changed:', selectedBook);
   }, [selectedBook]);
 
+  useEffect(() => {
+    if (showBookCreation) {
+      document.body.style.overflow = 'hidden';
+      document.body.style.touchAction = 'none';
+    } else {
+      document.body.style.overflow = '';
+      document.body.style.touchAction = '';
+    }
+
+    return () => {
+      document.body.style.overflow = '';
+      document.body.style.touchAction = '';
+    };
+  }, [showBookCreation]);
+
   const getFilteredCollections = useCallback(() => {
     const insightsToUse = searchQuery || selectedFilters.personIds.length > 0 ?
       searchResults :
