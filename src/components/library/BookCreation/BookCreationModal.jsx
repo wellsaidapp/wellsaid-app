@@ -171,34 +171,57 @@ const BookCreationModal = ({
 
   // Then modify your handleComplete function:
   const handleComplete = async (actionType = 'cancel') => {
-    // Skip confirmation for publish/save actions
     if (actionType === 'publish' || actionType === 'draft') {
+      let loadingToast;
       try {
+        loadingToast = toast.custom(
+          (t) => (
+            <ToastMessage
+              type="info"  // Add this type to your ToastMessage styles
+              title={actionType === 'publish' ? "Publishing..." : "Saving Draft..."}
+              message="Please wait while we process your book"
+              onDismiss={() => toast.dismiss(t.id)}
+            />
+          ),
+          {
+            duration: Infinity, // Loading toast stays until manually dismissed
+            position: 'bottom-center',
+            style: { zIndex: 9999 }
+          }
+        );
+
         if (actionType === 'publish') {
-          // Only generate PDF for publishing
           const pdfBlob = await generateBookPDF(
-            newBook,          // 1st param
-            entryOrder,       // 2nd param
-            insights,         // 3rd param
-            userData,         // 4th param (NEW - was missing)
-            newBook.fontStyle, // 5th param (moved from 4th)
-            newBook.isBlackAndWhite // 6th param
+            newBook,
+            entryOrder,
+            insights,
+            userData,
+            newBook.fontStyle,
+            newBook.isBlackAndWhite
           );
 
+          // Get user ID safely (this fixes the null error)
+          const userId = userData?.id || (await fetchAuthSession())?.userSub;
+
           const [coverImageUrl, pdfUrl] = await Promise.all([
-            uploadCoverImageToS3(newBook.coverImage, userData.id, newBook.existingBookId),
-            uploadPDFToS3(pdfBlob, userData.id, newBook.existingBookId)
+            uploadCoverImageToS3(newBook.coverImage, userId, newBook.existingBookId),
+            uploadPDFToS3(pdfBlob, userId, newBook.existingBookId)
           ]);
 
-          // Create download link
-          const url = URL.createObjectURL(pdfBlob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = `${newBook.title || 'Untitled Book'}.pdf`;
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
-          URL.revokeObjectURL(url);
+          // MOBILE-ONLY CHANGE: Remove all download logic
+          if (!isTouchDevice()) {
+            // Desktop behavior remains unchanged
+            const url = URL.createObjectURL(pdfBlob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${newBook.title || 'Untitled Book'}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            setTimeout(() => {
+              document.body.removeChild(a);
+              URL.revokeObjectURL(url);
+            }, 100);
+          }
 
           const updatedBookData = {
             id: newBook.existingBookId,
@@ -242,16 +265,34 @@ const BookCreationModal = ({
             savedOn: updatedBookData.savedOn
           });
 
+          // MOBILE-ONLY CHANGE: Different success message
           toast.success(
             (t) => (
               <ToastMessage
                 type="success"
-                title="Book Published"
-                message={`"${newBook.title || 'Untitled Book'}" has been published.`}
+                title={isTouchDevice() ? "Book Published!" : "Book Published"}
+                message={
+                  isTouchDevice()
+                    ? <div className="space-y-1">
+                        <p>Your book "{newBook.title || 'Untitled Book'}" is ready!</p>
+                        <p>
+                          Access it anytime from <span className="font-semibold">My Books</span>.
+                        </p>
+                      </div>
+                    : `"${newBook.title || 'Untitled Book'}" has been published.`
+                }
                 onDismiss={() => toast.dismiss(t.id)}
               />
             ),
-            { duration: 4000 }
+            {
+              id: loadingToast,
+              duration: isTouchDevice() ? 5000 : 4000,
+              position: 'bottom-center', // Ensures consistent positioning
+              style: {
+                marginBottom: '2rem', // Prevents toast from appearing at the very bottom
+                zIndex: 9999 // Additional z-index for the toast container
+              }
+            }
           );
         } else if (actionType === 'draft') {
           // Handle draft saving without PDF generation
@@ -312,32 +353,6 @@ const BookCreationModal = ({
     } else {
       resetCreationState();
       onClose();
-    }
-  };
-
-  // Add this inside your BookCreationModal component, before the return statement
-  const handlePublish = async () => {
-    try {
-      const pdfBlob = await generateBookPDF(newBook, entryOrder, insights, userData);
-
-      // Create download link
-      const url = URL.createObjectURL(pdfBlob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${newBook.title || 'Untitled Book'}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-
-      // Show success message
-      toast.success('Book PDF generated successfully!');
-
-      // Close the modal
-      onClose();
-    } catch (error) {
-      console.error('Error generating PDF:', error);
-      toast.error('Failed to generate PDF');
     }
   };
 

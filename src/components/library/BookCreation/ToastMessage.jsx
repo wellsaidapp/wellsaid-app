@@ -51,6 +51,7 @@ const ToastMessage = ({ type, title, message, onDismiss }) => {
       p-4 rounded-lg border shadow-sm
       ${style.bg} ${style.border}
       min-w-0 w-full max-w-md
+      z-[9999]
     `}>
       <div className="flex items-start gap-3">
         {style.icon}
