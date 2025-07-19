@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
 import { X, ChevronLeft, ChevronRight, MoreHorizontal, Download, ShoppingCart, Edit, Share, Share2 } from 'lucide-react';
 import BookEditor from './BookEditor';
@@ -19,6 +19,13 @@ export default function PDFViewerWrapper({ book, onClose, onEdit }) {
   const [pageNumber, setPageNumber] = useState(1);
   const [toasts, setToasts ] = useState([]);
   const [isSending, setIsSending] = useState(false);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [touchStartX, setTouchStartX] = useState(null);
+  const containerRef = useRef(null);
+
+  // Pre-render adjacent pages
+  const prevPageNumber = Math.max(1, pageNumber - 1);
+  const nextPageNumber = Math.min(numPages || 1, pageNumber + 1);
 
   const addToast = (toast) => {
     const id = Math.random().toString(36).substring(2, 9);
@@ -45,23 +52,6 @@ export default function PDFViewerWrapper({ book, onClose, onEdit }) {
   });
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  if (book.status === "Draft" && !file) {
-    return (
-      <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center p-4 z-[100]">
-        <div className="bg-white p-6 rounded-lg max-w-md text-center">
-          <h3 className="text-lg font-medium mb-2">Draft Not Viewable</h3>
-          <p className="mb-4">This book is still in draft mode. Please publish it to view as PDF.</p>
-          <button
-            onClick={onClose}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-          >
-            Close
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   // Handle window resize
   useEffect(() => {
     const handleResize = () => {
@@ -75,6 +65,44 @@ export default function PDFViewerWrapper({ book, onClose, onEdit }) {
     handleResize(); // Set initial size
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  // Smooth page change with animation
+  const changePage = (newPage) => {
+    if (isTransitioning || newPage === pageNumber) return;
+
+    setIsTransitioning(true);
+    setPageNumber(newPage);
+
+    // Animation duration matches CSS transition
+    setTimeout(() => {
+      setIsTransitioning(false);
+    }, 300);
+  };
+
+  // Touch event handlers for swipe gestures
+  const handleTouchStart = (e) => {
+    setTouchStartX(e.touches[0].clientX);
+  };
+
+  const handleTouchEnd = (e) => {
+    if (!touchStartX) return;
+
+    const touchEndX = e.changedTouches[0].clientX;
+    const deltaX = touchStartX - touchEndX;
+
+    // Minimum swipe distance to trigger page turn
+    if (Math.abs(deltaX) > 50) {
+      if (deltaX > 0 && pageNumber < numPages) {
+        // Swipe left - next page
+        changePage(pageNumber + 1);
+      } else if (deltaX < 0 && pageNumber > 1) {
+        // Swipe right - previous page
+        changePage(pageNumber - 1);
+      }
+    }
+
+    setTouchStartX(null);
+  };
 
   const handleDownload = () => {
     const cleanName = book.name
@@ -206,9 +234,11 @@ export default function PDFViewerWrapper({ book, onClose, onEdit }) {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center p-4 z-[100] pointer-events-none">
-      {/* Main modal container */}
-      <div className="relative w-full max-w-4xl bg-white rounded-lg shadow-xl pointer-events-auto flex flex-col" style={{ maxHeight: '90vh' }}>
-
+      <div
+        className="relative w-full max-w-4xl bg-white rounded-lg shadow-xl pointer-events-auto flex flex-col"
+        style={{ maxHeight: '90vh' }}
+        ref={containerRef}
+      >
         {/* Top Control Bar */}
         <div className="absolute top-4 left-4 right-4 flex justify-between items-center z-10">
           <div className="flex items-center">
@@ -263,14 +293,16 @@ export default function PDFViewerWrapper({ book, onClose, onEdit }) {
           </button>
         </div>
 
-        {/* Scrollable PDF Content */}
+        {/* Scrollable PDF Content with enhanced transitions */}
         <div
-          className="flex-1 overflow-auto touch-pan-y overscroll-contain"
+          className="flex-1 overflow-auto touch-pan-y overscroll-contain relative"
           style={{
             WebkitOverflowScrolling: 'touch',
-            paddingTop: '60px', // Space for header
-            paddingBottom: '60px' // Space for pagination
+            paddingTop: '60px',
+            paddingBottom: '60px'
           }}
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
         >
           <Document
             file={file}
@@ -279,17 +311,58 @@ export default function PDFViewerWrapper({ book, onClose, onEdit }) {
             onLoadError={(error) => console.error("PDF load error:", error)}
           >
             <div className="p-4 flex justify-center">
-              <div className="relative">
-                {/* Shadow element that will appear on all sides */}
-                <div className="absolute inset-0 shadow-[0_0_15px_rgba(0,0,0,0.1)] -z-10" />
+              <div className="relative w-full" style={{ maxWidth: `${dimensions.width}px` }}>
+                {/* Current Page with transition effect */}
+                <div
+                  className={`transition-opacity duration-300 ${isTransitioning ? 'opacity-70' : 'opacity-100'}`}
+                  style={{
+                    position: 'relative',
+                    zIndex: 10,
+                    boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1)',
+                    backgroundColor: 'white'
+                  }}
+                >
+                  <Page
+                    key={`page-${pageNumber}`}
+                    pageNumber={pageNumber}
+                    width={dimensions.width - 8}
+                    loading={<div className="text-center py-20">Loading page...</div>}
+                    renderTextLayer={false}
+                    renderAnnotationLayer={false}
+                  />
+                </div>
 
-                <Page
-                  pageNumber={pageNumber}
-                  width={dimensions.width - 8} // Reduced width to allow shadow space
-                  loading={<div className="text-center py-20">Loading page...</div>}
-                  renderTextLayer={false}
-                  renderAnnotationLayer={false}
-                />
+                {/* Pre-render next page (hidden) for faster transitions */}
+                {pageNumber < numPages && (
+                  <div
+                    className="absolute top-0 left-0 opacity-0 pointer-events-none"
+                    style={{ zIndex: 5 }}
+                  >
+                    <Page
+                      key={`preload-next-${nextPageNumber}`}
+                      pageNumber={nextPageNumber}
+                      width={dimensions.width - 8}
+                      renderTextLayer={false}
+                      renderAnnotationLayer={false}
+                    />
+                  </div>
+                )}
+
+                {/* Pre-render previous page (hidden) for faster transitions */}
+                {pageNumber > 1 && (
+                  <div
+                    className="absolute top-0 left-0 opacity-0 pointer-events-none"
+                    style={{ zIndex: 5 }}
+                  >
+                    <Page
+                      key={`preload-prev-${prevPageNumber}`}
+                      pageNumber={prevPageNumber}
+                      width={dimensions.width - 8}
+                      renderTextLayer={false}
+                      renderAnnotationLayer={false}
+                    />
+                  </div>
+                )}
               </div>
             </div>
           </Document>
@@ -360,13 +433,15 @@ export default function PDFViewerWrapper({ book, onClose, onEdit }) {
           </div>
         )}
 
-        {/* Pagination */}
+        {/* Enhanced Pagination with animation feedback */}
         {numPages && (
           <div className="sticky bottom-0 bg-white border-t p-4 flex justify-center items-center">
             <button
-              onClick={() => setPageNumber(p => Math.max(1, p - 1))}
-              disabled={pageNumber <= 1}
-              className="px-4 py-2 mx-2 bg-gray-100 rounded-full disabled:opacity-50"
+              onClick={() => changePage(Math.max(1, pageNumber - 1))}
+              disabled={pageNumber <= 1 || isTransitioning}
+              className={`px-4 py-2 mx-2 rounded-full transition-all duration-200 ${
+                pageNumber <= 1 ? 'opacity-50' : 'bg-gray-100 hover:bg-gray-200'
+              }`}
             >
               <ChevronLeft className="w-5 h-5" />
             </button>
@@ -374,9 +449,11 @@ export default function PDFViewerWrapper({ book, onClose, onEdit }) {
               Page {pageNumber} of {numPages}
             </span>
             <button
-              onClick={() => setPageNumber(p => Math.min(numPages, p + 1))}
-              disabled={pageNumber >= numPages}
-              className="px-4 py-2 mx-2 bg-gray-100 rounded-full disabled:opacity-50"
+              onClick={() => changePage(Math.min(numPages, pageNumber + 1))}
+              disabled={pageNumber >= numPages || isTransitioning}
+              className={`px-4 py-2 mx-2 rounded-full transition-all duration-200 ${
+                pageNumber >= numPages ? 'opacity-50' : 'bg-gray-100 hover:bg-gray-200'
+              }`}
             >
               <ChevronRight className="w-5 h-5" />
             </button>

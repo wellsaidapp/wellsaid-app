@@ -136,3 +136,29 @@
     opacity: 0;
   }
 }
+
+/* Add these to your global styles */
+.react-pdf__Page {
+  transition: opacity 0.3s ease;
+}
+
+.react-pdf__Page--loading {
+  opacity: 0;
+}
+
+.react-pdf__Page--loaded {
+  opacity: 1;
+}
+
+/* iOS-specific optimizations */
+@supports (-webkit-touch-callout: none) {
+  .pdf-viewer-container {
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .react-pdf__Page {
+    /* Improve rendering on iOS */
+    transform: translateZ(0);
+    backface-visibility: hidden;
+  }
+}

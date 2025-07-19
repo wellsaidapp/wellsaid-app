@@ -182,7 +182,7 @@ const LoginScreen = ({ onSuccess, onBack }) => {
             <p className="text-gray-600 text-center mb-6">Sign in to continue your journey</p>
 
             <form onSubmit={handleEmailSubmit} className="space-y-4">
-              <label className="block text-sm font-medium text-gray-700">
+              <label className="block text-[16px] font-medium text-gray-700">
                 Email
                 <input
                   type="email"
@@ -211,7 +211,7 @@ const LoginScreen = ({ onSuccess, onBack }) => {
           <>
             <h2 className="text-xl font-bold text-gray-800 text-center mb-4">Enter PIN</h2>
             <form onSubmit={handlePinSubmit} className="space-y-4">
-              <label className="block text-sm font-medium text-gray-700">
+              <label className="block text-[16px] font-medium text-gray-700">
                 6-digit PIN
                 <input
                   type="text"
