@@ -289,7 +289,6 @@ const AddPersonFlow = ({ onComplete, onCancel }) => {
                             handleSubmit(e);
                           }
                         }}
-                        autoFocus
                       />
                     </div>
                     <button

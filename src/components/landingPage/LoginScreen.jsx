@@ -221,7 +221,6 @@ const LoginScreen = ({ onSuccess, onBack }) => {
                   onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg text-center text-2xl tracking-widest mt-1"
                   autoComplete="one-time-code"
-                  autoFocus
                   required
                 />
               </label>
