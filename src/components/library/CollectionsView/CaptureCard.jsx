@@ -15,6 +15,7 @@ const CaptureCard = ({
   const [editedEntry, setEditedEntry] = useState(entry);
   const promptRef = useRef(null);
   const responseRef = useRef(null);
+
   const handleChange = (field, value) => {
     setEditedEntry(prev => ({ ...prev, [field]: value }));
   };
@@ -67,6 +68,11 @@ const CaptureCard = ({
     }
   };
 
+  // iOS-friendly base font size (16px minimum)
+  const baseFontSize = "text-[16px]";
+  const smallFontSize = "text-[14px]"; // For non-editable text
+
+  // Remove the auto-focus useEffect completely
   useEffect(() => {
     if (isEditing) {
       autoResizeTextarea(promptRef);
@@ -147,10 +153,11 @@ const CaptureCard = ({
                   handleChange('prompt', e.target.value);
                   autoResizeTextarea(promptRef);
                 }}
-                className="w-full bg-blue-50 rounded-lg p-3 text-[16px] text-gray-800 border border-blue-200 resize-none overflow-hidden"
+                className={`w-full bg-blue-50 rounded-lg p-3 ${baseFontSize} text-gray-800 border border-blue-200 resize-none overflow-hidden`}
+                style={{ fontSize: '16px' }} // Explicit iOS fix
               />
             ) : (
-              <div className="bg-blue-50 rounded-lg p-3 text-sm text-gray-800">
+              <div className={`bg-blue-50 rounded-lg p-3 ${smallFontSize} text-gray-800`}>
                 {currentEntry.prompt}
               </div>
             )}
@@ -172,14 +179,15 @@ const CaptureCard = ({
                 handleChange('response', e.target.value);
                 autoResizeTextarea(responseRef);
               }}
-              className={`w-full rounded-lg p-3 text-[16px] resize-none overflow-hidden ${
+              className={`w-full rounded-lg p-3 ${baseFontSize} resize-none overflow-hidden ${
                 currentEntry.isDraft || currentEntry.isVoiceNote
                   ? "bg-gray-50 italic text-gray-600 border border-gray-200"
                   : "bg-green-50 text-gray-800 border border-green-200"
               }`}
+              style={{ fontSize: '16px' }} // Explicit iOS fix
             />
           ) : (
-            <div className={`rounded-lg p-3 text-sm ${
+            <div className={`rounded-lg p-3 ${smallFontSize} ${
               currentEntry.isDraft || currentEntry.isVoiceNote
                 ? "bg-gray-50 italic text-gray-600"
                 : "bg-green-50 text-gray-800"

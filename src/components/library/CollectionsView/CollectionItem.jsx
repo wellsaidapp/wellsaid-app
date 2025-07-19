@@ -247,9 +247,9 @@ const CollectionItem = ({
                   <textarea
                     value={draftEntry.prompt}
                     onChange={(e) => handleDraftChange('prompt', e.target.value)}
-                    className="w-full bg-blue-50 rounded-lg p-3 text-sm text-gray-800 border border-blue-200 resize-none overflow-hidden"
+                    className="w-full bg-blue-50 rounded-lg p-3 text-base text-gray-800 border border-blue-200 resize-none overflow-hidden"
                     placeholder="Enter your prompt..."
-                    autoFocus
+                    style={{ fontSize: '16px' }}
                   />
                 </div>
 
@@ -263,8 +263,9 @@ const CollectionItem = ({
                   <textarea
                     value={draftEntry.response}
                     onChange={(e) => handleDraftChange('response', e.target.value)}
-                    className="w-full bg-green-50 rounded-lg p-3 text-sm text-gray-800 border border-green-200 resize-none overflow-hidden"
+                    className="w-full bg-green-50 rounded-lg p-3 text-base text-gray-800 border border-green-200 resize-none overflow-hidden"
                     placeholder="Enter your response..."
+                    style={{ fontSize: '16px' }}
                   />
                 </div>
               </div>
