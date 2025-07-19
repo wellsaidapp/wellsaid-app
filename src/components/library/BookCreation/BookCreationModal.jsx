@@ -29,6 +29,7 @@ import DraggableEntry from './DraggableEntry';
 
 import { useSystemCollections } from '../../../context/SystemCollectionsContext';
 import { useUser } from '../../../context/UserContext';
+import { useBooks } from '../../../context/BooksContext';
 
 const BookCreationModal = ({
   onClose,
@@ -75,7 +76,7 @@ const BookCreationModal = ({
     setBookCreationStep(0);
     setCoverImageState({ tempImage: null, showCropModal: false });
   };
-
+  const { refreshBooks } = useBooks();
   const { systemCollections, loading } = useSystemCollections();
   const { userData } = useUser();
   const [showExitConfirmation, setShowExitConfirmation] = useState(false);
@@ -327,7 +328,7 @@ const BookCreationModal = ({
             { duration: 4000 }
           );
         }
-
+        await refreshBooks();
         resetCreationState();
         onClose();
         return;
