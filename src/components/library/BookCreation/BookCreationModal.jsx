@@ -253,8 +253,7 @@ const BookCreationModal = ({
             backCoverNote: newBook.backCoverNote,
             fontStyle: updatedBookData.fontStyle,
             isBlackAndWhite: newBook.isBlackAndWhite,
-            color: newBook.color,
-            coverMode: newBook.coverMode,
+            color: newBook.color || 'bg-blue-500',
             status: updatedBookData.status,
             personId: updatedBookData.personId,
             personName: updatedBookData.personName,
@@ -303,13 +302,14 @@ const BookCreationModal = ({
             backCoverNote: newBook.backCoverNote,
             fontStyle: updatedBookData.fontStyle,
             isBlackAndWhite: newBook.isBlackAndWhite,
-            colorTheme: newBook.color,
             status: updatedBookData.status,
             personId: updatedBookData.personId,
+            personName: updatedBookData.personName,
             coverImage: updatedBookData.coverImage,
             publishedBook: null, // not saving PDF yet for draft
             publishedContent: null,
-            insightIds: newBook.selectedEntries
+            insightIds: newBook.selectedEntries,
+            color: newBook.color || 'bg-blue-500',
           });
 
           console.log('Draft book data:', updatedBookData);

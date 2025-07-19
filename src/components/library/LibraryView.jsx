@@ -469,7 +469,6 @@ const LibraryView = ({
                       isDraft: true,
                       color: latestBook.color || 'bg-blue-500',
                       existingBookId: latestBook.id,
-                      coverMode: latestBook.coverMode || 'color'
                     };
 
                     console.log('🔄 Draft payload prepared:', {

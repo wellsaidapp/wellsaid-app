@@ -117,7 +117,6 @@ const PeopleView = ({ individuals, insights, collections, sharedBooks, setCurren
       isDraft: true,
       color: book.color || 'bg-blue-500',
       existingBookId: book.id,
-      coverMode: book.coverMode || 'color'
     });
 
     setEntryOrder(book.draftState.insightIds);
