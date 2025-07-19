@@ -595,7 +595,6 @@ const WellSaidOnboarding = ({ onComplete }) => {
                   onPaste={(e) => handlePaste(e)}
                   className="w-12 h-12 text-center text-xl font-bold border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none"
                   maxLength={1}
-                  autoFocus={index === 0}
                 />
               ))}
             </div>
