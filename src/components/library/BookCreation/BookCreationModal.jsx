@@ -261,6 +261,7 @@ const BookCreationModal = ({
             publishedBook: updatedBookData.publishedBook,
             publishedContent: updatedBookData.publishedContent,
             insightIds: newBook.selectedEntries,
+            collectionIds: updatedBookData.collections,
             savedOn: updatedBookData.savedOn
           });
 
