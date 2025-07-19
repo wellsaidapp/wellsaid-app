@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import CaptureCard from './CaptureCard'; // Make sure this import exists
-import { ChevronDown, ChevronUp, PlusCircle, FolderOpen, Calendar } from 'lucide-react';
+import { ChevronDown, ChevronUp, PlusCircle, FolderOpen, Calendar, Plus, Save, X } from 'lucide-react';
 
 const CollectionItem = ({
   collection,
@@ -18,6 +18,49 @@ const CollectionItem = ({
   onCollectionToggle,
   onPersonToggle
 }) => {
+
+  const [isCreating, setIsCreating] = useState(false);
+  const [draftEntry, setDraftEntry] = useState({
+    prompt: '',
+    response: '',
+    collections: [collection.id], // Automatically include the current collection
+    isDraft: true
+  });
+
+  const handleCreateNew = () => {
+    setIsCreating(true);
+  };
+
+  const handleSaveDraft = () => {
+    const newEntry = {
+      ...draftEntry,
+      date: new Date().toISOString(),
+      isDraft: false
+    };
+    onEntryUpdate(newEntry);
+    setIsCreating(false);
+    setDraftEntry({
+      prompt: '',
+      response: '',
+      collections: [collection.id],
+      isDraft: true
+    });
+  };
+
+  const handleCancelDraft = () => {
+    setIsCreating(false);
+    setDraftEntry({
+      prompt: '',
+      response: '',
+      collections: [collection.id],
+      isDraft: true
+    });
+  };
+
+  const handleDraftChange = (field, value) => {
+    setDraftEntry(prev => ({ ...prev, [field]: value }));
+  };
+
   return (
     <div className={`relative z-0 ${!isActive ? 'opacity-70' : ''}`}>
       <div
@@ -78,29 +121,108 @@ const CollectionItem = ({
         </div>
       </div>
 
-      {isActive && expanded && entries.length > 0 && (
+      {isActive && expanded && (
         <div className="pl-4 border-l-2 border-gray-200 ml-5 mt-2 space-y-3">
-          {entries.map(entry => (
-            <CaptureCard
-              key={entry.id}
-              entry={entry}
-              individuals={individuals}
-              collections={[...systemCollections, ...collections]}
-              systemCollections={systemCollections}
-              onEdit={(updatedEntry) => {
-                if (typeof onEntryUpdate === 'function') {
-                  onEntryUpdate(updatedEntry);
-                }
-              }}
-              onDelete={(entryId) => onEntryDelete(entryId)}
-              onCollectionToggle={(collectionId) => {
-                if (typeof onCollectionToggle === 'function') {
-                  onCollectionToggle(entry.id, collectionId);
-                }
-              }}
-              onPersonToggle={(recipientId) => onPersonToggle(entry.id, recipientId)}
-            />
-          ))}
+          {/* Add New Insight Button */}
+          <button
+            onClick={handleCreateNew}
+            className="w-full py-2 px-3 border border-dashed border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 transition-colors flex items-center justify-center gap-2 text-sm"
+          >
+            <Plus size={16} className="text-gray-500" />
+            Add New Insight
+          </button>
+
+          {/* Draft Capture Card - shown when creating */}
+          {isCreating && (
+            <div className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100 mb-4">
+              {/* Header */}
+              <div className="flex items-center p-3 border-b border-gray-100 bg-gray-50">
+                <div className="flex-1 flex items-center space-x-2">
+                  <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-orange-100 text-orange-800">
+                    New
+                  </span>
+                </div>
+                {/* Action Buttons */}
+                <div className="flex space-x-2">
+                  <button
+                    onClick={handleSaveDraft}
+                    className="p-1.5 text-gray-500 hover:text-green-600 hover:bg-green-50 rounded-md transition-colors"
+                    aria-label="Save"
+                  >
+                    <Save className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={handleCancelDraft}
+                    className="p-1.5 text-gray-500 hover:text-gray-600 hover:bg-gray-50 rounded-md transition-colors"
+                    aria-label="Cancel"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Content */}
+              <div className="p-4">
+                {/* Prompt */}
+                <div className="mb-4">
+                  <div className="flex items-center mb-1">
+                    <span className="text-xs font-semibold text-blue-600 uppercase tracking-wider">
+                      Prompt
+                    </span>
+                  </div>
+                  <textarea
+                    value={draftEntry.prompt}
+                    onChange={(e) => handleDraftChange('prompt', e.target.value)}
+                    className="w-full bg-blue-50 rounded-lg p-3 text-sm text-gray-800 border border-blue-200 resize-none overflow-hidden"
+                    placeholder="Enter your prompt..."
+                    autoFocus
+                  />
+                </div>
+
+                {/* Response */}
+                <div>
+                  <div className="flex items-center mb-1">
+                    <span className="text-xs font-semibold text-green-600 uppercase tracking-wider">
+                      Response
+                    </span>
+                  </div>
+                  <textarea
+                    value={draftEntry.response}
+                    onChange={(e) => handleDraftChange('response', e.target.value)}
+                    className="w-full bg-green-50 rounded-lg p-3 text-sm text-gray-800 border border-green-200 resize-none overflow-hidden"
+                    placeholder="Enter your response..."
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Existing entries list */}
+          {entries.length > 0 && (
+            <div className="space-y-3">
+              {entries.map(entry => (
+                <CaptureCard
+                  key={entry.id}
+                  entry={entry}
+                  individuals={individuals}
+                  collections={[...systemCollections, ...collections]}
+                  systemCollections={systemCollections}
+                  onEdit={(updatedEntry) => {
+                    if (typeof onEntryUpdate === 'function') {
+                      onEntryUpdate(updatedEntry);
+                    }
+                  }}
+                  onDelete={(entryId) => onEntryDelete(entryId)}
+                  onCollectionToggle={(collectionId) => {
+                    if (typeof onCollectionToggle === 'function') {
+                      onCollectionToggle(entry.id, collectionId);
+                    }
+                  }}
+                  onPersonToggle={(recipientId) => onPersonToggle(entry.id, recipientId)}
+                />
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>
