@@ -10,6 +10,7 @@ import { usePeople } from './context/PeopleContext';
 import { useUserCollections } from './context/UserCollectionsContext';
 import { useInsights } from './context/InsightContext';
 import { useBooks } from './context/BooksContext';
+import PullToRefresh from 'pulltorefreshjs';
 
 const MyComponent = () => {
   const { userCollections, loading } = useUserCollections();
@@ -72,6 +73,7 @@ const WellSaidApp = () => {
   const [libraryDefaultViewMode, setLibraryDefaultViewMode] = useState('collections');
   const { books, refreshBooks } = useBooks();
   const { refetchUser } = useUser();
+
   useEffect(() => {
     const storedAuthState = localStorage.getItem('wellsaid-auth-state');
 
@@ -89,6 +91,29 @@ const WellSaidApp = () => {
     if (storedAuthState !== 'loggedIn') {
       setShowSplash(true);
     }
+  }, []);
+
+  useEffect(() => {
+    const destroyPullToRefresh = PullToRefresh.init({
+      mainElement: 'body',
+      onRefresh() {
+        window.location.reload(); // Replace with refetchUser(), etc. if desired
+      },
+      shouldPullToRefresh() {
+        return window.scrollY === 0;
+      },
+      distThreshold: 60,
+      resistance: 2.5,
+      iconArrow: '↓',
+      iconRefreshing: '⟳',
+    });
+
+    // ✅ Correct cleanup
+    return () => {
+      if (typeof destroyPullToRefresh === 'function') {
+        destroyPullToRefresh();
+      }
+    };
   }, []);
 
   const [showCaptureOptions, setShowCaptureOptions] = useState(false);

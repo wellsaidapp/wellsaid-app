@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
-import { X, ChevronLeft, ChevronRight, MoreHorizontal, Download, ShoppingCart, Edit } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, MoreHorizontal, Download, ShoppingCart, Edit, Share } from 'lucide-react';
 import BookEditor from './BookEditor';
+import { fetchAuthSession } from 'aws-amplify/auth';
+import ToastMessage from '../BookCreation/ToastMessage';
 
 pdfjs.GlobalWorkerOptions.workerSrc =
   process.env.NODE_ENV === 'development'
@@ -15,6 +17,21 @@ export default function PDFViewerWrapper({ book, onClose, onEdit }) {
 
   const [numPages, setNumPages] = useState(null);
   const [pageNumber, setPageNumber] = useState(1);
+  const [toasts, setToasts ] = useState([]);
+
+  const addToast = (toast) => {
+    const id = Math.random().toString(36).substring(2, 9);
+    setToasts((prev) => [...prev, { ...toast, id }]);
+
+    // Auto-dismiss after 5 seconds
+    setTimeout(() => {
+      removeToast(id);
+    }, 5000);
+  };
+
+  const removeToast = (id) => {
+    setToasts((prev) => prev.filter((toast) => toast.id !== id));
+  };
 
   // Update handleEdit function
   const handleEdit = () => {
@@ -124,6 +141,66 @@ export default function PDFViewerWrapper({ book, onClose, onEdit }) {
     }
   };
 
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [recipientEmail, setRecipientEmail] = useState('');
+  const [personalMessage, setPersonalMessage] = useState('');
+
+  const handleShareBook = async () => {
+    if (!recipientEmail || !book.publishedBook) return;
+
+    const session = await fetchAuthSession();
+    const token = session.tokens?.idToken?.toString();
+
+    try {
+      const response = await fetch(`https://aqaahphwfj.execute-api.us-east-2.amazonaws.com/dev/books/${book.id}/share`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': token,
+        },
+        body: JSON.stringify({
+          recipientEmail,
+          senderName: book.userName || 'A WellSaid user',
+          personalMessage,
+          bookUrl: book.publishedBook,
+          bookId: book.id,
+          expirationDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // optional
+        })
+      });
+
+      const result = await response.json();
+      if (response.ok) {
+        addToast({
+          type: 'success',
+          title: 'Book Shared',
+          message: `Successfully shared with ${recipientEmail}`,
+          onDismiss: () => {
+            setShowShareModal(false);
+            setRecipientEmail('');
+            setPersonalMessage('');
+          }
+        });
+        // Close modal immediately
+        setShowShareModal(false);
+        setRecipientEmail('');
+        setPersonalMessage('');
+      } else {
+        addToast({
+          type: 'error',
+          title: 'Sharing Failed',
+          message: result?.error || 'Failed to share book'
+        });
+      }
+    } catch (err) {
+      console.error("Share error:", err);
+      addToast({
+        type: 'error',
+        title: 'Unexpected Error',
+        message: 'Error sharing book. Please try again.'
+      });
+    }
+  };
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center p-4 z-[100] pointer-events-none">
       {/* Main modal container */}
@@ -159,6 +236,13 @@ export default function PDFViewerWrapper({ book, onClose, onEdit }) {
                   title={book.status === "Draft" ? "Continue Editing" : "Convert to Draft & Edit"}
                 >
                   <Edit className="w-4 h-4 text-gray-600" />
+                </button>
+                <button
+                  onClick={() => setShowShareModal(true)}
+                  className="p-1.5 hover:bg-gray-100 rounded-full"
+                  title="Share Book"
+                >
+                  <Share className="w-4 h-4 text-gray-600" />
                 </button>
               </div>
             </div>
@@ -208,6 +292,51 @@ export default function PDFViewerWrapper({ book, onClose, onEdit }) {
           </Document>
         </div>
 
+        {showShareModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-[110]">
+            <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
+              <h2 className="text-lg font-semibold mb-4">Share this book</h2>
+
+              <label className="block mb-3">
+                <span className="text-sm font-medium text-gray-700">Recipient Email</span>
+                <input
+                  type="email"
+                  className="mt-1 block w-full border rounded px-3 py-2 text-sm"
+                  placeholder="email@example.com"
+                  value={recipientEmail}
+                  onChange={e => setRecipientEmail(e.target.value)}
+                />
+              </label>
+
+              <label className="block mb-4">
+                <span className="text-sm font-medium text-gray-700">Personal Message</span>
+                <textarea
+                  className="mt-1 block w-full border rounded px-3 py-2 text-sm"
+                  rows={3}
+                  placeholder="Write something thoughtful..."
+                  value={personalMessage}
+                  onChange={e => setPersonalMessage(e.target.value)}
+                />
+              </label>
+
+              <div className="flex justify-end space-x-2">
+                <button
+                  className="px-4 py-2 text-sm rounded bg-gray-200 hover:bg-gray-300"
+                  onClick={() => setShowShareModal(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="px-4 py-2 text-sm rounded bg-blue-600 text-white hover:bg-blue-700"
+                  onClick={handleShareBook}
+                >
+                  Send
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Pagination */}
         {numPages && (
           <div className="sticky bottom-0 bg-white border-t p-4 flex justify-center items-center">
@@ -230,6 +359,20 @@ export default function PDFViewerWrapper({ book, onClose, onEdit }) {
             </button>
           </div>
         )}
+
+        {/* Toast Notifications */}
+        <div className="fixed top-4 right-4 space-y-2 z-[120]">
+          {toasts.map((toast) => (
+            <ToastMessage
+              key={toast.id}
+              type={toast.type}
+              title={toast.title}
+              message={toast.message}
+              onDismiss={() => removeToast(toast.id)}
+            />
+          ))}
+        </div>
+        
       </div>
     </div>
   );
