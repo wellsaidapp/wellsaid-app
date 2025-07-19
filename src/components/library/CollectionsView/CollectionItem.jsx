@@ -2,6 +2,9 @@ import React, { useState } from 'react';
 import CaptureCard from './CaptureCard'; // Make sure this import exists
 import { ChevronDown, ChevronUp, PlusCircle, FolderOpen, Calendar, Plus, Save, X } from 'lucide-react';
 import { fetchAuthSession } from 'aws-amplify/auth';
+import { useSystemCollections } from '../../../context/SystemCollectionsContext';
+import { useUserCollections } from '../../../context/UserCollectionsContext';
+import { useInsights } from '../../../context/InsightContext';
 
 const CollectionItem = ({
   collection,
@@ -19,6 +22,10 @@ const CollectionItem = ({
   onCollectionToggle,
   onPersonToggle
 }) => {
+
+  const { refreshInsights } = useInsights();
+  const { refreshSystemCollections } = useSystemCollections();
+  const { refreshUserCollections } = useUserCollections();
 
   const [isCreating, setIsCreating] = useState(false);
   const [draftEntry, setDraftEntry] = useState({
@@ -83,6 +90,12 @@ const CollectionItem = ({
         collections: [collection.id],
         isDraft: true
       });
+
+      await Promise.all([
+        refreshInsights(),
+        collection.type === 'system' ? refreshSystemCollections() : refreshUserCollections()
+      ]);
+
     } catch (err) {
       console.error("❌ Failed to save insight:", err);
     }
