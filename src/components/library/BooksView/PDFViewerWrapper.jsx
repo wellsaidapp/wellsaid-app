@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
-import { X, ChevronLeft, ChevronRight, MoreHorizontal, Download, ShoppingCart, Edit, Share, Share2 } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, MoreHorizontal, Download, ShoppingCart, Edit, Share, Share2, Send } from 'lucide-react';
 import BookEditor from './BookEditor';
 import { fetchAuthSession } from 'aws-amplify/auth';
 import ToastMessage from '../BookCreation/ToastMessage';
@@ -258,7 +258,7 @@ export default function PDFViewerWrapper({ book, onClose, onEdit }) {
                   className="p-1.5 hover:bg-gray-100 rounded-full"
                   title="Share Book"
                 >
-                  <Share2 className="w-5 h-5 text-gray-600" />
+                  <Send className="w-5 h-5 text-gray-600" />
                 </button>
                 <button
                   onClick={handleDownload}

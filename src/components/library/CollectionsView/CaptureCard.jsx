@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Pencil, Trash2, Save, X, Mic, GripVertical, Library, User } from 'lucide-react';
+import { fetchAuthSession } from 'aws-amplify/auth';
 
 const CaptureCard = ({
   entry,
@@ -15,14 +16,38 @@ const CaptureCard = ({
   const [editedEntry, setEditedEntry] = useState(entry);
   const promptRef = useRef(null);
   const responseRef = useRef(null);
+  const [showMinCollectionAlert, setShowMinCollectionAlert] = useState(false);
 
   const handleChange = (field, value) => {
     setEditedEntry(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleSave = () => {
-    onEdit(editedEntry);
-    setIsEditing(false);
+  const handleSave = async () => {
+    try {
+      const session = await fetchAuthSession();
+      const token = session.tokens?.idToken?.toString();
+
+      const res = await fetch(`https://aqaahphwfj.execute-api.us-east-2.amazonaws.com/dev/insights/${entry.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: token
+        },
+        body: JSON.stringify({
+          prompt: editedEntry.prompt,
+          response: editedEntry.response,
+          collectionIds: editedEntry.collections || []
+        })
+      });
+
+      if (!res.ok) throw new Error('Failed to update insight');
+
+      onEdit(editedEntry); // Update local context or state
+      setIsEditing(false);
+    } catch (err) {
+      console.error("❌ Error saving insight:", err);
+      // Optionally: toast.error("Failed to save changes");
+    }
   };
 
   const handleCancel = () => {
@@ -33,7 +58,16 @@ const CaptureCard = ({
   const handleCollectionToggle = (collectionId) => {
     setEditedEntry(prev => {
       const currentCollections = prev.collections || [];
-      const newCollections = currentCollections.includes(collectionId)
+      const isSelected = currentCollections.includes(collectionId);
+
+      if (isSelected && currentCollections.length === 1) {
+        // Don't allow removing the last one
+        setShowMinCollectionAlert(true);
+        setTimeout(() => setShowMinCollectionAlert(false), 2500);
+        return prev; // No change
+      }
+
+      const newCollections = isSelected
         ? currentCollections.filter(id => id !== collectionId)
         : [...currentCollections, collectionId];
 
@@ -236,7 +270,11 @@ const CaptureCard = ({
               </button>
             )}
           </div>
-
+          {showMinCollectionAlert && (
+            <div className="text-red-600 text-xs mt-2 font-medium">
+              ⚠️ At least one relationship must be tagged.
+            </div>
+          )}
           {!isEditing ? (
             <div className="flex flex-wrap gap-2">
               {currentEntry.collections.map(collectionId => {
