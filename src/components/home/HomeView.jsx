@@ -19,7 +19,7 @@ import PDFViewerWrapper from '../library/BooksView/PDFViewerWrapper';
 import BookEditor from '../library/BooksView/BookEditor';
 import BookPreviewModal from './BookPreviewModal'
 
-import { isThisWeek, parseISO } from 'date-fns';
+import { parseISO, isThisWeek, addHours } from 'date-fns';
 
 const HomeView = ({
   showCaptureOptions,
@@ -39,7 +39,7 @@ const HomeView = ({
       </div>
     );
   }
-  console.log("People Loaded:", people.length);
+  // console.log("People Loaded:", people.length);
 
   const [pdfTimestamp, setPdfTimestamp] = useState(null);
   const userName = userData?.name?.split(' ')[0] || 'Friend';
@@ -47,6 +47,7 @@ const HomeView = ({
   const userStreak = userData?.streak ?? 0;
 
   const { insights, loadingInsights } = useInsights();
+  // console.log("Insights Context:", insights);
   const {
     books,
     setBooks,
@@ -55,7 +56,21 @@ const HomeView = ({
     getPublishedBooksCount,
     updateBook
   } = useBooks();
-  const weekInsights = insights.filter(i => isThisWeek(parseISO(i.date))).length;
+
+  insights.forEach(i => {
+    const parsed = parseISO(i.date);
+    const adjusted = addHours(parsed, 5); // Adjust based on your UTC offset if needed
+    // console.log("🕵️", i.prompt, "| Original:", parsed.toString(), "| Adjusted:", adjusted.toString(), "| isThisWeek:", isThisWeek(adjusted));
+  });
+
+  // ✅ Actual weekly insights count
+  const weekInsights = insights.filter(i => {
+    const parsed = parseISO(i.date);
+    const adjusted = addHours(parsed, 5); // Optional: adjust for your timezone (e.g. UTC-5)
+    return isThisWeek(adjusted);
+  }).length;
+
+  // console.log("✅ Week Insights:", weekInsights);
   // const weeklyGoal = 5;
   const [selectedBook, setSelectedBook] = useState(null);
   const [currentPage, setCurrentPage] = useState(0);
