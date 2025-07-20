@@ -11,7 +11,6 @@ import { X } from 'lucide-react';
 // Component imports
 import BookCreationModal from './BookCreation/BookCreationModal';
 import TagEditor from './utils/TagEditor';
-import Header from '../appLayout/Header';
 import SearchAndFilterBar from './utils/SearchAndFilterBar';
 import ViewModeToggle from './utils/ViewModeToggle';
 import CollectionsList from './CollectionsView/CollectionsList';
@@ -396,7 +395,6 @@ const LibraryView = ({
         />
       ) : (
         <>
-          <Header />
           <div className={(showBookCreation || showPdfViewer) ? 'pointer-events-none' : ''}>
             <div className="p-4">
               <ViewModeToggle

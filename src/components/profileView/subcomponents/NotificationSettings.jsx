@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { ChevronLeft, Bell, BellOff, Mail, Smartphone } from 'lucide-react';
-import Header from '../../appLayout/Header';
 
 const NotificationSettings = ({ user, onBack, onUpdateNotificationSettings }) => {
   const [isEditing, setIsEditing] = useState(false);
@@ -32,7 +31,6 @@ const NotificationSettings = ({ user, onBack, onUpdateNotificationSettings }) =>
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-blue-50 to-indigo-50 pb-20">
-      <Header />
       <div className="p-4">
         <button
           onClick={onBack}

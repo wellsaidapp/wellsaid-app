@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { ChevronLeft, Trash2, Edit, X } from 'lucide-react';
 import Modal from './Modal';
-import Header from '../../appLayout/Header';
 import { useUser } from '../../../context/UserContext';
 
 const AccountSettings = ({ user, onBack, onUpdateUser, onDeleteAccount }) => {
@@ -47,7 +46,6 @@ const AccountSettings = ({ user, onBack, onUpdateUser, onDeleteAccount }) => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-blue-50 to-indigo-50 pb-20">
-      <Header />
       <div className="p-4">
         <button
           onClick={onBack}

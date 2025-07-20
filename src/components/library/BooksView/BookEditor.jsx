@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { X, ChevronLeft, ChevronUp, ChevronDown, Save, Trash2, Palette, Type, Image as ImageIcon } from 'lucide-react';
-import Header from '../../appLayout/Header';
 import { generateBookPDF } from '../BookCreation/BookPDFGenerator';
 import ImageCropperModal from '../BookCreation/ImageCropperModal';
 import { uploadData } from 'aws-amplify/storage';
@@ -256,7 +255,6 @@ const BookEditor = ({ book, onClose, onSave, onBackToViewer, returnToViewer, pre
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-blue-50 to-indigo-50 pb-20">
-      <Header />
       <div className="p-4">
         <div className="flex justify-between items-center mb-4">
           <button

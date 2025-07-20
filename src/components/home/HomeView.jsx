@@ -7,7 +7,6 @@ import { useInsights } from '../../context/InsightContext';
 import { useBooks } from '../../context/BooksContext';
 import { UPCOMING_EVENTS } from '../../constants/upcomingEvents';
 import { OCCASION_QUESTIONS } from '../../constants/occasionQuestions';
-import Header from '../appLayout/Header';
 import CaptureOptionsModal from '../capture/CaptureOptionsModal';
 import CaptureView from '../capture/CaptureView';
 import HeroSection from './HeroSection';
@@ -221,7 +220,6 @@ const HomeView = ({
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-blue-50 to-indigo-50 pb-20 overflow-y-auto">
-      <Header showLogo={true} />
 
       <div className="p-4">
         <HeroSection

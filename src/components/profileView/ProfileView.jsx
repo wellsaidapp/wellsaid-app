@@ -3,7 +3,6 @@ import { useUser } from '../../context/UserContext';
 import {
   Settings, Bell, Users, BookOpen, Lock, Wand2, X, XCircle
 } from 'lucide-react';
-import Header from '../appLayout/Header';
 import UserProfileCard from './subcomponents/UserProfileCard';
 import ProfileMenuItem from './subcomponents/ProfileMenuItem';
 import DisclosureAccordion from './subcomponents/DisclosureAccordion';
@@ -215,8 +214,6 @@ const ProfileView = ({ user, insights = [], individuals = [], collections = [], 
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-blue-50 to-indigo-50 pb-20">
-      <Header />
-
       <div className="p-4">
         <UserProfileCard
           user={{ ...userData, avatarImage: userData?.avatarUrl?.href }}

@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { ChevronLeft, Mail, MessageSquare, HelpCircle, ChevronDown, ChevronUp } from 'lucide-react';
-import Header from '../../appLayout/Header';
 
 const HelpAndSupport = ({ onBack }) => {
   const [expandedFaq, setExpandedFaq] = useState(null);
@@ -39,7 +38,6 @@ const HelpAndSupport = ({ onBack }) => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-blue-50 to-indigo-50 pb-20">
-      <Header />
       <div className="p-4">
         <button
           onClick={onBack}

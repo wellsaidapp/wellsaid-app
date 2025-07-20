@@ -11,6 +11,7 @@ import { useUserCollections } from './context/UserCollectionsContext';
 import { useInsights } from './context/InsightContext';
 import { useBooks } from './context/BooksContext';
 import PullToRefresh from 'pulltorefreshjs';
+import MainLayout from './components/appLayout/MainLayout';
 
 const MyComponent = () => {
   const { userCollections, loading } = useUserCollections();
@@ -191,16 +192,13 @@ const WellSaidApp = () => {
 
     if (authState === 'loggedIn' && !loadingUser) {
       return (
-        <div className="relative min-h-screen overflow-y-auto">
-          <main className="flex-grow">
-            {renderView()}
-          </main>
-          <BottomNav
-            currentView={currentView}
-            setCurrentView={setCurrentView}
-            setShowCaptureOptions={setShowCaptureOptions}
-          />
-        </div>
+        <MainLayout
+          currentView={currentView}
+          setCurrentView={setCurrentView}
+          setShowCaptureOptions={setShowCaptureOptions}
+        >
+          {renderView()}
+        </MainLayout>
       );
     }
 
