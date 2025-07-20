@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Pencil, Trash2, Save, X, Mic, GripVertical, Library, User } from 'lucide-react';
 import { fetchAuthSession } from 'aws-amplify/auth';
+import DeleteInsightModal from './DeleteInsightModal';
 
 const CaptureCard = ({
   entry,
@@ -18,11 +19,53 @@ const CaptureCard = ({
   const responseRef = useRef(null);
   const [showMinCollectionAlert, setShowMinCollectionAlert] = useState(false);
 
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
   const handleChange = (field, value) => {
     setEditedEntry(prev => ({ ...prev, [field]: value }));
   };
 
+  const handleDeleteInsight = async () => {
+    setIsDeleting(true);
+    try {
+      const session = await fetchAuthSession();
+      const token = session.tokens?.idToken?.toString();
+
+      const collectionCount = entry.collections?.length || 0;
+      let deleteType = 'partial';
+
+      if (collectionCount <= 1) {
+        deleteType = 'full';
+      }
+
+      const res = await fetch(
+        `https://aqaahphwfj.execute-api.us-east-2.amazonaws.com/dev/insights/${entry.id}?collectionId=${entry.collections[0]}&type=${deleteType}`,
+        {
+          method: 'DELETE',
+          headers: { Authorization: token }
+        }
+      );
+
+      if (res.ok) {
+        onDelete(entry.id); // remove from context
+      } else {
+        console.error("❌ Failed to delete insight");
+      }
+    } catch (err) {
+      console.error("❌ Error during deletion:", err);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   const handleSave = async () => {
+    if (!editedEntry.collections || editedEntry.collections.length === 0) {
+      console.warn("Must have at least one collection");
+      setShowMinCollectionAlert(true);
+      setTimeout(() => setShowMinCollectionAlert(false), 2500);
+      return;
+    }
     try {
       const session = await fetchAuthSession();
       const token = session.tokens?.idToken?.toString();
@@ -48,6 +91,26 @@ const CaptureCard = ({
       console.error("❌ Error saving insight:", err);
       // Optionally: toast.error("Failed to save changes");
     }
+  };
+
+  const handleUnlink = () => {
+    if (!editedEntry.collections || editedEntry.collections.length <= 1) {
+      // Prevent removing the last collection
+      setShowMinCollectionAlert(true);
+      setTimeout(() => setShowMinCollectionAlert(false), 2500);
+      return;
+    }
+
+    // Remove the current active collection from the array
+    const updatedCollections = editedEntry.collections.filter(
+      id => id !== (entry.collections?.[0] || "")
+    );
+
+    setEditedEntry(prev => ({ ...prev, collections: updatedCollections }));
+
+    // Then call handleSave to persist the change
+    handleSave();
+    setShowDeleteModal(false);
   };
 
   const handleCancel = () => {
@@ -114,6 +177,17 @@ const CaptureCard = ({
     }
   }, [isEditing]);
 
+  useEffect(() => {
+    if (showDeleteModal) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'auto';
+    }
+    return () => {
+      document.body.style.overflow = 'auto';
+    };
+  }, [showDeleteModal]);
+
   return (
     <div className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100 mb-4">
       {/* Header */}
@@ -141,7 +215,7 @@ const CaptureCard = ({
                 <Pencil className="w-4 h-4" />
               </button>
               <button
-                onClick={() => onDelete(entry.id)}
+                onClick={() => setShowDeleteModal(true)}
                 className="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"
                 aria-label="Delete"
               >
@@ -342,6 +416,15 @@ const CaptureCard = ({
             </>
           )}
           </div>
+        )}
+        {showDeleteModal && (
+          <DeleteInsightModal
+            onClose={() => setShowDeleteModal(false)}
+            onDelete={handleDeleteInsight}
+            onUnlink={handleUnlink}
+            isDeleting={isDeleting}
+            showUnlink={entry.collections?.length > 1}
+          />
         )}
         </div>
       </div>
