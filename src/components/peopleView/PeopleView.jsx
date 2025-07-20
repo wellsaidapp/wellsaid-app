@@ -49,6 +49,24 @@ const PeopleView = ({ individuals, insights, collections, sharedBooks, setCurren
     }
   };
 
+  const [scrollBlocked, setScrollBlocked] = useState(false);
+
+  useEffect(() => {
+    if (scrollBlocked) {
+      window.scrollTo(0, 1); // ensure not at 0 for pull-to-refresh
+      document.body.style.overflow = 'hidden';
+      document.body.style.touchAction = 'none';
+    } else {
+      document.body.style.overflow = '';
+      document.body.style.touchAction = '';
+    }
+
+    return () => {
+      document.body.style.overflow = '';
+      document.body.style.touchAction = '';
+    };
+  }, [scrollBlocked]);
+
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedBook, setSelectedBook] = useState(null);
   const [currentPage, setCurrentPage] = useState(0);
@@ -381,6 +399,18 @@ const PeopleView = ({ individuals, insights, collections, sharedBooks, setCurren
     );
   }
 
+  useEffect(() => {
+    if (selectedBook?.status === "Published") {
+      setScrollBlocked(true);
+    }
+  }, [selectedBook]);
+
+  useEffect(() => {
+    if (showBookCreation) {
+      setScrollBlocked(true);
+    }
+  }, [showBookCreation]);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-blue-50 to-indigo-50 pb-20">
       <Header />
@@ -440,6 +470,7 @@ const PeopleView = ({ individuals, insights, collections, sharedBooks, setCurren
             onClose={() => {
               setSelectedBook(null);
               setCurrentPage(0);
+              setScrollBlocked(false);
             }}
             onEdit={(book) => {
               setPreviousViewerState({
@@ -449,6 +480,7 @@ const PeopleView = ({ individuals, insights, collections, sharedBooks, setCurren
               setEditingBook(book);
               setSelectedBook(null);
               setReturnToViewer(true);
+              setScrollBlocked(false);
             }}
           />
         ) : (
@@ -465,7 +497,10 @@ const PeopleView = ({ individuals, insights, collections, sharedBooks, setCurren
       )}
       {showBookCreation && (
         <BookCreationModal
-          onClose={() => setShowBookCreation(false)}
+          onClose={() => {
+            setShowBookCreation(false);
+            setScrollBlocked(false); // ✅ Allow scroll again
+          }}
           newBook={newBook}
           setNewBook={setNewBook}
           bookCreationStep={bookCreationStep}
