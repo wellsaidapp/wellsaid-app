@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import CaptureCard from './CaptureCard'; // Make sure this import exists
-import { ChevronDown, ChevronUp, PlusCircle, FolderOpen, Calendar, Plus, Save, X } from 'lucide-react';
+import { ChevronDown, ChevronUp, PlusCircle, FolderOpen, Calendar, Plus, Save, X, Brain, Zap } from 'lucide-react';
 import { fetchAuthSession } from 'aws-amplify/auth';
 import { useSystemCollections } from '../../../context/SystemCollectionsContext';
 import { useUserCollections } from '../../../context/UserCollectionsContext';
@@ -26,7 +26,7 @@ const CollectionItem = ({
   const { refreshInsights } = useInsights();
   const { refreshSystemCollections } = useSystemCollections();
   const { refreshUserCollections } = useUserCollections();
-
+  const [showAddOptions, setShowAddOptions] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [draftEntry, setDraftEntry] = useState({
     prompt: '',
@@ -34,6 +34,9 @@ const CollectionItem = ({
     collections: [collection.id], // Automatically include the current collection
     isDraft: true
   });
+
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [showCaptureCard, setShowCaptureCard] = useState(false);
 
   const handleCreateNew = () => {
     setIsCreating(true);
@@ -112,6 +115,7 @@ const CollectionItem = ({
       collections: [collection.id],
       isDraft: true
     });
+    setShowCaptureCard(false);
   };
 
   const handleDraftChange = (field, value) => {
@@ -155,16 +159,13 @@ const CollectionItem = ({
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  onAddToCollection(collection);
+                  setIsExpanded(true);
+                  setShowCaptureCard(true);
                 }}
-                className={`flex items-center gap-1 px-3 py-1 rounded-full text-sm transition-colors ${
-                  isActive
-                    ? 'bg-blue-50 text-blue-600 hover:bg-blue-100'
-                    : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
-                }`}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+                title="Add New Insight"
               >
-                <PlusCircle className="w-5 h-5 text-blue-700" />
-                <span className="ml-1">Capture</span>
+                <PlusCircle className="w-5 h-5" />
               </button>
             )}
             {isActive && (
@@ -177,6 +178,112 @@ const CollectionItem = ({
           </div>
         </div>
       </div>
+      {!isActive && showCaptureCard && (
+        <div className="pl-4 border-l-2 border-gray-200 ml-5 mt-2">
+          <div className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100 mb-4">
+            {/* Header - unchanged */}
+            <div className="flex items-center justify-between p-3 border-b border-gray-100 bg-gray-50">
+              {/* Left: Save button */}
+              <button
+                onClick={handleSaveDraft}
+                disabled={isSaving}
+                className="flex items-center justify-center gap-2 px-3 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm"
+              >
+                {isSaving ? (
+                  <>
+                    <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span>Saving...</span>
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-4 h-4" />
+                    <span>Save</span>
+                  </>
+                )}
+              </button>
+
+              {/* Right: New pill + Cancel button */}
+              <div className="flex items-center gap-2">
+                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">
+                  New
+                </span>
+                <button
+                  onClick={handleCancelDraft}
+                  className="p-1.5 text-gray-500 hover:text-gray-600 hover:bg-gray-50 rounded-md transition-colors"
+                  aria-label="Cancel"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            {/* Content */}
+            <div className="p-4">
+              {/* Prompt */}
+              <div className="mb-4">
+                <div className="flex items-center mb-1">
+                  <span className="text-xs font-semibold text-blue-600 uppercase tracking-wider">
+                    Prompt
+                  </span>
+                </div>
+                <textarea
+                  value={draftEntry.prompt}
+                  onChange={(e) => handleDraftChange('prompt', e.target.value)}
+                  className="w-full bg-blue-50 rounded-lg p-3 text-base text-gray-800 border border-blue-200 resize-none overflow-hidden"
+                  placeholder="Enter your prompt..."
+                  style={{ fontSize: '16px' }}
+                />
+              </div>
+
+              {/* Response */}
+              <div>
+                <div className="flex items-center mb-1">
+                  <span className="text-xs font-semibold text-green-600 uppercase tracking-wider">
+                    Response
+                  </span>
+                </div>
+                <textarea
+                  value={draftEntry.response}
+                  onChange={(e) => handleDraftChange('response', e.target.value)}
+                  className="w-full bg-green-50 rounded-lg p-3 text-base text-gray-800 border border-green-200 resize-none overflow-hidden"
+                  placeholder="Enter your response..."
+                  style={{ fontSize: '16px' }}
+                />
+              </div>
+
+              {/* Enhanced Helper Text */}
+              <div className="mt-6 mb-4">
+                <div className="bg-gray-50 rounded-lg p-3 border border-gray-200 text-center">
+                  <p className="text-sm text-gray-600">
+                    Need help? Try one of the guided capture experiences below.
+                  </p>
+                </div>
+              </div>
+
+              {/* Enhanced Wizard Buttons */}
+              <div className="flex justify-center gap-3 pb-1">
+                <button
+                  onClick={() => onAddToCollection(collection, 'quick')}
+                  className="flex items-center gap-2 px-4 py-2 bg-white border border-blue-200 text-blue-600 rounded-lg hover:bg-blue-50 transition-colors text-sm font-medium shadow-xs"
+                >
+                  <Zap className="w-4 h-4 text-blue-500" />
+                  Quick Capture
+                </button>
+                <button
+                  onClick={() => onAddToCollection(collection, 'builder')}
+                  className="flex items-center gap-2 px-4 py-2 bg-white border border-green-200 text-green-600 rounded-lg hover:bg-green-50 transition-colors text-sm font-medium shadow-xs"
+                >
+                  <Brain className="w-4 h-4 text-green-500" />
+                  Insight Builder
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {isActive && expanded && (
         <div className="pl-4 border-l-2 border-gray-200 ml-5 mt-2 space-y-3">

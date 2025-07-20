@@ -26,7 +26,7 @@ const CollectionsList = ({
   noMatchesFound
 }) => {
   const [sortDescending, setSortDescending] = useState(true);
-
+  const [showInactiveOptions, setShowInactiveOptions] = useState(false);
   const sortCollections = (collectionsArray) => {
     return [...collectionsArray].sort((a, b) => {
       const countA = groupedEntries[a.id]?.length || 0;
@@ -219,6 +219,13 @@ const CollectionsList = ({
                   expanded={false}
                   onToggle={() => {}}
                   onAddToCollection={startQuickCaptureFromCollection}
+                  individuals={individuals}
+                  collections={collections}
+                  systemCollections={systemCollections}
+                  onEntryUpdate={onEntryUpdate}
+                  onEntryDelete={onEntryDelete}
+                  onCollectionToggle={onCollectionToggle}
+                  onPersonToggle={onPersonToggle}
                 />
               ))}
             </div>
