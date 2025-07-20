@@ -85,7 +85,7 @@ const BookItem = ({
                   </span>
                 </div>
                 <span className="text-xs text-gray-600">
-                  Shared with {book.personName}
+                  Created for {book.personName}
                 </span>
               </div>
             ) : (
