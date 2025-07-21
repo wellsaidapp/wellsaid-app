@@ -12,6 +12,7 @@ import AddPersonFlow from './subcomponents/AddPersonFlow';
 import { uploadData, getUrl } from 'aws-amplify/storage';
 import { fetchAuthSession } from 'aws-amplify/auth';
 import { usePeople } from '../../context/PeopleContext';
+import { useUser } from '../../context/UserContext';
 
 const PeopleView = ({ individuals, insights, collections, sharedBooks, setCurrentView }) => {
   const { systemCollections } = useSystemCollections();
@@ -29,6 +30,7 @@ const PeopleView = ({ individuals, insights, collections, sharedBooks, setCurren
     console.warn("⚠️ individuals is not an array:", individuals);
   }
   const { people, refetchPeople, updatePerson } = usePeople();
+  const { userData, loading: loadingAppUser, refetchUser } = useUser();
   const [isCompletingAddPerson, setIsCompletingAddPerson] = useState(false);
   const [selectedPerson, setSelectedPerson] = useState(null);
   const [showAddPerson, setShowAddPerson] = useState(false);
@@ -479,6 +481,7 @@ const PeopleView = ({ individuals, insights, collections, sharedBooks, setCurren
               setReturnToViewer(true);
               setScrollBlocked(false);
             }}
+            userData={userData}
           />
         ) : (
           <BookPreviewModal

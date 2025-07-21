@@ -10,7 +10,8 @@ pdfjs.GlobalWorkerOptions.workerSrc =
     ? `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`
     : '/pdf.worker.min.js';
 
-export default function PDFViewerWrapper({ book, onClose, onEdit }) {
+export default function PDFViewerWrapper({ book, onClose, onEdit, userData }) {
+  console.log("User Data in PDFViewerWrapper:", userData);
   const file = book.status === "Published"
     ? book.publishedBook
     : null;
@@ -189,7 +190,7 @@ export default function PDFViewerWrapper({ book, onClose, onEdit }) {
         },
         body: JSON.stringify({
           recipientEmail,
-          senderName: book.userName || 'A WellSaid user',
+          senderName: userData.name || 'A WellSaid user',
           personalMessage,
           bookUrl: book.publishedBook,
           bookId: book.id,
@@ -209,6 +210,20 @@ export default function PDFViewerWrapper({ book, onClose, onEdit }) {
             setPersonalMessage('');
           }
         });
+
+        try {
+          await fetch(`https://aqaahphwfj.execute-api.us-east-2.amazonaws.com/dev/books/${book.id}/share`, {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': token,
+            }
+          });
+        } catch (patchError) {
+          console.error("⚠️ Failed to update book share metadata:", patchError);
+          // You could optionally show a toast here, but it's non-critical
+        }
+
         // Close modal immediately
         setShowShareModal(false);
         setRecipientEmail('');

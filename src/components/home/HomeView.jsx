@@ -300,6 +300,7 @@ const HomeView = ({
               setShowPdfViewer(false);
               setReturnToViewer(true);
             }}
+            userData={userData}
           />
         ) : (
           <BookPreviewModal

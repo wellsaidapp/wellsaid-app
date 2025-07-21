@@ -542,6 +542,7 @@ const LibraryView = ({
                   setSelectedBook(null);
                   setReturnToViewer(true);
                 }}
+                userData={userData}
               />
             ) : (
               <BookPreviewModal
