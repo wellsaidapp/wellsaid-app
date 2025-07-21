@@ -23,7 +23,8 @@ const BooksList = ({
   insights,
   sortDirection,
   onToggleSortDirection,
-  setIsAnyModalOpen
+  setIsAnyModalOpen,
+  onDeleteBook
 }) => {
   const [showFilters, setShowFilters] = useState(false);
   const [statusFilter, setStatusFilter] = useState('');
@@ -244,6 +245,7 @@ const BooksList = ({
               entryOrder={entryOrder}
               insights={insights}
               setIsAnyModalOpen={setIsAnyModalOpen}
+              onDeleteBook={onDeleteBook}
             />
           ))
         ) : (

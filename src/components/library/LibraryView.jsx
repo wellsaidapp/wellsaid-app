@@ -19,6 +19,7 @@ import BookPreviewModal from '../home/BookPreviewModal';
 import CreateBook from './BookCreation/CreateBook';
 import PDFViewerWrapper from './BooksView/PDFViewerWrapper';
 import BookEditor from './BooksView/BookEditor';
+import { fetchAuthSession } from 'aws-amplify/auth';
 
 const LibraryView = ({
   individuals,
@@ -121,6 +122,27 @@ const LibraryView = ({
     setEditingBook(book);
     setSelectedBook(null); // Close the viewer
     setReturnToViewer(true);
+  };
+
+  const handleDeleteBook = async (book) => {
+    const session = await fetchAuthSession();
+    const token = session.tokens?.idToken?.toString();
+
+    const response = await fetch(`https://aqaahphwfj.execute-api.us-east-2.amazonaws.com/dev/books/${book.id}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: token,
+      },
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to delete book');
+    }
+
+    // Optionally update local state or refetch books if you're using context
+    // refetchBooks(); or setBooks((prev) => prev.filter(b => b.id !== book.id));
   };
 
   // Derived state
@@ -522,6 +544,7 @@ const LibraryView = ({
                   sortDirection={sortDirection}
                   onToggleSortDirection={toggleSortDirection}
                   setIsAnyModalOpen={setIsAnyModalOpen}
+                  onDeleteBook={handleDeleteBook}
                 />
               )}
             </div>
