@@ -397,6 +397,7 @@ const CollectionItem = ({
                     }
                   }}
                   onPersonToggle={(recipientId) => onPersonToggle(entry.id, recipientId)}
+                  activeCollectionId={collection.id}
                 />
               ))}
             </div>

@@ -5,6 +5,7 @@ import DeleteInsightModal from './DeleteInsightModal';
 
 const CaptureCard = ({
   entry,
+  activeCollectionId,
   individuals = [],
   collections = [],
   systemCollections = [],
@@ -13,6 +14,7 @@ const CaptureCard = ({
   onCollectionToggle,
   onPersonToggle
 }) => {
+  console.log("Collection inside:", activeCollectionId);
   const [isEditing, setIsEditing] = useState(false);
   const [editedEntry, setEditedEntry] = useState(entry);
   const promptRef = useRef(null);
@@ -21,6 +23,7 @@ const CaptureCard = ({
 
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isUnlinking, setIsUnlinking] = useState(false);
 
   const handleChange = (field, value) => {
     setEditedEntry(prev => ({ ...prev, [field]: value }));
@@ -93,24 +96,50 @@ const CaptureCard = ({
     }
   };
 
-  const handleUnlink = () => {
+  const handleUnlink = async () => {
     if (!editedEntry.collections || editedEntry.collections.length <= 1) {
-      // Prevent removing the last collection
       setShowMinCollectionAlert(true);
       setTimeout(() => setShowMinCollectionAlert(false), 2500);
       return;
     }
 
-    // Remove the current active collection from the array
-    const updatedCollections = editedEntry.collections.filter(
-      id => id !== (entry.collections?.[0] || "")
-    );
+    if (!activeCollectionId) {
+      console.warn("No active collection to unlink from.");
+      return;
+    }
 
-    setEditedEntry(prev => ({ ...prev, collections: updatedCollections }));
+    setIsUnlinking(true);
+    const updatedCollections = editedEntry.collections.filter(id => id !== activeCollectionId);
+    const updatedEntry = { ...editedEntry, collections: updatedCollections };
 
-    // Then call handleSave to persist the change
-    handleSave();
-    setShowDeleteModal(false);
+    try {
+      const session = await fetchAuthSession();
+      const token = session.tokens?.idToken?.toString();
+
+      const res = await fetch(`https://aqaahphwfj.execute-api.us-east-2.amazonaws.com/dev/insights/${entry.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: token
+        },
+        body: JSON.stringify({
+          prompt: updatedEntry.prompt,
+          response: updatedEntry.response,
+          collectionIds: updatedEntry.collections
+        })
+      });
+
+      if (!res.ok) throw new Error('Failed to update insight');
+
+      setEditedEntry(updatedEntry);
+      onEdit(updatedEntry); // update local context or state
+      setIsEditing(false);
+      setShowDeleteModal(false);
+    } catch (err) {
+      console.error("❌ Error unlinking collection:", err);
+    } finally {
+      setIsUnlinking(false);
+    }
   };
 
   const handleCancel = () => {
@@ -423,6 +452,7 @@ const CaptureCard = ({
             onDelete={handleDeleteInsight}
             onUnlink={handleUnlink}
             isDeleting={isDeleting}
+            isUnlinking={isUnlinking}
             showUnlink={entry.collections?.length > 1}
           />
         )}
