@@ -51,12 +51,23 @@ const PeopleView = ({ individuals, insights, collections, sharedBooks, setCurren
   };
 
   const [scrollBlocked, setScrollBlocked] = useState(false);
+  const [editingBook, setEditingBook] = useState(null);
+  const [selectedBook, setSelectedBook] = useState(null);
+  const [showBookCreation, setShowBookCreation] = useState(false);
 
   useEffect(() => {
-    if (scrollBlocked) {
-      window.scrollTo(0, 1); // ensure not at 0 for pull-to-refresh
+    const modalIsOpen =
+      editingBook !== null ||
+      selectedBook?.status === "Published" ||
+      showBookCreation;
+
+    if (modalIsOpen) {
       document.body.style.overflow = 'hidden';
       document.body.style.touchAction = 'none';
+
+      if (window.scrollY === 0) {
+        window.scrollTo(0, 1);
+      }
     } else {
       document.body.style.overflow = '';
       document.body.style.touchAction = '';
@@ -66,13 +77,13 @@ const PeopleView = ({ individuals, insights, collections, sharedBooks, setCurren
       document.body.style.overflow = '';
       document.body.style.touchAction = '';
     };
-  }, [scrollBlocked]);
+  }, [editingBook, selectedBook, showBookCreation]);
 
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedBook, setSelectedBook] = useState(null);
+
   const [currentPage, setCurrentPage] = useState(0);
 
-  const [editingBook, setEditingBook] = useState(null);
+
   const [returnToViewer, setReturnToViewer] = useState(false);
   const [previousViewerState, setPreviousViewerState] = useState(null);
 
@@ -82,7 +93,7 @@ const PeopleView = ({ individuals, insights, collections, sharedBooks, setCurren
   const [croppedAvatarImage, setCroppedAvatarImage] = useState(null); // Final cropped avatar image
 
   const systemCollectionIds = new Set(systemCollections.map(c => c.id));
-  const [showBookCreation, setShowBookCreation] = useState(false);
+
   const [bookCreationStep, setBookCreationStep] = useState(0);
   const [newBook, setNewBook] = useState({
     title: '',
@@ -375,30 +386,30 @@ const PeopleView = ({ individuals, insights, collections, sharedBooks, setCurren
     );
   }
 
-  if (editingBook) {
-    return (
-      <BookEditor
-        book={editingBook}
-        onClose={() => {
-          setEditingBook(null);
-          setReturnToViewer(false);
-        }}
-        onSave={async (updatedBook) => {
-          // TODO: Implement your save logic here
-          // await updateBook(updatedBook);
-          setEditingBook(null);
-          setReturnToViewer(false);
-        }}
-        onBackToViewer={() => {
-          if (returnToViewer && previousViewerState) {
-            setSelectedBook(previousViewerState.book);
-          }
-          setEditingBook(null);
-          setReturnToViewer(false);
-        }}
-      />
-    );
-  }
+  // if (editingBook) {
+  //   return (
+  //     <BookEditor
+  //       book={editingBook}
+  //       onClose={() => {
+  //         setEditingBook(null);
+  //         setReturnToViewer(false);
+  //       }}
+  //       onSave={async (updatedBook) => {
+  //         // TODO: Implement your save logic here
+  //         // await updateBook(updatedBook);
+  //         setEditingBook(null);
+  //         setReturnToViewer(false);
+  //       }}
+  //       onBackToViewer={() => {
+  //         if (returnToViewer && previousViewerState) {
+  //           setSelectedBook(previousViewerState.book);
+  //         }
+  //         setEditingBook(null);
+  //         setReturnToViewer(false);
+  //       }}
+  //     />
+  //   );
+  // }
 
   useEffect(() => {
     if (selectedBook?.status === "Published") {
@@ -532,6 +543,44 @@ const PeopleView = ({ individuals, insights, collections, sharedBooks, setCurren
           onCancel={() => setShowAddPerson(false)}
           isCompleting={isCompletingAddPerson}
         />
+      )}
+      {editingBook && (
+        <div className="fixed inset-0 z-[100] flex items-start justify-center p-4">
+          {/* backdrop */}
+          <div
+            className="absolute inset-0 bg-black/40"
+            onClick={() => {
+              setEditingBook(null);
+              setReturnToViewer(false);
+            }}
+          />
+          {/* modal content */}
+          <div className="relative z-10 w-full max-w-4xl">
+            <BookEditor
+              variant="modal"
+              book={editingBook}
+              editingBook={editingBook}
+              returnToViewer={returnToViewer}
+              previousViewerState={previousViewerState}
+              userData={userData}
+              onClose={() => {
+                setEditingBook(null);
+                setReturnToViewer(false);
+              }}
+              onSave={async (updatedBook) => {
+                setEditingBook(null);
+                setReturnToViewer(false);
+                // TODO: Update context or re-fetch people if needed
+              }}
+              onBackToViewer={(savedBook) => {
+                const bookToShow = savedBook || previousViewerState?.book;
+                setSelectedBook(bookToShow);
+                setEditingBook(null);
+                setReturnToViewer(false);
+              }}
+            />
+          </div>
+        </div>
       )}
     </div>
   );

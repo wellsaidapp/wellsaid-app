@@ -390,42 +390,51 @@ const LibraryView = ({
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-blue-50 to-indigo-50 pb-20">
-      {editingBook ? (
-        <BookEditor
-          key={editingBook.id}
-          book={editingBook}
-          returnToViewer={returnToViewer}
-          previousViewerState={previousViewerState}
-          onClose={() => {
-            setEditingBook(null);
-            setReturnToViewer(false);
-          }}
-          onSave={async (updatedBook) => {
-            updateBook({ ...updatedBook, _renderNonce: Date.now() }); // force uniqueness
-            setEditingBook(null);
-            setReturnToViewer(false);
-          }}
-          onBackToViewer={(savedBook) => {
-            const bookToShow = savedBook || previousViewerState?.book;
-
-            const cleanUrl = bookToShow.publishedBook?.split('?')[0] || '';
-            const cacheBustedUrl = `${cleanUrl}?ts=${Date.now()}`;
-
-            setSelectedBook({
-              ...bookToShow,
-              publishedBook: cacheBustedUrl
-            });
-
-            setEditingBook(null);
-            setReturnToViewer(false);
-            setShowPdfViewer(true); // ⬅️ Ensure this is defined in LibraryView
-
-            setCurrentPage(prev => prev + 1);
-            setTimeout(() => setCurrentPage(prev => prev - 1), 10);
-          }}
-          userData={userData}
-        />
-      ) : (
+      {editingBook && (
+        <div className="fixed inset-0 z-[100] flex items-start justify-center p-4">
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/40"
+            onClick={() => {
+              setEditingBook(null);
+              setReturnToViewer(false);
+            }}
+          />
+          {/* Modal content */}
+          <div className="relative z-10 w-full">
+            <BookEditor
+              variant="modal"
+              key={editingBook.id}
+              book={editingBook}
+              returnToViewer={returnToViewer}
+              previousViewerState={previousViewerState}
+              onClose={() => {
+                setEditingBook(null);
+                setReturnToViewer(false);
+              }}
+              onSave={async (updatedBook) => {
+                updateBook({ ...updatedBook, _renderNonce: Date.now() });
+                setEditingBook(null);
+                setReturnToViewer(false);
+              }}
+              onBackToViewer={(savedBook) => {
+                const bookToShow = savedBook || previousViewerState?.book;
+                const cleanUrl = bookToShow.publishedBook?.split('?')[0] || '';
+                setSelectedBook({
+                  ...bookToShow,
+                  publishedBook: `${cleanUrl}?ts=${Date.now()}`
+                });
+                setEditingBook(null);
+                setReturnToViewer(false);
+                setShowPdfViewer(true);
+                setCurrentPage(prev => prev + 1);
+                setTimeout(() => setCurrentPage(prev => prev - 1), 10);
+              }}
+              userData={userData}
+            />
+          </div>
+        </div>
+      )} : (
         <>
           <div className={(showBookCreation || showPdfViewer) ? 'pointer-events-none' : ''}>
             <div className="p-4">
