@@ -1,12 +1,13 @@
-import React from 'react';
-import { Book, Heart, FilePen, Library } from 'lucide-react';
-
+import React, { useState } from 'react';
+import { Book, Heart, FilePen, Library, Share2, BookOpen, Trash2 } from 'lucide-react';
+import DeleteBookModal from './DeleteBookModal';
 import { useSystemCollections } from '../../../context/SystemCollectionsContext';
 import { useUserCollections } from '../../../context/UserCollectionsContext';
 
 const BookItem = ({
   book,
   onViewBook,
+  onDeleteBook,
   onStartNewBook,
   userData,
   isCreating = false,
@@ -26,6 +27,27 @@ const BookItem = ({
     });
   };
 
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [bookToDelete, setBookToDelete] = useState(null);
+
+  const handleDeleteClick = (book) => {
+    setBookToDelete(book);
+    setShowDeleteModal(true);
+  };
+
+  const handleDelete = async () => {
+    setIsDeleting(true);
+    try {
+      await onDeleteBook(book);
+    } catch (error) {
+      console.error("Failed to delete book:", error);
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteModal(false);
+    }
+  };
+
   return (
     <>
       {/* Book List Item */}
@@ -35,17 +57,30 @@ const BookItem = ({
             <div className={`w-12 h-12 rounded-lg ${book.color} flex items-center justify-center mr-3 flex-shrink-0`}>
               <Book className="w-6 h-6 text-white" />
             </div>
-            <div className="flex-1">
-              <h3 className="font-semibold text-gray-800 mb-1 flex items-center gap-2">
-                {book.name}
-                {book.status === 'Draft' && (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-yellow-100 text-yellow-700 text-xs rounded-full">
-                    <FilePen className="w-3 h-3" />
-                    Draft
-                  </span>
+            <div className="flex-1 min-w-0"> {/* Added min-w-0 to prevent flex item overflow */}
+              <div className="flex items-start gap-3 mb-1">
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold text-gray-800 flex items-center gap-2">
+                    <span className="truncate">{book.name}</span>
+                    {book.status === 'Draft' && (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-yellow-100 text-yellow-700 text-xs rounded-full flex-shrink-0">
+                        <FilePen className="w-3 h-3" />
+                        Draft
+                      </span>
+                    )}
+                  </h3>
+                </div>
+                {/* Shared Status Indicator */}
+                {book.hasBeenShared && (
+                  <div className="flex items-center gap-1 flex-shrink-0">
+                    <div className="flex items-center justify-center w-6 h-6 bg-green-100 rounded-full">
+                      <Share2 className="w-3 h-3 text-green-600" />
+                    </div>
+                    <span className="text-xs text-green-600 font-medium">Shared</span>
+                  </div>
                 )}
-              </h3>
-              <p className="text-sm text-gray-600 mb-2">{book.description}</p>
+              </div>
+              <p className="text-sm text-gray-600 mb-2 line-clamp-2">{book.description}</p>
 
               {/* Collection Pills */}
               {book.collections?.length > 0 && (
@@ -91,12 +126,22 @@ const BookItem = ({
             ) : (
               <div /> // empty spacer to keep alignment
             )}
-            <button
-              onClick={() => onViewBook(book)}
-              className="text-xs font-medium text-blue-600 hover:text-blue-800"
-            >
-              {book.status === 'Draft' ? 'Continue Editing' : 'View Book'}
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => handleDeleteClick(book)}
+                className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors"
+                title="Delete book"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => onViewBook(book)}
+                className="p-1.5 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors"
+                title={book.status === 'Draft' ? 'Continue editing' : 'View book'}
+              >
+                <BookOpen className="w-4 h-4" />
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -121,6 +166,15 @@ const BookItem = ({
             )}
           </div>
         </div>
+      )}
+      {/* Modal */}
+      {showDeleteModal && (
+        <DeleteBookModal
+          book={book}
+          onClose={() => setShowDeleteModal(false)}
+          onDelete={handleDelete}
+          isDeleting={isDeleting}
+        />
       )}
     </>
   );
