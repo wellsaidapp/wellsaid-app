@@ -434,7 +434,7 @@ const LibraryView = ({
             />
           </div>
         </div>
-      )} : (
+      )}
         <>
           <div className={(showBookCreation || showPdfViewer) ? 'pointer-events-none' : ''}>
             <div className="p-4">
@@ -640,7 +640,6 @@ const LibraryView = ({
             />
           )}
         </>
-      )}
     </div>
   );
 };
