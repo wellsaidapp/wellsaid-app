@@ -31,7 +31,7 @@ const LibraryView = ({
   const { insights, setInsights } = useInsights();
   const { systemCollections, loading: loadingSystem } = useSystemCollections();
   const { userCollections, loading: loadingUser } = useUserCollections();
-  const { books, loadingBooks, updateBook } = useBooks();
+  const { books, loadingBooks, updateBook, refreshBooks } = useBooks();
   const { userData, loading: loadingAppUser, refetchUser } = useUser();
   const [viewMode, setViewMode] = useState(defaultViewMode);
   const [collectionFilter, setCollectionFilter] = useState('all');
@@ -125,24 +125,32 @@ const LibraryView = ({
   };
 
   const handleDeleteBook = async (book) => {
-    const session = await fetchAuthSession();
-    const token = session.tokens?.idToken?.toString();
+    try {
+      const session = await fetchAuthSession();
+      const token = session.tokens?.idToken?.toString();
 
-    const response = await fetch(`https://aqaahphwfj.execute-api.us-east-2.amazonaws.com/dev/books/${book.id}`, {
-      method: 'DELETE',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: token,
-      },
-    });
+      const response = await fetch(
+        `https://aqaahphwfj.execute-api.us-east-2.amazonaws.com/dev/books/${book.id}`,
+        {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: token,
+          },
+        }
+      );
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Failed to delete book');
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to delete book');
+      }
+
+      // ✅ Only refresh after confirmed deletion
+      await refreshBooks();
+    } catch (err) {
+      console.error("❌ Book deletion failed:", err);
+      // Optionally show toast or user feedback
     }
-
-    // Optionally update local state or refetch books if you're using context
-    // refetchBooks(); or setBooks((prev) => prev.filter(b => b.id !== book.id));
   };
 
   // Derived state
