@@ -6,24 +6,20 @@ import { fetchAuthSession } from 'aws-amplify/auth';
 const inchToPt = (inches) => inches * 72;
 
 // Helper function to convert image to black and white
-async function convertToBlackAndWhite(imageSrc) {
+async function convertToBlackAndWhite(imageSrc) { // Remove targetSize parameter
   return new Promise((resolve) => {
     const img = new Image();
-    img.crossOrigin = 'Anonymous';
     img.onload = () => {
       const canvas = document.createElement('canvas');
-      const scaleFactor = 2; // Render at double resolution
-      canvas.width = avatarSize * scaleFactor;
-      canvas.height = avatarSize * scaleFactor;
+      canvas.width = img.naturalWidth; // Use original image dimensions
+      canvas.height = img.naturalHeight;
       const ctx = canvas.getContext('2d');
-      ctx.imageSmoothingEnabled = true;
-      ctx.imageSmoothingQuality = 'high';
 
-      // Draw white background first to preserve transparency
+      // Draw white background first (preserves transparency)
       ctx.fillStyle = 'white';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      // Draw image
+      // Draw original image
       ctx.drawImage(img, 0, 0);
 
       // Convert to grayscale
@@ -37,9 +33,12 @@ async function convertToBlackAndWhite(imageSrc) {
       }
       ctx.putImageData(imageData, 0, 0);
 
-      resolve(canvas.toDataURL('image/jpeg'));
+      resolve(canvas.toDataURL('image/png')); // Keep as PNG
     };
-    img.onerror = () => resolve(imageSrc); // Fallback to original if conversion fails
+    img.onerror = () => {
+      console.warn('B&W conversion failed, using original');
+      resolve(imageSrc); // Fallback to original
+    };
     img.src = imageSrc;
   });
 }
@@ -954,6 +953,11 @@ const renderBackCoverPage = async (
 
       console.log('🖼️ Using image source:', imageSource);
 
+      let processedSource = imageSource;
+      if (isBlackAndWhite) {
+        processedSource = await convertToBlackAndWhite(imageSource);
+      }
+
       const image = await new Promise((resolve, reject) => {
         const img = new Image();
 
@@ -964,7 +968,7 @@ const renderBackCoverPage = async (
         };
 
         // Do NOT set crossOrigin for blob URLs
-        img.src = imageSource;
+        img.src = processedSource;
       });
 
       const scaleFactor = 2; // Render at double resolution
@@ -992,7 +996,7 @@ const renderBackCoverPage = async (
       );
       ctx.closePath();
       ctx.clip();
-      
+
       // Draw image (scaled up)
       ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
 
