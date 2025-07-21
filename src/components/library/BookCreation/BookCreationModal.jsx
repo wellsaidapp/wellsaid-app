@@ -79,6 +79,8 @@ const BookCreationModal = ({
   const { refreshBooks } = useBooks();
   const { systemCollections, loading } = useSystemCollections();
   const { userData } = useUser();
+  const [isPublishing, setIsPublishing] = useState(false);
+
   const [showExitConfirmation, setShowExitConfirmation] = useState(false);
   console.log("User Data:", userData.avatarUrl);
   const isTouchDevice = () =>
@@ -173,6 +175,7 @@ const BookCreationModal = ({
   // Then modify your handleComplete function:
   const handleComplete = async (actionType = 'cancel') => {
     if (actionType === 'publish' || actionType === 'draft') {
+      setIsPublishing(true);
       let loadingToast;
       try {
         loadingToast = toast.custom(
@@ -314,6 +317,8 @@ const BookCreationModal = ({
       } catch (error) {
         console.error('Error during book completion:', error);
         toast.error(`Failed to ${actionType === 'publish' ? 'publish' : 'save'} book`);
+      } finally {
+        setIsPublishing(false);
       }
     } else {
       // Cancel logic remains the same
@@ -604,11 +609,12 @@ const BookCreationModal = ({
                         : 'bg-green-600 hover:bg-green-700 text-white'
                       : 'bg-blue-600 hover:bg-blue-700 text-white'
                   }`}
+                  disabled={isPublishing}
                 >
                   {bookCreationStep === 7
                     ? newBook.isDraft
-                      ? 'Save Draft'
-                      : 'Publish Book'
+                      ? isPublishing ? 'Saving...' : 'Save Draft'
+                      : isPublishing ? 'Publishing...' : 'Publish Book'
                     : 'Next'}
                 </button>
               </div>
