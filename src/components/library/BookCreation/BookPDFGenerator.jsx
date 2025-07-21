@@ -12,9 +12,12 @@ async function convertToBlackAndWhite(imageSrc) {
     img.crossOrigin = 'Anonymous';
     img.onload = () => {
       const canvas = document.createElement('canvas');
-      canvas.width = img.width;
-      canvas.height = img.height;
+      const scaleFactor = 2; // Render at double resolution
+      canvas.width = avatarSize * scaleFactor;
+      canvas.height = avatarSize * scaleFactor;
       const ctx = canvas.getContext('2d');
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
 
       // Draw white background first to preserve transparency
       ctx.fillStyle = 'white';
@@ -74,10 +77,16 @@ async function cropImageToCircle(imageSrc, size, isBlackAndWhite = false) {
       try {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.beginPath();
-        ctx.arc(canvas.width / 2, canvas.height / 2, canvas.width / 2, 0, Math.PI * 2);
+        ctx.arc(
+          (avatarSize * scaleFactor) / 2,  // Updated
+          (avatarSize * scaleFactor) / 2,  // Updated
+          (avatarSize * scaleFactor) / 2,  // Updated
+          0,
+          Math.PI * 2
+        );
         ctx.closePath();
         ctx.clip();
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        ctx.drawImage(image, 0, 0, avatarSize * scaleFactor, avatarSize * scaleFactor);
 
         // Convert to black and white if needed
         let result = canvas.toDataURL('image/png');
@@ -958,44 +967,52 @@ const renderBackCoverPage = async (
         img.src = imageSource;
       });
 
-      // Create a canvas with transparent background
+      const scaleFactor = 2; // Render at double resolution
       const canvas = document.createElement('canvas');
-      canvas.width = avatarSize;
-      canvas.height = avatarSize;
+      canvas.width = avatarSize * scaleFactor;
+      canvas.height = avatarSize * scaleFactor;
       const ctx = canvas.getContext('2d');
 
-      // Create a transparent background
+      // Enable high-quality smoothing
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+
+      // Draw transparent background
       ctx.fillStyle = 'transparent';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      // Draw circular clip
+      // Draw circle mask
       ctx.beginPath();
-      ctx.arc(avatarSize / 2, avatarSize / 2, avatarSize / 2, 0, Math.PI * 2);
+      ctx.arc(
+        canvas.width / 2,
+        canvas.height / 2,
+        canvas.width / 2,
+        0,
+        Math.PI * 2
+      );
       ctx.closePath();
       ctx.clip();
+      
+      // Draw image (scaled up)
+      ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
 
-      // Draw the image (only inside the circle due to clipping)
-      ctx.drawImage(image, 0, 0, avatarSize, avatarSize);
-
-      // Convert to PNG to preserve transparency
+      // Convert to PNG
       const dataUrl = canvas.toDataURL('image/png');
 
+      // Add to PDF (will be downscaled to avatarSize)
       const avatarX = centerX - avatarSize / 2;
       doc.saveGraphicsState();
-      // Create clipping path in PDF
       doc.circle(centerX, avatarY + avatarSize / 2, avatarSize / 2);
       doc.clip();
-      // Add the image (PNG with transparency)
       doc.addImage(dataUrl, 'PNG', avatarX, avatarY, avatarSize, avatarSize);
       doc.restoreGraphicsState();
 
-      // Optional: Add a subtle border around the circle
+      // Optional border
       doc.setDrawColor(100);
       doc.setLineWidth(0.5);
       doc.circle(centerX, avatarY + avatarSize / 2, avatarSize / 2, 'S');
-
     } catch (error) {
-      console.error('Failed to render avatar:', error);
+      console.error('Avatar error:', error);
     }
   };
 
