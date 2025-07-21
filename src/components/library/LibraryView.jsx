@@ -335,7 +335,7 @@ const LibraryView = ({
   }, [selectedBook]);
 
   useEffect(() => {
-    const modalIsOpen = showBookCreation || showPdfViewer || isAnyModalOpen;
+    const modalIsOpen = showBookCreation || showPdfViewer || editingBook || isAnyModalOpen;
 
     if (modalIsOpen) {
       document.body.style.overflow = 'hidden';
@@ -353,7 +353,7 @@ const LibraryView = ({
       document.body.style.overflow = '';
       document.body.style.touchAction = '';
     };
-  }, [showBookCreation, showPdfViewer, isAnyModalOpen]);
+  }, [showBookCreation, showPdfViewer, editingBook, isAnyModalOpen]);
 
   const getFilteredCollections = useCallback(() => {
     const insightsToUse = searchQuery || selectedFilters.personIds.length > 0 ?
