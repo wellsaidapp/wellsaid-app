@@ -289,9 +289,10 @@ export default function PDFViewerWrapper({ book, onClose, onEdit, userData }) {
                 >
                   <Edit className="w-5 h-5 text-gray-600" />
                 </button>
-                <button className="p-1.5 hover:bg-gray-100 rounded-full" title="Add to Cart">
+{/*                <button className="p-1.5 hover:bg-gray-100 rounded-full" title="Add to Cart">
                   <ShoppingCart className="w-5 h-5 text-gray-600" />
                 </button>
+*/}
               </div>
             </div>
           </div>
