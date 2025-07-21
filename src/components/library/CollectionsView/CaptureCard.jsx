@@ -20,7 +20,7 @@ const CaptureCard = ({
   const promptRef = useRef(null);
   const responseRef = useRef(null);
   const [showMinCollectionAlert, setShowMinCollectionAlert] = useState(false);
-
+  const [isSaving, setIsSaving] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isUnlinking, setIsUnlinking] = useState(false);
@@ -69,6 +69,9 @@ const CaptureCard = ({
       setTimeout(() => setShowMinCollectionAlert(false), 2500);
       return;
     }
+
+    setIsSaving(true);
+
     try {
       const session = await fetchAuthSession();
       const token = session.tokens?.idToken?.toString();
@@ -93,6 +96,8 @@ const CaptureCard = ({
     } catch (err) {
       console.error("❌ Error saving insight:", err);
       // Optionally: toast.error("Failed to save changes");
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -257,8 +262,25 @@ const CaptureCard = ({
                 onClick={handleSave}
                 className="p-1.5 text-gray-500 hover:text-green-600 hover:bg-green-50 rounded-md transition-colors"
                 aria-label="Save"
+                disabled={isSaving}
               >
-                <Save className="w-4 h-4" />
+                {isSaving ? (
+                  <svg className="animate-spin h-4 w-4 text-green-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle
+                      className="opacity-25"
+                      cx="12" cy="12" r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    />
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                    />
+                  </svg>
+                ) : (
+                  <Save className="w-4 h-4" />
+                )}
               </button>
               <button
                 onClick={handleCancel}
