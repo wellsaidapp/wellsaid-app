@@ -7,7 +7,8 @@ const SharedBooksSection = ({
   setCurrentView,
   setLibraryDefaultViewMode,
   userData,
-  showViewAll = true
+  showViewAll = true,
+  onDeleteBook
 }) => {
   return (
     <div className="mb-8">
@@ -43,6 +44,7 @@ const SharedBooksSection = ({
               book={book}
               onViewBook={onViewBook}
               userData={userData}
+              onDeleteBook={(book) => onDeleteBook(book)}
             />
           ))}
         </div>

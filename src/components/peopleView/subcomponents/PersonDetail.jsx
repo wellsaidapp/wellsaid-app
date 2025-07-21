@@ -33,7 +33,8 @@ const PersonDetail = ({
   onEditDraftBook,
   onSavePerson,
   isUploadingAvatar,
-  onDeletePerson
+  onDeletePerson,
+  onDeleteBook
 }) => {
 
   console.log("👤 PersonDetail received person:", person);
@@ -358,6 +359,7 @@ const PersonDetail = ({
           }
         }}
         showViewAll={false}
+        onDeleteBook={onDeleteBook}
       />
 
       {/* Add BookCreationModal */}

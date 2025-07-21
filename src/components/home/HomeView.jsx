@@ -17,7 +17,7 @@ import LegacyStats from './LegacyStats';
 import PDFViewerWrapper from '../library/BooksView/PDFViewerWrapper';
 import BookEditor from '../library/BooksView/BookEditor';
 import BookPreviewModal from './BookPreviewModal'
-
+import { fetchAuthSession } from 'aws-amplify/auth';
 import { parseISO, isThisWeek, addHours } from 'date-fns';
 
 const HomeView = ({
@@ -39,7 +39,8 @@ const HomeView = ({
     loadingBooks,
     getRecentBooks,
     getPublishedBooksCount,
-    updateBook
+    updateBook,
+    refreshBooks
   } = useBooks();
 
   const [selectedBook, setSelectedBook] = useState(null);
@@ -117,6 +118,35 @@ const HomeView = ({
     }
   };
 
+  const handleDeleteBook = async (book) => {
+    try {
+      const session = await fetchAuthSession();
+      const token = session.tokens?.idToken?.toString();
+
+      const response = await fetch(
+        `https://aqaahphwfj.execute-api.us-east-2.amazonaws.com/dev/books/${book.id}`,
+        {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: token,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to delete book');
+      }
+
+      // ✅ Only refresh after confirmed deletion
+      await refreshBooks();
+    } catch (err) {
+      console.error("❌ Book deletion failed:", err);
+      // Optionally show toast or user feedback
+    }
+  };
+
   useEffect(() => {
     const modalIsOpen = editingBook || showPdfViewer || showCaptureOptions;
 
@@ -174,6 +204,7 @@ const HomeView = ({
           setCurrentView={setCurrentView}
           setLibraryDefaultViewMode={setLibraryDefaultViewMode}
           userData={userData}
+          onDeleteBook={handleDeleteBook}
         />
 
         <LegacyStats

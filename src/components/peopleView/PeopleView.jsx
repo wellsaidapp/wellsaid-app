@@ -13,6 +13,7 @@ import { uploadData, getUrl } from 'aws-amplify/storage';
 import { fetchAuthSession } from 'aws-amplify/auth';
 import { usePeople } from '../../context/PeopleContext';
 import { useUser } from '../../context/UserContext';
+import { useBooks } from '../../context/BooksContext';
 
 const PeopleView = ({ individuals, insights, collections, sharedBooks, setCurrentView }) => {
   const { systemCollections } = useSystemCollections();
@@ -32,6 +33,7 @@ const PeopleView = ({ individuals, insights, collections, sharedBooks, setCurren
   const { people, refetchPeople, updatePerson } = usePeople();
   const { userData, loading: loadingAppUser, refetchUser } = useUser();
   const [isCompletingAddPerson, setIsCompletingAddPerson] = useState(false);
+  const { books, loadingBooks, updateBook, refreshBooks } = useBooks();
   const [selectedPerson, setSelectedPerson] = useState(null);
   const [showAddPerson, setShowAddPerson] = useState(false);
   const handleAddPersonComplete = async (newPerson) => {
@@ -47,6 +49,35 @@ const PeopleView = ({ individuals, insights, collections, sharedBooks, setCurren
 
     } finally {
       setIsCompletingAddPerson(false);
+    }
+  };
+
+  const handleDeleteBook = async (book) => {
+    try {
+      const session = await fetchAuthSession();
+      const token = session.tokens?.idToken?.toString();
+
+      const response = await fetch(
+        `https://aqaahphwfj.execute-api.us-east-2.amazonaws.com/dev/books/${book.id}`,
+        {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: token,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to delete book');
+      }
+
+      // ✅ Only refresh after confirmed deletion
+      await refreshBooks();
+    } catch (err) {
+      console.error("❌ Book deletion failed:", err);
+      // Optionally show toast or user feedback
     }
   };
 
@@ -470,6 +501,7 @@ const PeopleView = ({ individuals, insights, collections, sharedBooks, setCurren
             }}
             onSavePerson={handleSavePerson}
             isUploadingAvatar={isUploadingAvatar}
+            onDeleteBook={handleDeleteBook}
           />
         )}
       </div>
