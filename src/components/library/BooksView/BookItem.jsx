@@ -12,7 +12,8 @@ const BookItem = ({
   userData,
   isCreating = false,
   entryOrder = [],
-  insights = []
+  insights = [],
+  setIsAnyModalOpen
 }) => {
 
   const { systemCollections } = useSystemCollections();
@@ -34,6 +35,12 @@ const BookItem = ({
   const handleDeleteClick = (book) => {
     setBookToDelete(book);
     setShowDeleteModal(true);
+    setIsAnyModalOpen?.(true); // prevent background scroll
+  };
+
+  const handleCloseDeleteModal = () => {
+    setShowDeleteModal(false);
+    setIsAnyModalOpen?.(false); // restore scroll
   };
 
   const handleDelete = async () => {
@@ -171,7 +178,7 @@ const BookItem = ({
       {showDeleteModal && (
         <DeleteBookModal
           book={book}
-          onClose={() => setShowDeleteModal(false)}
+          onClose={handleCloseDeleteModal}
           onDelete={handleDelete}
           isDeleting={isDeleting}
         />

@@ -23,6 +23,7 @@ const BooksList = ({
   insights,
   sortDirection,
   onToggleSortDirection,
+  setIsAnyModalOpen
 }) => {
   const [showFilters, setShowFilters] = useState(false);
   const [statusFilter, setStatusFilter] = useState('');
@@ -242,6 +243,7 @@ const BooksList = ({
               isCreating={isCreating && book.id === 'new'}
               entryOrder={entryOrder}
               insights={insights}
+              setIsAnyModalOpen={setIsAnyModalOpen}
             />
           ))
         ) : (

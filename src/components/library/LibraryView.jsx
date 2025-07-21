@@ -70,6 +70,8 @@ const LibraryView = ({
   const [showPdfViewer, setShowPdfViewer] = useState(false);
   const [previousViewerState, setPreviousViewerState] = useState(null);
 
+  const [isAnyModalOpen, setIsAnyModalOpen] = useState(false);
+
   const shouldUseSearchResults =
     searchQuery.trim().length > 0 && searchResults.length > 0;
 
@@ -303,7 +305,7 @@ const LibraryView = ({
   }, [selectedBook]);
 
   useEffect(() => {
-    const modalIsOpen = showBookCreation || showPdfViewer;
+    const modalIsOpen = showBookCreation || showPdfViewer || isAnyModalOpen;
 
     if (modalIsOpen) {
       document.body.style.overflow = 'hidden';
@@ -321,7 +323,7 @@ const LibraryView = ({
       document.body.style.overflow = '';
       document.body.style.touchAction = '';
     };
-  }, [showBookCreation, showPdfViewer]);
+  }, [showBookCreation, showPdfViewer, isAnyModalOpen]);
 
   const getFilteredCollections = useCallback(() => {
     const insightsToUse = searchQuery || selectedFilters.personIds.length > 0 ?
@@ -519,6 +521,7 @@ const LibraryView = ({
                   insights={insights}
                   sortDirection={sortDirection}
                   onToggleSortDirection={toggleSortDirection}
+                  setIsAnyModalOpen={setIsAnyModalOpen}
                 />
               )}
             </div>
