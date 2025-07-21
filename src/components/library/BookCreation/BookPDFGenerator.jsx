@@ -1,5 +1,6 @@
 import { jsPDF } from 'jspdf';
 import logo from '../../../assets/wellsaid.svg';
+import { fetchAuthSession } from 'aws-amplify/auth';
 
 // Convert inches to points (72 points per inch)
 const inchToPt = (inches) => inches * 72;
@@ -680,6 +681,183 @@ const renderResponsePage = (doc, entry, margin, contentWidth, contentHeight, fon
 };
 
 
+// const renderBackCoverPage = async (
+//   doc,
+//   backCoverNote,
+//   margin,
+//   contentWidth,
+//   contentHeight,
+//   fontStyle,
+//   userData,
+//   logoBase64,
+//   isBlackAndWhite = false
+// ) => {
+//   if (!backCoverNote) return;
+//
+//   const renderAvatar = async (doc, avatarUrl, centerX, avatarY, avatarSize, isBlackAndWhite) => {
+//     try {
+//       // First convert the URL to a base64 image
+//       const avatarBase64 = await urlToBase64(avatarUrl);
+//       let processedAvatar = avatarBase64;
+//
+//       if (isBlackAndWhite) {
+//         processedAvatar = await convertToBlackAndWhite(avatarBase64);
+//       }
+//
+//       const circularAvatar = await cropImageToCircle(processedAvatar, avatarSize, isBlackAndWhite);
+//       const avatarX = centerX - avatarSize / 2;
+//
+//       doc.saveGraphicsState();
+//       doc.circle(centerX, avatarY + avatarSize / 2, avatarSize / 2);
+//       doc.clip();
+//       doc.addImage(circularAvatar, 'JPEG', avatarX, avatarY, avatarSize, avatarSize);
+//       doc.restoreGraphicsState();
+//       doc.setDrawColor(100);
+//       doc.setLineWidth(0.5);
+//       doc.circle(centerX, avatarY + avatarSize / 2, avatarSize / 2, 'S');
+//     } catch (error) {
+//       console.error('Failed to render avatar:', error);
+//     }
+//   };
+//
+//   // Add helper function to convert URL to base64
+//   const urlToBase64 = async (url) => {
+//     return new Promise((resolve, reject) => {
+//       const img = new Image();
+//       img.crossOrigin = 'Anonymous';
+//       img.onload = () => {
+//         const canvas = document.createElement('canvas');
+//         canvas.width = img.width;
+//         canvas.height = img.height;
+//         const ctx = canvas.getContext('2d');
+//         ctx.drawImage(img, 0, 0);
+//         resolve(canvas.toDataURL('image/jpeg'));
+//       };
+//       img.onerror = reject;
+//       img.src = url;
+//     });
+//   };
+//
+//   const centerX = margin + (contentWidth / 2);
+//   const avatarSize = 40;
+//   const userInfoSpacing = 8;
+//   const logoMaxHeight = 20;
+//   const logoSpacing = 15;
+//
+//   const bottomPadding = 10;
+//   const noteToUserSpacing = 20;
+//   const availableHeight = contentHeight - (noteToUserSpacing + avatarSize + userInfoSpacing + 12 + logoSpacing + logoMaxHeight + bottomPadding) - 20;
+//
+//   // Render back cover note
+//   doc.setFont(fontStyle === 'serif' ? 'times' : 'helvetica', 'italic');
+//   const { fontSize, lineHeight, lines } = calculateOptimalTextLayout(
+//     doc,
+//     backCoverNote,
+//     contentWidth * 0.8,
+//     availableHeight,
+//     11
+//   );
+//   doc.setFontSize(fontSize);
+//
+//   const totalTextHeight = lines.length * lineHeight;
+//   const textStartY = margin + 20 + (availableHeight - totalTextHeight) / 2;
+//
+//   // Render each line with emoji support
+//   for (let i = 0; i < lines.length; i++) {
+//     const line = lines[i];
+//     await renderTextWithEmojis(
+//       doc,
+//       line,
+//       centerX, // Center position
+//       textStartY + (i * lineHeight),
+//       {
+//         align: 'center',
+//         fontSize: fontSize,
+//         emojiSpacing: fontSize * 0.1,
+//         emojiToEmojiSpacing: fontSize * 0.05,
+//         emojiVerticalAdjust: -1,
+//         fontStyle: 'italic'
+//       }
+//     );
+//   }
+//
+//   const noteEndY = textStartY + totalTextHeight;
+//   const userInfoY = noteEndY + noteToUserSpacing;
+//   const nameY = userInfoY + avatarSize + userInfoSpacing;
+//   const adjustedNameY = nameY + 4;
+//
+//   // Match the page number position from other pages
+//   const pageNumberYPosition = inchToPt(5) - margin + 5; // Same as addPageNumber function
+//   const logoY = pageNumberYPosition - (logoMaxHeight / 2); // Center logo vertically at this position
+//
+//   // const logoY = margin + contentHeight - logoMaxHeight - bottomPadding;
+//
+//   if (logoBase64) {
+//     try {
+//       const imgProps = doc.getImageProperties(logoBase64);
+//       const aspectRatio = imgProps.width / imgProps.height;
+//       let logoWidth, logoHeight;
+//
+//       if (aspectRatio > 1) {
+//         logoWidth = logoMaxHeight * aspectRatio;
+//         logoHeight = logoMaxHeight;
+//       } else {
+//         logoWidth = logoMaxHeight;
+//         logoHeight = logoMaxHeight / aspectRatio;
+//       }
+//
+//       doc.addImage(
+//         logoBase64,
+//         'PNG',
+//         centerX - (logoWidth / 2),
+//         logoY - (logoHeight / 2),
+//         logoWidth,
+//         logoHeight
+//       );
+//     } catch (error) {
+//       console.warn('Could not add logo:', error);
+//     }
+//   }
+//
+//   if (userData?.name) {
+//     doc.setFont(fontStyle === 'serif' ? 'times' : 'helvetica', 'italic');
+//     doc.setFontSize(10);
+//     doc.setTextColor(0, 0, 0);
+//     doc.text(userData.name, centerX, adjustedNameY, { align: 'center' });
+//   }
+//
+//   console.log("Attempting to add avatar to back cover:", userData.avatarUrl);
+//   if (userData?.avatarUrl) {
+//     console.log("Trying to load Avatar URL:", "Trying!");
+//     try {
+//       // Process avatar image (convert to B&W if needed)
+//       let processedAvatar = typeof userData.avatarUrl === 'string' ? userData.avatarUrl : userData.avatarUrl?.href;
+//       if (isBlackAndWhite) {
+//         processedAvatar = await convertToBlackAndWhite(userData.avatarUrl);
+//       }
+//
+//       const circularAvatar = await cropImageToCircle(processedAvatar, avatarSize, isBlackAndWhite);
+//       const avatarX = centerX - (avatarSize / 2);
+//       const avatarY = userInfoY;
+//
+//       doc.addImage(
+//         circularAvatar,
+//         'JPEG',
+//         avatarX,
+//         avatarY,
+//         avatarSize,
+//         avatarSize
+//       );
+//
+//       doc.setDrawColor(150, 150, 150);
+//       doc.setLineWidth(0.4);
+//       doc.circle(centerX, avatarY + (avatarSize / 2), avatarSize / 2, 'S');
+//     } catch (error) {
+//       console.error('Avatar failed to process:', error);
+//     }
+//   }
+// };
+
 const renderBackCoverPage = async (
   doc,
   backCoverNote,
@@ -693,50 +871,135 @@ const renderBackCoverPage = async (
 ) => {
   if (!backCoverNote) return;
 
-  const renderAvatar = async (doc, avatarUrl, centerX, avatarY, avatarSize, isBlackAndWhite) => {
+  // Function to fetch avatar from Lambda using fetchAuthSession
+  const fetchAvatarFromLambda = async () => {
     try {
-      // First convert the URL to a base64 image
-      const avatarBase64 = await urlToBase64(avatarUrl);
-      let processedAvatar = avatarBase64;
+      const session = await fetchAuthSession();
+      const token = session.tokens?.accessToken?.toString();
 
-      if (isBlackAndWhite) {
-        processedAvatar = await convertToBlackAndWhite(avatarBase64);
+      if (!token) {
+        console.warn('No access token available');
+        return null;
       }
 
-      const circularAvatar = await cropImageToCircle(processedAvatar, avatarSize, isBlackAndWhite);
-      const avatarX = centerX - avatarSize / 2;
+      const response = await fetch(
+        'https://aqaahphwfj.execute-api.us-east-2.amazonaws.com/dev/users/avatar',
+        {
+          method: 'GET',
+          headers: {
+            'Authorization': token,
+          }
+        }
+      );
 
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const base64 = await response.text(); // NOT .blob(), it's base64-encoded text
+      console.log('📦 Base64 string length:', base64.length);
+
+      const byteCharacters = atob(base64);
+      const byteNumbers = new Array(byteCharacters.length);
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+      }
+      const byteArray = new Uint8Array(byteNumbers);
+      const blob = new Blob([byteArray], { type: 'image/jpeg' });
+
+      const objectUrl = URL.createObjectURL(blob);
+      console.log('🖼️ Final blob URL:', objectUrl);
+
+      return objectUrl;
+
+    } catch (error) {
+      console.error('Failed to fetch avatar from Lambda:', error);
+      return null;
+    }
+  };
+  // Function to safely check URL
+  const isUrl = (str) => {
+    if (typeof str !== 'string') return false;
+    try {
+      new URL(str);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
+  const renderAvatar = async (doc, avatarUrl, centerX, avatarY, avatarSize, isBlackAndWhite) => {
+    try {
+      let imageSource = null;
+
+      // Try Lambda first
+      const lambdaUrl = await fetchAvatarFromLambda();
+      if (lambdaUrl) {
+        imageSource = lambdaUrl;
+      } else if (isUrl(avatarUrl)) {
+        imageSource = avatarUrl;
+      } else {
+        console.warn('No valid avatar source available');
+        return;
+      }
+
+      console.log('🖼️ Using image source:', imageSource);
+
+      const image = await new Promise((resolve, reject) => {
+        const img = new Image();
+
+        img.onload = () => resolve(img);
+        img.onerror = (e) => {
+          console.error('❌ Image load failed:', e);
+          reject(e);
+        };
+
+        // Do NOT set crossOrigin for blob URLs
+        img.src = imageSource;
+      });
+
+      // Create a canvas with transparent background
+      const canvas = document.createElement('canvas');
+      canvas.width = avatarSize;
+      canvas.height = avatarSize;
+      const ctx = canvas.getContext('2d');
+
+      // Create a transparent background
+      ctx.fillStyle = 'transparent';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Draw circular clip
+      ctx.beginPath();
+      ctx.arc(avatarSize / 2, avatarSize / 2, avatarSize / 2, 0, Math.PI * 2);
+      ctx.closePath();
+      ctx.clip();
+
+      // Draw the image (only inside the circle due to clipping)
+      ctx.drawImage(image, 0, 0, avatarSize, avatarSize);
+
+      // Convert to PNG to preserve transparency
+      const dataUrl = canvas.toDataURL('image/png');
+
+      const avatarX = centerX - avatarSize / 2;
       doc.saveGraphicsState();
+      // Create clipping path in PDF
       doc.circle(centerX, avatarY + avatarSize / 2, avatarSize / 2);
       doc.clip();
-      doc.addImage(circularAvatar, 'JPEG', avatarX, avatarY, avatarSize, avatarSize);
+      // Add the image (PNG with transparency)
+      doc.addImage(dataUrl, 'PNG', avatarX, avatarY, avatarSize, avatarSize);
       doc.restoreGraphicsState();
+
+      // Optional: Add a subtle border around the circle
       doc.setDrawColor(100);
       doc.setLineWidth(0.5);
       doc.circle(centerX, avatarY + avatarSize / 2, avatarSize / 2, 'S');
+
     } catch (error) {
       console.error('Failed to render avatar:', error);
     }
   };
 
-  // Add helper function to convert URL to base64
-  const urlToBase64 = async (url) => {
-    return new Promise((resolve, reject) => {
-      const img = new Image();
-      img.crossOrigin = 'Anonymous';
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        canvas.width = img.width;
-        canvas.height = img.height;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0);
-        resolve(canvas.toDataURL('image/jpeg'));
-      };
-      img.onerror = reject;
-      img.src = url;
-    });
-  };
-
+  // Rest of the function implementation remains the same...
   const centerX = margin + (contentWidth / 2);
   const avatarSize = 40;
   const userInfoSpacing = 8;
@@ -761,13 +1024,12 @@ const renderBackCoverPage = async (
   const totalTextHeight = lines.length * lineHeight;
   const textStartY = margin + 20 + (availableHeight - totalTextHeight) / 2;
 
-  // Render each line with emoji support
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
     await renderTextWithEmojis(
       doc,
       line,
-      centerX, // Center position
+      centerX,
       textStartY + (i * lineHeight),
       {
         align: 'center',
@@ -785,11 +1047,8 @@ const renderBackCoverPage = async (
   const nameY = userInfoY + avatarSize + userInfoSpacing;
   const adjustedNameY = nameY + 4;
 
-  // Match the page number position from other pages
-  const pageNumberYPosition = inchToPt(5) - margin + 5; // Same as addPageNumber function
-  const logoY = pageNumberYPosition - (logoMaxHeight / 2); // Center logo vertically at this position
-
-  // const logoY = margin + contentHeight - logoMaxHeight - bottomPadding;
+  const pageNumberYPosition = inchToPt(5) - margin + 5;
+  const logoY = pageNumberYPosition - (logoMaxHeight / 2);
 
   if (logoBase64) {
     try {
@@ -827,28 +1086,14 @@ const renderBackCoverPage = async (
 
   if (userData?.avatarUrl) {
     try {
-      // Process avatar image (convert to B&W if needed)
-      let processedAvatar = userData.avatarUrl;
-      if (isBlackAndWhite) {
-        processedAvatar = await convertToBlackAndWhite(userData.avatarUrl);
-      }
-
-      const circularAvatar = await cropImageToCircle(processedAvatar, avatarSize, isBlackAndWhite);
-      const avatarX = centerX - (avatarSize / 2);
-      const avatarY = userInfoY;
-
-      doc.addImage(
-        circularAvatar,
-        'JPEG',
-        avatarX,
-        avatarY,
+      await renderAvatar(
+        doc,
+        userData.avatarUrl,
+        centerX,
+        userInfoY,
         avatarSize,
-        avatarSize
+        isBlackAndWhite
       );
-
-      doc.setDrawColor(150, 150, 150);
-      doc.setLineWidth(0.4);
-      doc.circle(centerX, avatarY + (avatarSize / 2), avatarSize / 2, 'S');
     } catch (error) {
       console.error('Avatar failed to process:', error);
     }
