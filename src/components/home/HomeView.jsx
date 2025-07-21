@@ -31,22 +31,8 @@ const HomeView = ({
   const { userData, loadingUser, refetchUser } = useUser();
   const { people, loadingPeople, refetchPeople } = usePeople();
   const { userCollections, loading } = useUserCollections();
-  if (loadingUser) {
-    return (
-      <div className="fixed inset-0 flex items-center justify-center bg-white">
-        <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500" />
-      </div>
-    );
-  }
-  // console.log("People Loaded:", people.length);
-
   const [pdfTimestamp, setPdfTimestamp] = useState(null);
-  const userName = userData?.name?.split(' ')[0] || 'Friend';
-  const weeklyGoal = userData?.weeklyGoal ?? 5;
-  const userStreak = userData?.streak ?? 0;
-
   const { insights, loadingInsights } = useInsights();
-  // console.log("Insights Context:", insights);
   const {
     books,
     setBooks,
@@ -56,21 +42,6 @@ const HomeView = ({
     updateBook
   } = useBooks();
 
-  insights.forEach(i => {
-    const parsed = parseISO(i.date);
-    const adjusted = addHours(parsed, 5); // Adjust based on your UTC offset if needed
-    // console.log("🕵️", i.prompt, "| Original:", parsed.toString(), "| Adjusted:", adjusted.toString(), "| isThisWeek:", isThisWeek(adjusted));
-  });
-
-  // ✅ Actual weekly insights count
-  const weekInsights = insights.filter(i => {
-    const parsed = parseISO(i.date);
-    const adjusted = addHours(parsed, 5); // Optional: adjust for your timezone (e.g. UTC-5)
-    return isThisWeek(adjusted);
-  }).length;
-
-  // console.log("✅ Week Insights:", weekInsights);
-  // const weeklyGoal = 5;
   const [selectedBook, setSelectedBook] = useState(null);
   const [currentPage, setCurrentPage] = useState(0);
   const [showPdfViewer, setShowPdfViewer] = useState(false);
@@ -78,10 +49,36 @@ const HomeView = ({
   const [questionSet, setQuestionSet] = useState([]);
   const [currentQuestion, setCurrentQuestion] = useState('');
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const recentBooks = getRecentBooks(2);
   const [editingBook, setEditingBook] = useState(null);
   const [returnToViewer, setReturnToViewer] = useState(false);
   const [previousViewerState, setPreviousViewerState] = useState(null);
+
+  if (loadingUser) {
+    return (
+      <div className="fixed inset-0 flex items-center justify-center bg-white">
+        <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500" />
+      </div>
+    );
+  }
+  // console.log("People Loaded:", people.length);
+  const userName = userData?.name?.split(' ')[0] || 'Friend';
+  const weeklyGoal = userData?.weeklyGoal ?? 5;
+  const userStreak = userData?.streak ?? 0;
+
+  insights.forEach(i => {
+    const parsed = parseISO(i.date);
+    const adjusted = addHours(parsed, 5);
+  });
+
+  // ✅ Actual weekly insights count
+  const weekInsights = insights.filter(i => {
+    const parsed = parseISO(i.date);
+    const adjusted = addHours(parsed, 5);
+    return isThisWeek(adjusted);
+  }).length;
+
+
+  const recentBooks = getRecentBooks(2);
   const resetForm = () => {
     setSelectedOccasion(null);
     setQuestionSet([]);
@@ -113,10 +110,6 @@ const HomeView = ({
         )
       );
 
-      // If using API, add your update call here
-      // const response = await api.updateBook(updatedBook.id, updatedBook);
-      // return response.data;
-
       return updatedBook;
     } catch (error) {
       console.error("Failed to update book:", error);
@@ -124,86 +117,13 @@ const HomeView = ({
     }
   };
 
-  // In HomeView.jsx - simplify the BookEditor props
-  // In HomeView.jsx - update the BookEditor props
-  if (editingBook) {
-    // Define the update function
-    const updatePublishedBook = async (updatedBook) => {
-      try {
-        // 1. Update in your state
-        setBooks(prevBooks =>
-          prevBooks.map(book =>
-            book.id === updatedBook.id ? updatedBook : book
-          )
-        );
-
-        // 2. If using an API, add your backend call here:
-        // const response = await api.updateBook(updatedBook.id, updatedBook);
-        // return response.data;
-
-        // 3. For demo purposes without backend:
-        return updatedBook;
-
-      } catch (error) {
-        console.error("Failed to update book:", error);
-        throw error;
-      }
-    };
-
-    return (
-      // In the BookEditor props in HomeView.jsx:
-      <BookEditor
-        book={editingBook}
-        editingBook={editingBook}
-        returnToViewer={returnToViewer}
-        previousViewerState={previousViewerState}
-        userData={userData}
-        onClose={() => {
-          setEditingBook(null);
-          setReturnToViewer(false);
-        }}
-        onSave={async (updatedBook) => {
-          try {
-            const savedBook = await updatePublishedBook(updatedBook);
-            updateBook(savedBook);
-            setPdfTimestamp(Date.now());
-            setEditingBook(null);
-            setReturnToViewer(false);
-            return savedBook; // Make sure to return the saved book
-          } catch (error) {
-            console.error("Error saving book:", error);
-            throw error;
-          }
-        }}
-        onBackToViewer={(savedBook) => {
-          const bookToShow = savedBook || previousViewerState?.book;
-
-          // Remove any old ?ts= from the URL
-          const cleanPublishedBookUrl = bookToShow.publishedBook.split('?')[0];
-
-          setSelectedBook({
-            ...bookToShow,
-            publishedBook: `${cleanPublishedBookUrl}?ts=${Date.now()}`
-          });
-
-          setEditingBook(null);
-          setReturnToViewer(false);
-          setShowPdfViewer(true);
-
-          // Force re-render of viewer by nudging page
-          setCurrentPage(prev => prev + 1);
-          setTimeout(() => setCurrentPage(prev => prev - 1), 10);
-        }}
-      />
-    );
-  }
-
   useEffect(() => {
-    if (showPdfViewer) {
+    const modalIsOpen = editingBook || showPdfViewer || showCaptureOptions;
+
+    if (modalIsOpen) {
       document.body.style.overflow = 'hidden';
       document.body.style.touchAction = 'none';
 
-      // Prevent iOS pull-to-refresh if at top
       if (window.scrollY === 0) {
         window.scrollTo(0, 1);
       }
@@ -216,11 +136,10 @@ const HomeView = ({
       document.body.style.overflow = '';
       document.body.style.touchAction = '';
     };
-  }, [showPdfViewer]);
+  }, [editingBook, showPdfViewer, showCaptureOptions]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-blue-50 to-indigo-50 pb-20 overflow-y-auto">
-
       <div className="p-4">
         <HeroSection
           setShowCaptureOptions={setShowCaptureOptions}
@@ -313,6 +232,60 @@ const HomeView = ({
             }}
           />
         )
+      )}
+      {editingBook && (
+        <div className="fixed inset-0 z-[100] flex items-start justify-center p-4">
+          {/* backdrop */}
+          <div
+            className="absolute inset-0 bg-black/40"
+            onClick={() => {
+              // optional backdrop close
+              setEditingBook(null);
+              setReturnToViewer(false);
+            }}
+          />
+          {/* modal content */}
+          <div className="relative z-10 w-full">
+            <BookEditor
+              variant="modal"
+              book={editingBook}
+              editingBook={editingBook}
+              returnToViewer={returnToViewer}
+              previousViewerState={previousViewerState}
+              userData={userData}
+              onClose={() => {
+                setEditingBook(null);
+                setReturnToViewer(false);
+              }}
+              onSave={async (updatedBook) => {
+                try {
+                  const savedBook = await updatePublishedBook(updatedBook);
+                  updateBook(savedBook);
+                  setPdfTimestamp(Date.now());
+                  setEditingBook(null);
+                  setReturnToViewer(false);
+                  return savedBook;
+                } catch (err) {
+                  console.error('Error saving book:', err);
+                  throw err;
+                }
+              }}
+              onBackToViewer={(savedBook) => {
+                const bookToShow = savedBook || previousViewerState?.book;
+                const cleanUrl = bookToShow.publishedBook.split('?')[0];
+                setSelectedBook({
+                  ...bookToShow,
+                  publishedBook: `${cleanUrl}?ts=${Date.now()}`
+                });
+                setEditingBook(null);
+                setReturnToViewer(false);
+                setShowPdfViewer(true);
+                setCurrentPage(p => p + 1);
+                setTimeout(() => setCurrentPage(p => p - 1), 10);
+              }}
+            />
+          </div>
+        </div>
       )}
     </div>
   );

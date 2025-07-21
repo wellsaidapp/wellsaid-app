@@ -5,7 +5,17 @@ import ImageCropperModal from '../BookCreation/ImageCropperModal';
 import { uploadData } from 'aws-amplify/storage';
 import { fetchAuthSession } from 'aws-amplify/auth';
 
-const BookEditor = ({ book, onClose, onSave, onBackToViewer, returnToViewer, previousViewerState, editingBook, userData }) => {
+const BookEditor = ({
+  book,
+  onClose,
+  onSave,
+  onBackToViewer,
+  returnToViewer,
+  previousViewerState,
+  editingBook,
+  userData,
+  variant = 'page', // 'page' | 'modal'
+}) => {
   const [pages, setPages] = useState([]);
   const [title, setTitle] = useState(book.name);
   const [description, setDescription] = useState(book.description || '');
@@ -253,8 +263,13 @@ const BookEditor = ({ book, onClose, onSave, onBackToViewer, returnToViewer, pre
     }
   };
 
+  const rootClass =
+    variant === 'modal'
+      ? 'w-full max-w-xl sm:max-w-2xl max-h-[90vh] overflow-y-auto bg-white rounded-2xl shadow-2xl p-4'
+      : 'min-h-screen bg-gradient-to-br from-blue-50 via-blue-50 to-indigo-50 pb-20';
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-blue-50 to-indigo-50 pb-20">
+    <div className={rootClass}>
       <div className="p-4">
         <div className="flex justify-between items-center mb-4">
           <button
