@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import CaptureCard from './CaptureCard'; // Make sure this import exists
-import { ChevronDown, ChevronUp, PlusCircle, FolderOpen, Calendar, Plus, Save, X, Brain, Zap } from 'lucide-react';
+import { ChevronDown, ChevronUp, PlusCircle, FolderOpen, Calendar, Plus, Save, X, Brain, Zap, ArrowRight, Lightbulb, Clock, Pencil } from 'lucide-react';
 import { fetchAuthSession } from 'aws-amplify/auth';
 import { useSystemCollections } from '../../../context/SystemCollectionsContext';
 import { useUserCollections } from '../../../context/UserCollectionsContext';
@@ -265,19 +265,50 @@ const CollectionItem = ({
 
               {/* Enhanced Wizard Buttons */}
               <div className="flex justify-center gap-3 pb-1">
+              {/* Quick Capture Button */}
                 <button
                   onClick={() => onAddToCollection(collection, 'quick')}
-                  className="flex items-center gap-2 px-4 py-2 bg-white border border-blue-200 text-blue-600 rounded-lg hover:bg-blue-50 transition-colors text-sm font-medium shadow-xs"
+                  className="w-full max-w-[180px] bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-xl p-5 hover:shadow-lg transition-all hover:scale-[1.02]"
                 >
-                  <Zap className="w-4 h-4 text-blue-500" />
-                  Quick Capture
+                  <div className="flex items-center mb-3">
+                    <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center mr-3">
+                      <Zap size={18} className="text-white" />
+                    </div>
+                    <div className="text-left">
+                      <h3 className="font-semibold text-sm">Quick Capture</h3>
+                      <p className="text-blue-100 text-xs">Thoughtful prompts</p>
+                    </div>
+                  </div>
+                  <p className="text-blue-100 text-xs leading-relaxed mb-3">
+                    Answer thoughtful questions to capture what's on your mind
+                  </p>
+                  <div className="flex items-center text-blue-100 text-xs">
+                    <Clock size={12} className="mr-1" />
+                    <span>5-10 minutes</span>
+                  </div>
                 </button>
+
+                {/* Insight Builder Button */}
                 <button
                   onClick={() => onAddToCollection(collection, 'builder')}
-                  className="flex items-center gap-2 px-4 py-2 bg-white border border-green-200 text-green-600 rounded-lg hover:bg-green-50 transition-colors text-sm font-medium shadow-xs"
+                  className="w-full max-w-[180px] bg-gradient-to-br from-green-500 to-teal-500 text-white rounded-xl p-4 hover:shadow-lg transition-all hover:scale-[1.02]"
                 >
-                  <Brain className="w-4 h-4 text-green-500" />
-                  Insight Builder
+                    <div className="flex items-center mb-3">
+                    <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center mr-3">
+                        <Lightbulb size={18} className="text-white" />
+                      </div>
+                      <div className="text-left">
+                        <h3 className="font-semibold text-sm">Insight Builder</h3>
+                        <p className="text-green-100 text-xs">Start with an idea</p>
+                      </div>
+                    </div>
+                  <p className="text-green-100 text-xs leading-relaxed mb-2">
+                    Shape raw thoughts into meaningful takeaways with AI
+                  </p>
+                  <div className="flex items-center text-green-100 text-xs">
+                    <Pencil size={12} className="mr-1" />
+                    <span>10-15 minutes</span>
+                  </div>
                 </button>
               </div>
             </div>
