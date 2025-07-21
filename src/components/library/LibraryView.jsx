@@ -5,7 +5,7 @@ import { useSystemCollections } from '../../context/SystemCollectionsContext';
 import { useUserCollections } from '../../context/UserCollectionsContext';
 import { useBooks } from '../../context/BooksContext';
 import { useInsights } from '../../context/InsightContext';
-
+import { usePeople } from '../../context/PeopleContext';
 import { X } from 'lucide-react';
 
 // Component imports
@@ -33,6 +33,7 @@ const LibraryView = ({
   const { userCollections, loading: loadingUser } = useUserCollections();
   const { books, loadingBooks, updateBook, refreshBooks } = useBooks();
   const { userData, loading: loadingAppUser, refetchUser } = useUser();
+  const { refetchPeople } = usePeople();
   const [viewMode, setViewMode] = useState(defaultViewMode);
   const [collectionFilter, setCollectionFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -147,6 +148,7 @@ const LibraryView = ({
 
       // ✅ Only refresh after confirmed deletion
       await refreshBooks();
+      await refetchPeople();
     } catch (err) {
       console.error("❌ Book deletion failed:", err);
       // Optionally show toast or user feedback

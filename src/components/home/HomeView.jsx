@@ -141,6 +141,7 @@ const HomeView = ({
 
       // ✅ Only refresh after confirmed deletion
       await refreshBooks();
+      await refetchPeople();
     } catch (err) {
       console.error("❌ Book deletion failed:", err);
       // Optionally show toast or user feedback
