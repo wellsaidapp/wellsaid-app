@@ -25,7 +25,13 @@ const PeopleList = ({
   setSortDirection,
   onAddNewPerson
 }) => {
-
+  console.log("👥 PeopleList rendering with people:", individuals);
+  individuals.forEach(p => {
+    console.log(`🧑 ${p.name}:`, {
+      insightCount: p.insightCount,
+      systemCollectionCount: p.systemCollectionCount,
+    });
+  });
   const toggleSortField = () => {
     const currentIndex = sortOptions.indexOf(sortField);
     const nextField = sortOptions[(currentIndex + 1) % sortOptions.length];

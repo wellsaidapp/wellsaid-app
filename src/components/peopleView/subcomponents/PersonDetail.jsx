@@ -39,7 +39,7 @@ const PersonDetail = ({
 
   console.log("👤 PersonDetail received person:", person);
   console.log("📸 Avatar image:", person.avatarUrl?.toString?.().trim());
-
+  console.log("Insights being passed:", insights);
   const { systemCollections } = useSystemCollections();
   const { userCollections, loading } = useUserCollections();
 
@@ -298,14 +298,14 @@ const PersonDetail = ({
       <div className="grid grid-cols-2 gap-2 text-center mb-6">
         <StatCard
           label="Shared Insights"
-          value={personInsights.length}
+          value={person.insightCount}
           total={insights.length}
           showPercentage={true}
           color="blue"
         />
         <StatCard
           label="Shared Collections"
-          value={activeCollectionsCount}
+          value={person.systemCollectionCount}
           total={totalCollections}
           showPercentage={true}
           color="blue"

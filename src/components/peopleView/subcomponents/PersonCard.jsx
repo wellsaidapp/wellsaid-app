@@ -1,17 +1,19 @@
 import { ChevronRight } from 'lucide-react';
 
 const PersonCard = ({ person, insights, onClick }) => {
-  console.log("Person Received:", person);
-  const sharedInsightsCount = insights.filter(i =>
-    i.personIds?.includes(person.id)
-  ).length;
+  // console.log("Person Received:", person);
+  console.log(`📇 Rendering PersonCard: ${person.name}`, {
+    insightCount: person.insightCount,
+    systemCollectionCount: person.systemCollectionCount,
+  });
+  const sharedInsightsCount = person.insightCount ?? 0;
 
   const totalInsights = insights.length;
   const insightPercentage = totalInsights
     ? Math.round((sharedInsightsCount / totalInsights) * 100)
     : 0;
 
-  const activeCollections = person.activeCollectionsCount ?? 0;
+  const activeCollections = person.systemCollectionCount ?? 0;
   const totalCollections = person.totalCollectionsCount ?? 1;
   const collectionPercentage = Math.round((activeCollections / totalCollections) * 100);
 

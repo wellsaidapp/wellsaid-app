@@ -80,7 +80,7 @@ const BookCreationModal = ({
   const { refreshBooks } = useBooks();
   const { systemCollections, loading } = useSystemCollections();
   const { userData } = useUser();
-  const { refetchPeople } = usePeople();
+  const { refetchPeople, refreshPeople } = usePeople();
   const [isPublishing, setIsPublishing] = useState(false);
 
   const [showExitConfirmation, setShowExitConfirmation] = useState(false);
@@ -332,7 +332,7 @@ const BookCreationModal = ({
         successToast;
 
         await refreshBooks();
-        await refetchPeople();
+        await refreshPeople();
         resetCreationState();
         onClose();
       } catch (error) {

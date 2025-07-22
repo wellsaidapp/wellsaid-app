@@ -16,21 +16,25 @@ import { useUser } from '../../context/UserContext';
 import { useBooks } from '../../context/BooksContext';
 
 const PeopleView = ({ individuals, insights, collections, sharedBooks, setCurrentView }) => {
+  console.log("📄 PeopleView rendering");
+  console.log("🔍 individuals (from props):", individuals);
+
   const { systemCollections } = useSystemCollections();
-  if (Array.isArray(individuals)) {
-    console.log("🧑‍🤝‍🧑 Received individuals prop:", individuals.map(p => ({
-      name: p?.name,
-      id: p?.id,
-      avatarUrl: p?.avatarUrl,
-      hasImage:
-        typeof p.avatarUrl === 'string'
-          ? p.avatarUrl.trim() !== ''
-          : !!p.avatarUrl?.href
-    })));
-  } else {
-    console.warn("⚠️ individuals is not an array:", individuals);
-  }
+  // if (Array.isArray(individuals)) {
+  //   console.log("🧑‍🤝‍🧑 Received individuals prop:", individuals.map(p => ({
+  //     name: p?.name,
+  //     id: p?.id,
+  //     avatarUrl: p?.avatarUrl,
+  //     hasImage:
+  //       typeof p.avatarUrl === 'string'
+  //         ? p.avatarUrl.trim() !== ''
+  //         : !!p.avatarUrl?.href
+  //   })));
+  // } else {
+  //   console.warn("⚠️ individuals is not an array:", individuals);
+  // }
   const { people, refetchPeople, updatePerson } = usePeople();
+  console.log("🧠 people (from context):", people);
   const { userData, loading: loadingAppUser, refetchUser } = useUser();
   const [isCompletingAddPerson, setIsCompletingAddPerson] = useState(false);
   const { books, loadingBooks, updateBook, refreshBooks } = useBooks();
@@ -45,7 +49,7 @@ const PeopleView = ({ individuals, insights, collections, sharedBooks, setCurren
       setShowAddPerson(false);
 
       // Optional: Do something with newPerson if needed
-      console.log("Added person:", newPerson);
+      // console.log("Added person:", newPerson);
 
     } finally {
       setIsCompletingAddPerson(false);
@@ -276,7 +280,7 @@ const PeopleView = ({ individuals, insights, collections, sharedBooks, setCurren
 
   const handleSavePerson = async (personId, updatedFields) => {
     try {
-      console.log("✏️ Saving person update:", personId, updatedFields);
+      // console.log("✏️ Saving person update:", personId, updatedFields);
 
       const session = await fetchAuthSession();
       const idToken = session?.tokens?.idToken?.toString();
@@ -299,7 +303,7 @@ const PeopleView = ({ individuals, insights, collections, sharedBooks, setCurren
         ...updatedFields
       }));
 
-      console.log("✅ Person update complete and UI refreshed");
+      // console.log("✅ Person update complete and UI refreshed");
 
     } catch (err) {
       console.error("❌ Error saving person update:", err);
@@ -367,15 +371,15 @@ const PeopleView = ({ individuals, insights, collections, sharedBooks, setCurren
     });
   };
 
-  useEffect(() => {
-    const result = getSortedEnrichedIndividuals();
-    console.log("🔍 getSortedEnrichedIndividuals output:", result.map(p => ({
-      id: p.id,
-      name: p.name,
-      avatarUrl: p.avatarUrl,
-      activeCollectionsCount: p.activeCollectionsCount
-    })));
-  }, [individuals, insights, searchQuery, sortField, sortDirection]);
+  // useEffect(() => {
+  //   const result = getSortedEnrichedIndividuals();
+  //   console.log("🔍 getSortedEnrichedIndividuals output:", result.map(p => ({
+  //     id: p.id,
+  //     name: p.name,
+  //     avatarUrl: p.avatarUrl,
+  //     activeCollectionsCount: p.activeCollectionsCount
+  //   })));
+  // }, [individuals, insights, searchQuery, sortField, sortDirection]);
 
   const enrichedIndividuals = individuals.map(person => {
     const sharedSystemCollectionIds = new Set();
@@ -400,14 +404,14 @@ const PeopleView = ({ individuals, insights, collections, sharedBooks, setCurren
     };
   });
 
-  console.log('✅ Enriched Individuals:', enrichedIndividuals.map(p => ({
-    name: p.name,
-    id: p.id,
-    activeCollectionsCount: p.activeCollectionsCount,
-    totalCollectionsCount: p.totalCollectionsCount,
-    avatarUrl: p.avatarUrl,
-    isImageUsed: Boolean(p.avatarUrl?.trim?.())
-  })));
+  // console.log('✅ Enriched Individuals:', enrichedIndividuals.map(p => ({
+  //   name: p.name,
+  //   id: p.id,
+  //   activeCollectionsCount: p.activeCollectionsCount,
+  //   totalCollectionsCount: p.totalCollectionsCount,
+  //   avatarUrl: p.avatarUrl,
+  //   isImageUsed: Boolean(p.avatarUrl?.trim?.())
+  // })));
 
   if (showAddPerson) {
     return (

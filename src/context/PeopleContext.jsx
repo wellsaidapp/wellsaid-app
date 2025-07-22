@@ -19,34 +19,60 @@ export const PeopleProvider = ({ children }) => {
   };
 
   const fetchPeople = useCallback(async () => {
-    setLoadingPeople(true);
     try {
+      setLoadingPeople(true);
       const session = await fetchAuthSession();
       const idToken = session.tokens?.idToken?.toString();
+
       if (!idToken) {
-        setPeople([]);
+        setPeople([]); // Clear if unauthenticated
         return;
       }
 
-      const res = await fetch('https://aqaahphwfj.execute-api.us-east-2.amazonaws.com/dev/people', {
-        headers: { Authorization: idToken }
-      });
+      const response = await fetch(
+        'https://aqaahphwfj.execute-api.us-east-2.amazonaws.com/dev/people',
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: idToken,
+          },
+        }
+      );
 
-      const data = await res.json();
-      setPeople(data);
+      const raw = await response.json();
+      const people = Array.isArray(raw) ? raw : raw.people || [];
+      setPeople(people);
+      console.log('👥 People Loaded:', people);
     } catch (err) {
-      console.error("People fetch error:", err);
+      console.error('❌ Failed to load people:', err);
       setPeople([]);
     } finally {
       setLoadingPeople(false);
     }
   }, []);
 
-  // Add event listener for auth changes
+  const refreshPeople = useCallback(() => {
+    console.log("🔄 Manually refreshing people...");
+    return fetchPeople();
+  }, [fetchPeople]);
+
   useEffect(() => {
-    const handleAuthChange = () => fetchPeople();
-    window.addEventListener('authChange', handleAuthChange);
-    return () => window.removeEventListener('authChange', handleAuthChange);
+    const checkAuthAndFetch = async () => {
+      try {
+        const session = await fetchAuthSession();
+        if (session.tokens?.idToken) {
+          await fetchPeople();
+        }
+      } catch (err) {
+        console.error('Auth check failed (People):', err);
+      }
+    };
+
+    checkAuthAndFetch();
+
+    const listener = () => checkAuthAndFetch();
+    window.addEventListener('authChange', listener);
+    return () => window.removeEventListener('authChange', listener);
   }, [fetchPeople]);
 
   // Initial fetch
@@ -58,6 +84,7 @@ export const PeopleProvider = ({ children }) => {
     <PeopleContext.Provider value={{
       people,
       loadingPeople,
+      refreshPeople,
       refetchPeople: fetchPeople, // Expose fetch function
       updatePerson,
       removePerson
