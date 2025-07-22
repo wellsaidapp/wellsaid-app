@@ -178,24 +178,7 @@ const BookCreationModal = ({
   const handleComplete = async (actionType = 'cancel') => {
     if (actionType === 'publish' || actionType === 'draft') {
       setIsPublishing(true);
-      let loadingToast;
       try {
-        loadingToast = toast.custom(
-          (t) => (
-            <ToastMessage
-              type="info"
-              title={actionType === 'publish' ? "Publishing..." : "Saving Draft..."}
-              message="Please wait while we process your book"
-              onDismiss={() => toast.dismiss(t.id)}
-            />
-          ),
-          {
-            duration: Infinity,
-            position: 'bottom-center',
-            style: { zIndex: 9999 }
-          }
-        );
-
         // First create/update the book record to get the book ID
         const bookResponse = await saveBookToRDS({
           existingBookId: newBook.existingBookId,
@@ -303,7 +286,6 @@ const BookCreationModal = ({
             />
           ),
           {
-            id: loadingToast,
             duration: isTouchDevice() ? 5000 : 4000,
             position: 'bottom-center',
             style: {
@@ -601,24 +583,47 @@ const BookCreationModal = ({
                     if (bookCreationStep < 7) {
                       setBookCreationStep(bookCreationStep + 1);
                     } else {
-                      // Final step: publish or save draft
                       handleComplete(newBook.isDraft ? 'draft' : 'publish');
                     }
                   }}
-                  className={`px-4 py-2 rounded-lg ${
+                  className={`px-6 py-2 rounded-lg flex items-center justify-center min-w-[140px] transition-colors ${
                     bookCreationStep === 7
                       ? newBook.isDraft
-                        ? 'bg-yellow-500 hover:bg-yellow-600 text-white'
-                        : 'bg-green-600 hover:bg-green-700 text-white'
+                        ? isPublishing
+                          ? 'bg-yellow-400 text-white cursor-wait' // Disabled draft state
+                          : 'bg-yellow-500 hover:bg-yellow-600 text-white'
+                        : isPublishing
+                          ? 'bg-green-500/80 text-white cursor-wait' // Disabled publish state
+                          : 'bg-green-600 hover:bg-green-700 text-white'
                       : 'bg-blue-600 hover:bg-blue-700 text-white'
                   }`}
                   disabled={isPublishing}
                 >
-                  {bookCreationStep === 7
-                    ? newBook.isDraft
-                      ? isPublishing ? 'Saving...' : 'Save Draft'
-                      : isPublishing ? 'Publishing...' : 'Publish Book'
-                    : 'Next'}
+                  {bookCreationStep === 7 ? (
+                    newBook.isDraft ? (
+                      isPublishing ? (
+                        <>
+                          <svg className="animate-spin h-4 w-4 mr-2 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          Saving...
+                        </>
+                      ) : (
+                        'Save Draft'
+                      )
+                    ) : isPublishing ? (
+                      <>
+                        <svg className="animate-spin h-4 w-4 mr-2 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Publishing...
+                      </>
+                    ) : (
+                      'Publish Book'
+                    )
+                  ) : 'Next'}
                 </button>
               </div>
             </div>
