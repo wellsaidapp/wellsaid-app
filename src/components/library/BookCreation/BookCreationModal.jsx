@@ -31,6 +31,7 @@ import { useSystemCollections } from '../../../context/SystemCollectionsContext'
 import { useUser } from '../../../context/UserContext';
 import { useBooks } from '../../../context/BooksContext';
 import { usePeople } from '../../../context/PeopleContext';
+import { useInsights } from '../../../context/InsightContext';
 
 const BookCreationModal = ({
   onClose,
@@ -81,6 +82,7 @@ const BookCreationModal = ({
   const { systemCollections, loading } = useSystemCollections();
   const { userData } = useUser();
   const { refetchPeople, refreshPeople } = usePeople();
+  const { refreshInsights } = useInsights();
   const [isPublishing, setIsPublishing] = useState(false);
 
   const [showExitConfirmation, setShowExitConfirmation] = useState(false);
@@ -333,6 +335,7 @@ const BookCreationModal = ({
 
         await refreshBooks();
         await refreshPeople();
+        await refreshInsights();
         resetCreationState();
         onClose();
       } catch (error) {

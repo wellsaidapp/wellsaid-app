@@ -28,7 +28,7 @@ const LibraryView = ({
   defaultViewMode = 'collections'
 }) => {
   console.log("INDIVIDUALS IN LIBRARY:", individuals);
-  const { insights, setInsights } = useInsights();
+  const { insights, setInsights, refreshInsights } = useInsights();
   const { systemCollections, loading: loadingSystem } = useSystemCollections();
   const { userCollections, loading: loadingUser } = useUserCollections();
   const { books, loadingBooks, updateBook, refreshBooks } = useBooks();
@@ -149,6 +149,7 @@ const LibraryView = ({
       // ✅ Only refresh after confirmed deletion
       await refreshBooks();
       await refetchPeople();
+      await refreshInsights();
     } catch (err) {
       console.error("❌ Book deletion failed:", err);
       // Optionally show toast or user feedback
