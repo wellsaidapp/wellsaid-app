@@ -86,6 +86,7 @@ const ProfileView = ({ user, insights = [], individuals = [], collections = [], 
     try {
       const userId = userData?.cognitoId;
       const fileName = `Users/Active/${userId}/images/${userId}.jpg`;
+      const timestamp = Date.now();
 
       // ✅ Convert base64 Data URL to Blob
       const base64Data = croppedImage.split(',')[1];
@@ -121,7 +122,14 @@ const ProfileView = ({ user, insights = [], individuals = [], collections = [], 
         }
       });
 
-      console.log("🖼 Avatar uploaded to:", avatarUrl);
+      // Add timestamp to URL
+      const bustedAvatarUrl = `${avatarUrl}?v=${timestamp}`;
+      console.log("🖼 Avatar uploaded to:", bustedAvatarUrl);
+
+      setCurrentUser(prev => ({
+        ...prev,
+        avatar: bustedAvatarUrl
+      }));
 
       await refetchUser(true); // Refetch context
     } catch (err) {
