@@ -266,34 +266,70 @@ const BookCreationModal = ({
           }
         }
 
-        // Success toast
-        toast.success(
-          (t) => (
-            <ToastMessage
-              type="success"
-              title={isTouchDevice() ? "Book Published!" : "Book Published"}
-              message={
-                isTouchDevice()
-                  ? <span className="block space-y-1">
-                      <span className="block">Your book "{newBook.title || 'Untitled Book'}" is ready!</span>
-                      <span className="block">
-                        Access it anytime from <span className="font-semibold">My Books</span>.
+        // Add small delay to ensure spinner completes its animation
+        await new Promise(resolve => setTimeout(resolve, 300));
+
+        // Replace your current success toast with this conditional version:
+        const successToast = actionType === 'publish' ? (
+          toast.success(
+            (t) => (
+              <ToastMessage
+                type="success"
+                title={isTouchDevice() ? "Book Published!" : "Book Published"}
+                message={
+                  isTouchDevice()
+                    ? <span className="block space-y-1">
+                        <span className="block">Your book "{newBook.title || 'Untitled Book'}" is ready!</span>
+                        <span className="block">
+                          Access it anytime from <span className="font-semibold">My Books</span>.
+                        </span>
                       </span>
-                    </span>
-                  : `"${newBook.title || 'Untitled Book'}" has been published.`
+                    : `"${newBook.title || 'Untitled Book'}" has been published.`
+                }
+                onDismiss={() => toast.dismiss(t.id)}
+              />
+            ),
+            {
+              duration: isTouchDevice() ? 5000 : 4000,
+              position: 'bottom-center',
+              style: {
+                marginBottom: '2rem',
+                zIndex: 9999
               }
-              onDismiss={() => toast.dismiss(t.id)}
-            />
-          ),
-          {
-            duration: isTouchDevice() ? 5000 : 4000,
-            position: 'bottom-center',
-            style: {
-              marginBottom: '2rem',
-              zIndex: 9999
             }
-          }
+          )
+        ) : (
+          toast.success(
+            (t) => (
+              <ToastMessage
+                type="success"
+                title="Draft Saved"
+                message={
+                  isTouchDevice()
+                    ? <span className="block space-y-1">
+                        <span className="block">Your draft "{newBook.title || 'Untitled Book'}" was saved.</span>
+                        <span className="block">
+                          You can continue editing from <span className="font-semibold">My Books</span>.
+                        </span>
+                      </span>
+                    : `Draft "${newBook.title || 'Untitled Book'}" was successfully saved`
+                }
+                onDismiss={() => toast.dismiss(t.id)}
+              />
+            ),
+            {
+              duration: isTouchDevice() ? 5000 : 4000,
+              position: 'bottom-center',
+              style: {
+                marginBottom: '2rem',
+                zIndex: 9999
+              }
+            }
+          )
         );
+
+        await new Promise(resolve => setTimeout(resolve, 300)); // Small delay
+        successToast;
 
         await refreshBooks();
         await refetchPeople();
