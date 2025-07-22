@@ -33,7 +33,7 @@ const PeopleView = ({ individuals, insights, collections, sharedBooks, setCurren
   // } else {
   //   console.warn("⚠️ individuals is not an array:", individuals);
   // }
-  const { people, refetchPeople, updatePerson } = usePeople();
+  const { people, refetchPeople, updatePerson, refreshPeople } = usePeople();
   console.log("🧠 people (from context):", people);
   const { userData, loading: loadingAppUser, refetchUser } = useUser();
   const [isCompletingAddPerson, setIsCompletingAddPerson] = useState(false);
@@ -270,6 +270,7 @@ const PeopleView = ({ individuals, insights, collections, sharedBooks, setCurren
         ...prev,
         avatarUrl: cacheBustedUrl
       }));
+      await refreshPeople();
 
     } catch (err) {
       console.error("❌ Error uploading person avatar:", err);
