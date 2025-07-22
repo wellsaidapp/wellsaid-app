@@ -123,7 +123,6 @@ const ProfileView = ({ user, insights = [], individuals = [], collections = [], 
 
       console.log("🖼 Avatar uploaded to:", avatarUrl);
 
-      await handleUpdateUser({ avatar: avatarUrl });
       await refetchUser(true); // Refetch context
     } catch (err) {
       console.error("❌ Error uploading avatar to S3:", err);

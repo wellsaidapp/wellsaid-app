@@ -40,7 +40,7 @@ export const UserProvider = ({ children }) => {
       const cognitoId = user.userId; // or data.cognitoId if your API returns it now
 
       // 🖼 Try loading avatar image from S3
-      const avatarKey = `Users/Active/${cognitoId}/images/avatar.jpg`;
+      const avatarKey = `Users/Active/${cognitoId}/images/${cognitoId}.jpg`;
 
       try {
         const { url } = await getUrl({
