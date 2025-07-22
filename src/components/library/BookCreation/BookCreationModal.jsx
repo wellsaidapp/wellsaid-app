@@ -602,18 +602,6 @@ const BookCreationModal = ({
               </button>
 
               <div className="flex items-center space-x-2">
-                {bookCreationStep < 7 && (
-                  <button
-                    onClick={() => {
-                      // Immediately show draft saved toast
-                      handleComplete('draft');
-                    }}
-                    className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg"
-                  >
-                    Save as Draft
-                  </button>
-                )}
-
                 <button
                   onClick={() => {
                     if (bookCreationStep < 7) {
