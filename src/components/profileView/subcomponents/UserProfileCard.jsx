@@ -29,7 +29,7 @@ const UserProfileCard = ({
       reader.readAsDataURL(file);
     }
   };
-
+  
   return (
     <div className={`bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-sm border border-white/50 text-center ${className}`}>
       {/* Avatar Circle - Modified to support image */}

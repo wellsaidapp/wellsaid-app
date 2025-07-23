@@ -219,6 +219,28 @@ const ProfileView = ({ user, insights = [], individuals = [], collections = [], 
     return <HelpAndSupport onBack={() => setShowHelpSupport(false)} />;
   }
 
+  useEffect(() => {
+    const modalIsOpen = showAvatarCropper;
+
+    if (modalIsOpen) {
+      document.body.style.overflow = 'hidden';
+      document.body.style.touchAction = 'none';
+
+      // Prevent iOS pull-to-refresh at top of page
+      if (window.scrollY === 0) {
+        window.scrollTo(0, 1);
+      }
+    } else {
+      document.body.style.overflow = '';
+      document.body.style.touchAction = '';
+    }
+
+    return () => {
+      document.body.style.overflow = '';
+      document.body.style.touchAction = '';
+    };
+  }, [showAvatarCropper]);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-blue-50 to-indigo-50 pb-20">
       <div className="p-4">
