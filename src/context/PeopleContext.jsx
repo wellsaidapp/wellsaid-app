@@ -51,10 +51,15 @@ export const PeopleProvider = ({ children }) => {
     }
   }, []);
 
-  const refreshPeople = useCallback(() => {
+  const refreshPeople = useCallback(async (preserveSelectedId = null) => {
     console.log("🔄 Manually refreshing people...");
-    return fetchPeople();
-  }, [fetchPeople]);
+    await fetchPeople();
+
+    if (preserveSelectedId) {
+      const refreshed = people.find(p => p.id === preserveSelectedId);
+      return refreshed || null;
+    }
+  }, [fetchPeople, people]);
 
   useEffect(() => {
     const checkAuthAndFetch = async () => {

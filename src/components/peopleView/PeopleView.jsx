@@ -261,6 +261,11 @@ const PeopleView = ({ individuals, insights, collections, sharedBooks, setCurren
       // ✅ Rehydrate from server (important for fresh avatar across components)
       await refreshPeople();
 
+      const refreshedPerson = await refreshPeople(selectedPerson.id);
+      if (refreshedPerson) {
+        setSelectedPerson(refreshedPerson);
+      }
+
     } catch (err) {
       console.error("❌ Error uploading person avatar:", err);
     } finally {
@@ -425,7 +430,9 @@ const PeopleView = ({ individuals, insights, collections, sharedBooks, setCurren
           <PersonDetail
             person={{
               ...selectedPerson,
-              avatarUrl: selectedPerson.avatarUrl?.toString?.().trim() || null, // Use the URL href
+              avatarUrl: selectedPerson.avatarUrl
+                ? `${selectedPerson.avatarUrl.split('?')[0]}?t=${Date.now()}`
+                : null,
               avatarInitial: selectedPerson.avatar // Pass the initial separately
             }}
             insights={insights}
