@@ -20,19 +20,6 @@ const PeopleView = ({ individuals, insights, collections, sharedBooks, setCurren
   console.log("🔍 individuals (from props):", individuals);
 
   const { systemCollections } = useSystemCollections();
-  // if (Array.isArray(individuals)) {
-  //   console.log("🧑‍🤝‍🧑 Received individuals prop:", individuals.map(p => ({
-  //     name: p?.name,
-  //     id: p?.id,
-  //     avatarUrl: p?.avatarUrl,
-  //     hasImage:
-  //       typeof p.avatarUrl === 'string'
-  //         ? p.avatarUrl.trim() !== ''
-  //         : !!p.avatarUrl?.href
-  //   })));
-  // } else {
-  //   console.warn("⚠️ individuals is not an array:", individuals);
-  // }
   const { people, refetchPeople, updatePerson, refreshPeople } = usePeople();
   console.log("🧠 people (from context):", people);
   const { userData, loading: loadingAppUser, refetchUser } = useUser();
@@ -43,14 +30,7 @@ const PeopleView = ({ individuals, insights, collections, sharedBooks, setCurren
   const handleAddPersonComplete = async (newPerson) => {
     try {
       setIsCompletingAddPerson(true);
-
-      // This will wait for ALL operations in AddPersonFlow to complete
-      // before closing the modal
       setShowAddPerson(false);
-
-      // Optional: Do something with newPerson if needed
-      // console.log("Added person:", newPerson);
-
     } finally {
       setIsCompletingAddPerson(false);
     }
@@ -246,43 +226,50 @@ const PeopleView = ({ individuals, insights, collections, sharedBooks, setCurren
         data: imageBlob,
         options: {
           contentType: 'image/jpeg',
-          accessLevel: 'public'
+          accessLevel: 'public',
+          metadata: {
+            'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0'
+          }
         }
       }).result;
 
-      // ✅ Get public URL
-      const avatarBaseUrl = `https://wellsaidappdeva7ff28b66c7e4c6785e936c0092e78810660a-dev.s3.us-east-2.amazonaws.com/public/${fileName}`;
-      const cacheBustedUrl = `${avatarBaseUrl}?t=${Date.now()}`;
+      // ✅ Use Amplify getUrl to resolve base URL
+      const { url } = await getUrl({
+        key: fileName,
+        options: { accessLevel: 'public' }
+      });
+      const avatarUrl = url.toString();
+      const cacheBustedUrl = `${avatarUrl}?t=${Date.now()}`;
 
-      // ✅ Store clean URL in DB
+      // ✅ Store clean version in DB
       await fetch(`https://aqaahphwfj.execute-api.us-east-2.amazonaws.com/dev/people/${personId}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
           Authorization: idToken.toString()
         },
-        body: JSON.stringify({ avatarUrl: avatarBaseUrl }) // ✅ clean URL only
+        body: JSON.stringify({ avatarUrl }) // if variable name matches key
       });
 
-      // ✅ Use cache-busted version locally
+      // ✅ Update local context and rehydrate
       updatePerson({ id: personId, avatarUrl: cacheBustedUrl });
       setSelectedPerson(prev => ({
         ...prev,
         avatarUrl: cacheBustedUrl
       }));
+
+      // ✅ Rehydrate from server (important for fresh avatar across components)
       await refreshPeople();
 
     } catch (err) {
       console.error("❌ Error uploading person avatar:", err);
     } finally {
-      setIsUploadingAvatar(false); // ✅ Always stop spinner
+      setIsUploadingAvatar(false);
     }
   };
 
   const handleSavePerson = async (personId, updatedFields) => {
     try {
-      // console.log("✏️ Saving person update:", personId, updatedFields);
-
       const session = await fetchAuthSession();
       const idToken = session?.tokens?.idToken?.toString();
       if (!idToken) throw new Error("No ID token found");
@@ -303,9 +290,6 @@ const PeopleView = ({ individuals, insights, collections, sharedBooks, setCurren
         ...prev,
         ...updatedFields
       }));
-
-      // console.log("✅ Person update complete and UI refreshed");
-
     } catch (err) {
       console.error("❌ Error saving person update:", err);
     }
@@ -372,16 +356,6 @@ const PeopleView = ({ individuals, insights, collections, sharedBooks, setCurren
     });
   };
 
-  // useEffect(() => {
-  //   const result = getSortedEnrichedIndividuals();
-  //   console.log("🔍 getSortedEnrichedIndividuals output:", result.map(p => ({
-  //     id: p.id,
-  //     name: p.name,
-  //     avatarUrl: p.avatarUrl,
-  //     activeCollectionsCount: p.activeCollectionsCount
-  //   })));
-  // }, [individuals, insights, searchQuery, sortField, sortDirection]);
-
   const enrichedIndividuals = individuals.map(person => {
     const sharedSystemCollectionIds = new Set();
 
@@ -405,15 +379,6 @@ const PeopleView = ({ individuals, insights, collections, sharedBooks, setCurren
     };
   });
 
-  // console.log('✅ Enriched Individuals:', enrichedIndividuals.map(p => ({
-  //   name: p.name,
-  //   id: p.id,
-  //   activeCollectionsCount: p.activeCollectionsCount,
-  //   totalCollectionsCount: p.totalCollectionsCount,
-  //   avatarUrl: p.avatarUrl,
-  //   isImageUsed: Boolean(p.avatarUrl?.trim?.())
-  // })));
-
   if (showAddPerson) {
     return (
       <AddPersonFlow
@@ -422,31 +387,6 @@ const PeopleView = ({ individuals, insights, collections, sharedBooks, setCurren
       />
     );
   }
-
-  // if (editingBook) {
-  //   return (
-  //     <BookEditor
-  //       book={editingBook}
-  //       onClose={() => {
-  //         setEditingBook(null);
-  //         setReturnToViewer(false);
-  //       }}
-  //       onSave={async (updatedBook) => {
-  //         // TODO: Implement your save logic here
-  //         // await updateBook(updatedBook);
-  //         setEditingBook(null);
-  //         setReturnToViewer(false);
-  //       }}
-  //       onBackToViewer={() => {
-  //         if (returnToViewer && previousViewerState) {
-  //           setSelectedBook(previousViewerState.book);
-  //         }
-  //         setEditingBook(null);
-  //         setReturnToViewer(false);
-  //       }}
-  //     />
-  //   );
-  // }
 
   useEffect(() => {
     if (selectedBook?.status === "Published") {
