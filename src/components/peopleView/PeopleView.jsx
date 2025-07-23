@@ -77,12 +77,14 @@ const PeopleView = ({
   const [editingBook, setEditingBook] = useState(null);
   const [selectedBook, setSelectedBook] = useState(null);
   const [showBookCreation, setShowBookCreation] = useState(false);
+  const [showAvatarCropper, setShowAvatarCropper] = useState(false);
 
   useEffect(() => {
     const modalIsOpen =
       editingBook !== null ||
       selectedBook?.status === "Published" ||
-      showBookCreation;
+      showBookCreation ||
+      showAvatarCropper;
 
     if (modalIsOpen) {
       document.body.style.overflow = 'hidden';
@@ -100,7 +102,7 @@ const PeopleView = ({
       document.body.style.overflow = '';
       document.body.style.touchAction = '';
     };
-  }, [editingBook, selectedBook, showBookCreation]);
+  }, [editingBook, selectedBook, showBookCreation, showAvatarCropper]);
 
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -112,7 +114,7 @@ const PeopleView = ({
 
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [avatarUploadTemp, setAvatarUploadTemp] = useState(null); // base64 temp image
-  const [showAvatarCropper, setShowAvatarCropper] = useState(false);
+
   const [croppedAvatarImage, setCroppedAvatarImage] = useState(null); // Final cropped avatar image
 
   const systemCollectionIds = new Set(systemCollections.map(c => c.id));
