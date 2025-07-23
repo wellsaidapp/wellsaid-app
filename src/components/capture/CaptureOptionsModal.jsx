@@ -103,7 +103,7 @@ const CaptureOptionsModal = ({
             setCurrentQuestionIndex(0);
             setCaptureMode('milestone');
             setShowCaptureOptions(false);
-            setCurrentView('capture');
+            setCurrentView('specialOccasionSelectPerson');
           }}
           className="w-full bg-gradient-to-br from-purple-500 to-pink-500 text-white rounded-2xl p-6 text-left hover:shadow-lg transition-all hover:scale-[1.02]"
         >

@@ -18,6 +18,7 @@ const sortOptions = ['name', 'insights', 'collections'];
 const PeopleList = ({
   individuals,
   insights,
+  totalCollectionsCount = 20,
   onSelectPerson,
   sortField,
   setSortField,
@@ -82,20 +83,22 @@ const PeopleList = ({
     return [...individuals].sort((a, b) => {
       let aVal, bVal;
 
-      // Get comparison value based on selected sortField
       switch (sortField) {
         case 'name':
-          aVal = a.name.toLowerCase();
-          bVal = b.name.toLowerCase();
+          aVal = a.name?.toLowerCase() || '';
+          bVal = b.name?.toLowerCase() || '';
           break;
+
         case 'insights':
-          aVal = insights.filter(i => i.recipients?.includes(a.id)).length;
-          bVal = insights.filter(i => i.recipients?.includes(b.id)).length;
+          aVal = a.insightCount || 0;
+          bVal = b.insightCount || 0;
           break;
+
         case 'collections':
-          aVal = a.collections?.length || 0;
-          bVal = b.collections?.length || 0;
+          aVal = a.systemCollectionCount || 0;
+          bVal = b.systemCollectionCount || 0;
           break;
+
         default:
           return 0;
       }
@@ -118,12 +121,13 @@ const PeopleList = ({
       </div>
 
       <div className="space-y-3">
-        {individuals.length > 0 ? (
-          individuals.map(person => (
+      {getSortedIndividuals().length > 0 ? (
+        getSortedIndividuals().map(person => (
             <PersonCard
               key={person.id}
               person={person}
               insights={insights}
+              totalCollectionsCount={totalCollectionsCount}
               onClick={() => onSelectPerson(person)}
             />
           ))

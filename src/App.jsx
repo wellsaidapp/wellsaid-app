@@ -12,6 +12,7 @@ import { useInsights } from './context/InsightContext';
 import { useBooks } from './context/BooksContext';
 import PullToRefresh from 'pulltorefreshjs';
 import MainLayout from './components/appLayout/MainLayout';
+import SelectPersonView from './components/capture/SpecialOccasion/SelectPersonView';
 
 const MyComponent = () => {
   const { userCollections, loading } = useUserCollections();
@@ -175,6 +176,17 @@ const WellSaidApp = () => {
           user={userData}
           setCurrentView={setCurrentView}
         />;
+      case 'specialOccasionSelectPerson':
+        return (
+          <SelectPersonView
+            individuals={people}
+            onSelectPerson={(person) => {
+              setSelectedPerson(person);
+              setCurrentView('specialOccasionSelectCollections');
+            }}
+            onBack={() => setCurrentView('home')}
+          />
+        );
       default:
         return <HomeView />;
     }
