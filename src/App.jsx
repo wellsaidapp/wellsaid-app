@@ -74,6 +74,7 @@ const WellSaidApp = () => {
   const [libraryDefaultViewMode, setLibraryDefaultViewMode] = useState('collections');
   const { books, refreshBooks } = useBooks();
   const { refetchUser } = useUser();
+  const [selectedPerson, setSelectedPerson] = useState(null);
 
   useEffect(() => {
     const storedAuthState = localStorage.getItem('wellsaid-auth-state');
@@ -117,6 +118,13 @@ const WellSaidApp = () => {
     };
   }, []);
 
+  useEffect(() => {
+    // Reset selectedPerson when leaving people view
+    if (currentView !== 'people') {
+      setSelectedPerson(null);
+    }
+  }, [currentView]);
+
   const [showCaptureOptions, setShowCaptureOptions] = useState(false);
   const [showCapture, setShowCapture] = useState(false);
   const [newInsight, setNewInsight] = useState('');
@@ -156,6 +164,8 @@ const WellSaidApp = () => {
           collections={userCollections}
           setCurrentView={setCurrentView}
           sharedBooks={books}
+          selectedPerson={selectedPerson}
+          setSelectedPerson={setSelectedPerson}
         />;
       case 'profile':
         return <ProfileView

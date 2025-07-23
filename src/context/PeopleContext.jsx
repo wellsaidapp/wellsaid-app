@@ -52,12 +52,20 @@ export const PeopleProvider = ({ children }) => {
   }, []);
 
   const refreshPeople = useCallback(async (preserveSelectedId = null) => {
-    console.log("🔄 Manually refreshing people...");
-    await fetchPeople();
+    console.log("🔄 [refreshPeople] Starting refresh...");
+    try {
+      await fetchPeople();
+      console.log("🔄 [refreshPeople] Refresh completed. Current people:", people);
 
-    if (preserveSelectedId) {
-      const refreshed = people.find(p => p.id === preserveSelectedId);
-      return refreshed || null;
+      if (preserveSelectedId) {
+        const refreshed = people.find(p => p.id === preserveSelectedId);
+        console.log(`🔄 [refreshPeople] Found refreshed person with ID ${preserveSelectedId}:`, refreshed);
+        return refreshed || null;
+      }
+      return people;
+    } catch (error) {
+      console.error("❌ [refreshPeople] Error during refresh:", error);
+      throw error;
     }
   }, [fetchPeople, people]);
 

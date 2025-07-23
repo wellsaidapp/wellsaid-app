@@ -5,6 +5,7 @@ const PersonCard = ({ person, insights, onClick }) => {
   console.log(`📇 Rendering PersonCard: ${person.name}`, {
     insightCount: person.insightCount,
     systemCollectionCount: person.systemCollectionCount,
+    avatarLocation: person.avatarUrl,
   });
   const sharedInsightsCount = person.insightCount ?? 0;
 

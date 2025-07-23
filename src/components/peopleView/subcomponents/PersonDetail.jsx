@@ -37,9 +37,12 @@ const PersonDetail = ({
   onDeleteBook
 }) => {
 
-  console.log("👤 PersonDetail received person:", person);
-  console.log("📸 Avatar image:", person.avatarUrl?.toString?.().trim());
-  console.log("Insights being passed:", insights);
+  console.log("👤 [PersonDetail] Rendering with person:", {
+    id: person.id,
+    name: person.name,
+    avatarUrl: person.avatarUrl ? 'exists' : 'null',
+    avatarUrlLocation: person.avatarUrl
+  });
   const { systemCollections } = useSystemCollections();
   const { userCollections, loading } = useUserCollections();
 
