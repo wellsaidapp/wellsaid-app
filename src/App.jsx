@@ -14,6 +14,7 @@ import PullToRefresh from 'pulltorefreshjs';
 import MainLayout from './components/appLayout/MainLayout';
 import SelectPersonView from './components/capture/SpecialOccasion/SelectPersonView';
 import CollectionSelectionView from './components/capture/SpecialOccasion/CollectionSelectionView';
+import SpecialOccasionCapture from './components/capture/SpecialOccasion/SpecialOccasionCapture';
 
 const MyComponent = () => {
   const { userCollections, loading } = useUserCollections();
@@ -81,6 +82,15 @@ const WellSaidApp = () => {
     person: null,
     collections: []
   });
+
+  // Handler when collections are selected
+  const handleCollectionsSelected = (collections) => {
+    setSpecialOccasionData(prev => ({
+      ...prev,
+      collections
+    }));
+    setCurrentView('specialOccasion');
+  };
 
   useEffect(() => {
     const storedAuthState = localStorage.getItem('wellsaid-auth-state');
@@ -167,22 +177,11 @@ const WellSaidApp = () => {
   }, [currentView]);
 
   useEffect(() => {
-    console.log('Body scroll/touch styles:', {
-      overflow: document.body.style.overflow,
-      touchAction: document.body.style.touchAction
-    });
-  }, [currentView]);
-
-  useEffect(() => {
     // Reset selectedPerson when leaving people view
     if (currentView !== 'people') {
       setSelectedPerson(null);
     }
   }, [currentView]);
-
-  useEffect(() => {
-    console.log('currentView changed to:', currentView);
-  }, [currentView]); // Dependency array - runs whenever currentView changes
 
   const [showCaptureOptions, setShowCaptureOptions] = useState(false);
   const [showCapture, setShowCapture] = useState(false);
@@ -203,10 +202,29 @@ const WellSaidApp = () => {
           books={books}
         />;
       case 'capture':
-        return <CaptureView
-          captureMode={captureMode}
-          setCurrentView={setCurrentView}
-        />;
+        // Render different capture modes based on captureMode
+        switch (captureMode) {
+          case 'quick':
+          return <CaptureView
+            captureMode={captureMode}
+            setCurrentView={setCurrentView}
+          />;
+          case 'insight':
+          return <CaptureView
+            captureMode={captureMode}
+            setCurrentView={setCurrentView}
+          />;
+          case 'milestone':
+            return <SpecialOccasionCapture
+              setCurrentView={setCurrentView}
+              specialOccasionData={specialOccasionData}
+            />;
+          default:
+          return <CaptureView
+            captureMode={captureMode}
+            setCurrentView={setCurrentView}
+          />;
+        }
       case 'library':
         return <LibraryView
           insights={insights}
