@@ -33,6 +33,7 @@ export const SystemCollectionsProvider = ({ children }) => {
       const raw = await response.json();
       const collections = Array.isArray(raw) ? raw : raw.collections || [];
       setSystemCollections(collections);
+      console.log("System Collections from Context:", collections);
     } catch (err) {
       console.error("Failed to load system collections:", err);
       setSystemCollections([]);

@@ -13,6 +13,7 @@ import { useBooks } from './context/BooksContext';
 import PullToRefresh from 'pulltorefreshjs';
 import MainLayout from './components/appLayout/MainLayout';
 import SelectPersonView from './components/capture/SpecialOccasion/SelectPersonView';
+import CollectionSelectionView from './components/capture/SpecialOccasion/CollectionSelectionView';
 
 const MyComponent = () => {
   const { userCollections, loading } = useUserCollections();
@@ -76,6 +77,10 @@ const WellSaidApp = () => {
   const { books, refreshBooks } = useBooks();
   const { refetchUser } = useUser();
   const [selectedPerson, setSelectedPerson] = useState(null);
+  const [specialOccasionData, setSpecialOccasionData] = useState({
+    person: null,
+    collections: []
+  });
 
   useEffect(() => {
     const storedAuthState = localStorage.getItem('wellsaid-auth-state');
@@ -181,11 +186,29 @@ const WellSaidApp = () => {
           <SelectPersonView
             individuals={people}
             onSelectPerson={(person) => {
-              setSelectedPerson(person);
+              setSpecialOccasionData(prev => ({
+                ...prev,
+                person
+              }));
               setCurrentView('specialOccasionSelectCollections');
             }}
             onBack={() => setCurrentView('home')}
           />
+        );
+      case 'specialOccasionSelectCollections':
+        return (
+          <CollectionSelectionView
+          selectedPerson={specialOccasionData.person}
+          onCollectionsSelected={(collections) => {
+            setSpecialOccasionData(prev => ({
+              ...prev,
+              collections
+            }));
+            setCurrentView('capture');
+            setCaptureMode('milestone');
+          }}
+          onBack={() => setCurrentView('specialOccasionSelectPerson')}
+        />
         );
       default:
         return <HomeView />;

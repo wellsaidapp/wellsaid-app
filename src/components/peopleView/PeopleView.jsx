@@ -442,12 +442,13 @@ const PeopleView = ({
           <PeopleList
             individuals={getSortedEnrichedIndividuals()}
             insights={insights}
-            onSelectPerson={setSelectedPerson}
+            onPersonClick={setSelectedPerson}
             sortField={sortField}
             setSortField={setSortField}
             sortDirection={sortDirection}
             setSortDirection={setSortDirection}
             onAddNewPerson={() => setShowAddPerson(true)}
+            selectionMode={false}
           />
         ) : (
           <PersonDetail

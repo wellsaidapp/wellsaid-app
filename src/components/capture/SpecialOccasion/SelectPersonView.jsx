@@ -4,27 +4,46 @@ import PeopleList from '../../peopleView/subcomponents/PeopleList';
 import { useInsights } from '../../../context/InsightContext';
 import { useSystemCollections } from '../../../context/SystemCollectionsContext';
 
-const SelectPersonView = ({ onPersonChosen }) => {
+const SelectPersonView = ({ onSelectPerson, onBack }) => {
   const { people } = usePeople();
   const { insights } = useInsights();
   const { systemCollections } = useSystemCollections();
   const systemCollectionIds = new Set(systemCollections.map(c => c.id));
   const [sortField, setSortField] = useState('name');
   const [sortDirection, setSortDirection] = useState('asc');
+  const [showAddPerson, setShowAddPerson] = useState(false);
+  const [selectedPersonId, setSelectedPersonId] = useState(null);
+
+  const handlePersonSelected = (person) => {
+    setSelectedPersonId(person.id);
+    if (onSelectPerson) {
+      onSelectPerson(person);
+    }
+  };
 
   return (
-    <div className="p-4 pb-[80px]"> {/* Add space for bottom nav */}
-      <h2 className="text-2xl font-bold mb-4 text-center">Who is this for?</h2>
+    <div className="p-4 pb-[80px]">
+      <div className="flex items-center mb-6">
+        <button
+          onClick={onBack}
+          className="text-gray-500 hover:text-gray-700 mr-4"
+        >
+          ← Back
+        </button>
+        <h2 className="text-2xl font-bold">Who is this for?</h2>
+      </div>
       <PeopleList
         individuals={people}
         insights={insights}
         totalCollectionsCount={systemCollectionIds.size}
-        onSelectPerson={onPersonChosen}
+        onSelectPerson={handlePersonSelected}
         sortField={sortField}
         setSortField={setSortField}
         sortDirection={sortDirection}
         setSortDirection={setSortDirection}
-        onAddNewPerson={() => setShowAddPerson(true)} // ← hook this up below
+        onAddNewPerson={() => setShowAddPerson(true)}
+        selectedPersonId={selectedPersonId}
+        selectionMode={true}
       />
     </div>
   );

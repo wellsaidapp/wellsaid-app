@@ -8,7 +8,8 @@ import {
   ArrowDownZA,
   ArrowDown01,
   ArrowDown10,
-  Type
+  Type,
+  Check
 } from 'lucide-react';
 import PersonCard from './PersonCard';
 import { useState } from 'react';
@@ -20,11 +21,14 @@ const PeopleList = ({
   insights,
   totalCollectionsCount = 20,
   onSelectPerson,
+  onPersonClick,
   sortField,
   setSortField,
   sortDirection,
   setSortDirection,
-  onAddNewPerson
+  onAddNewPerson,
+  selectedPersonId = null,
+  selectionMode = false
 }) => {
   console.log("👥 PeopleList rendering with people:", individuals);
   individuals.forEach(p => {
@@ -109,6 +113,14 @@ const PeopleList = ({
     });
   };
 
+  const handlePersonClick = (person) => {
+    if (selectionMode && onSelectPerson) {
+      onSelectPerson(person);
+    } else if (onPersonClick) {
+      onPersonClick(person);
+    }
+  };
+
   return (
     <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-white/50 shadow-sm mb-6">
       <div className="flex items-center justify-between mb-4">
@@ -121,15 +133,24 @@ const PeopleList = ({
       </div>
 
       <div className="space-y-3">
-      {getSortedIndividuals().length > 0 ? (
-        getSortedIndividuals().map(person => (
-            <PersonCard
+        {getSortedIndividuals().length > 0 ? (
+          getSortedIndividuals().map(person => (
+            <div
               key={person.id}
-              person={person}
-              insights={insights}
-              totalCollectionsCount={totalCollectionsCount}
-              onClick={() => onSelectPerson(person)}
-            />
+              className={`relative ${selectionMode ? 'cursor-pointer' : ''}`}
+              onClick={() => handlePersonClick(person)}
+            >
+              <PersonCard
+                person={person}
+                insights={insights}
+                totalCollectionsCount={totalCollectionsCount}
+              />
+              {selectionMode && selectedPersonId === person.id && (
+                <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center">
+                  <Check size={16} className="text-white" />
+                </div>
+              )}
+            </div>
           ))
         ) : (
           <div className="text-sm text-gray-400 italic text-center py-4">
@@ -137,13 +158,15 @@ const PeopleList = ({
           </div>
         )}
 
-        <button
-          onClick={onAddNewPerson}
-          className="w-full mt-2 py-2 border border-dashed border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
-        >
-          <Plus size={16} />
-          Add New Person
-        </button>
+        {onAddNewPerson && (
+          <button
+            onClick={onAddNewPerson}
+            className="w-full mt-2 py-2 border border-dashed border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
+          >
+            <Plus size={16} />
+            Add New Person
+          </button>
+        )}
       </div>
     </div>
   );
