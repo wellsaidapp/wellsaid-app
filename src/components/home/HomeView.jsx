@@ -5,12 +5,11 @@ import { usePeople } from '../../context/PeopleContext';
 import { useUserCollections } from '../../context/UserCollectionsContext';
 import { useInsights } from '../../context/InsightContext';
 import { useBooks } from '../../context/BooksContext';
-import { UPCOMING_EVENTS } from '../../constants/upcomingEvents';
 import { OCCASION_QUESTIONS } from '../../constants/occasionQuestions';
 import CaptureOptionsModal from '../capture/CaptureOptionsModal';
 import CaptureView from '../capture/CaptureView';
 import HeroSection from './HeroSection';
-import UpcomingEventsSection from './UpcomingEventsSection';
+import RecentUserCollections from './RecentUserCollections';
 import WeeklyProgress from './WeeklyProgress';
 import SharedBooksSection from './SharedBooksSection';
 import LegacyStats from './LegacyStats';
@@ -178,9 +177,9 @@ const HomeView = ({
           userName={userName}
         />
 
-        {UPCOMING_EVENTS.length > 0 && (
-          <UpcomingEventsSection
-            events={UPCOMING_EVENTS}
+        {userCollections.length > 0 && (
+          <RecentUserCollections
+            userCollections={userCollections}
             occasionQuestions={OCCASION_QUESTIONS}
             setQuestionSet={setQuestionSet}
             setCurrentQuestion={setCurrentQuestion}
