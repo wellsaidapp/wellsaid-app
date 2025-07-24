@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { usePeople } from '../../../context/PeopleContext';
 import PeopleList from '../../peopleView/subcomponents/PeopleList';
 import { useInsights } from '../../../context/InsightContext';

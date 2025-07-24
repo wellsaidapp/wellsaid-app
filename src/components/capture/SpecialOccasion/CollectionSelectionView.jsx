@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useSystemCollections } from '../../../context/SystemCollectionsContext';
 import SystemCollectionsList from './SystemCollectionsList';
 import { SquareArrowLeft } from 'lucide-react';
@@ -76,7 +76,7 @@ const CollectionSelectionView = ({ selectedPerson, onCollectionsSelected, onBack
       {/* Optional helper text */}
       <div className="max-w-4xl mx-auto w-full px-4 pt-3">
         <p className="text-sm text-gray-500">
-          Optional - select any collections that you would like to include
+          Optional - select collections you would like to include
         </p>
       </div>
 

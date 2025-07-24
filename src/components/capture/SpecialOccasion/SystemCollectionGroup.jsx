@@ -56,7 +56,7 @@ const SystemCollectionGroup = ({
       {isExpanded && (
         <div className="divide-y">
           {group.collections.map(collection => (
-            <div 
+            <div
               key={collection.id}
               className="flex items-center p-4 pl-12 hover:bg-gray-50"
             >
@@ -69,7 +69,7 @@ const SystemCollectionGroup = ({
               />
               <label
                 htmlFor={`collection-${collection.id}`}
-                className="text-sm text-gray-700"
+                className="text-[16px] text-gray-700"
               >
                 {collection.name}
               </label>

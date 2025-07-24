@@ -101,14 +101,49 @@ const WellSaidApp = () => {
     }
   }, []);
 
+  // 🚫 Disable scroll when certain views are treated as modals
   useEffect(() => {
-    const destroyPullToRefresh = PullToRefresh.init({
+    const modalViews = [
+      'specialOccasionSelectPerson',
+      'specialOccasionSelectCollections',
+      'capture'
+    ];
+
+    const modalIsOpen = modalViews.includes(currentView);
+
+    if (modalIsOpen) {
+      document.body.style.overflow = 'hidden';
+      document.body.style.touchAction = 'none';
+
+      if (window.scrollY === 0) {
+        window.scrollTo(0, 1);
+      }
+    } else {
+      document.body.style.overflow = '';
+      document.body.style.touchAction = '';
+    }
+
+    return () => {
+      document.body.style.overflow = '';
+      document.body.style.touchAction = '';
+    };
+  }, [currentView]);
+
+  useEffect(() => {
+    const modalViews = [
+      'specialOccasionSelectPerson',
+      'specialOccasionSelectCollections',
+      'capture'
+    ];
+
+    // Initialize PullToRefresh
+    const ptr = PullToRefresh.init({
       mainElement: 'body',
       onRefresh() {
-        window.location.reload(); // Replace with refetchUser(), etc. if desired
+        window.location.reload();
       },
       shouldPullToRefresh() {
-        return window.scrollY === 0;
+        return window.scrollY === 0 && !modalViews.includes(currentView);
       },
       distThreshold: 60,
       resistance: 2.5,
@@ -116,13 +151,27 @@ const WellSaidApp = () => {
       iconRefreshing: '⟳',
     });
 
-    // ✅ Correct cleanup
+    // Cleanup function
     return () => {
-      if (typeof destroyPullToRefresh === 'function') {
-        destroyPullToRefresh();
+      if (ptr && typeof ptr.destroy === 'function') {
+        ptr.destroy();
+      } else {
+        // Fallback if destroy isn't available
+        try {
+          PullToRefresh.destroyAll();
+        } catch (e) {
+          console.warn('Failed to destroy PullToRefresh:', e);
+        }
       }
     };
-  }, []);
+  }, [currentView]);
+
+  useEffect(() => {
+    console.log('Body scroll/touch styles:', {
+      overflow: document.body.style.overflow,
+      touchAction: document.body.style.touchAction
+    });
+  }, [currentView]);
 
   useEffect(() => {
     // Reset selectedPerson when leaving people view
@@ -130,6 +179,10 @@ const WellSaidApp = () => {
       setSelectedPerson(null);
     }
   }, [currentView]);
+
+  useEffect(() => {
+    console.log('currentView changed to:', currentView);
+  }, [currentView]); // Dependency array - runs whenever currentView changes
 
   const [showCaptureOptions, setShowCaptureOptions] = useState(false);
   const [showCapture, setShowCapture] = useState(false);
