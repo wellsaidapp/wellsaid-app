@@ -125,6 +125,69 @@ const CollectionItem = ({
     setDraftEntry(prev => ({ ...prev, [field]: value }));
   };
 
+  // src/api/collections.js
+  const deleteUserCollection = async (collectionId) => {
+    const session = await fetchAuthSession();
+    const token = session.tokens?.accessToken?.toString();
+
+    if (!token) {
+      throw new Error("Authentication required");
+    }
+
+    const response = await fetch(
+      `https://aqaahphwfj.execute-api.us-east-2.amazonaws.com/dev/collections/user/${collectionId}`,
+      {
+        method: 'DELETE',
+        headers: {
+          'Authorization': token
+        }
+      }
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to delete collection');
+    }
+
+    return await response.json();
+  };
+
+  const updateCollectionName = async (collectionId, newName) => {
+    const session = await fetchAuthSession();
+    const token = session.tokens?.accessToken?.toString();
+
+    if (!token) {
+      console.error("🔒 Missing access token");
+      throw new Error("Authentication required");
+    }
+
+    try {
+      const response = await fetch(
+        `https://aqaahphwfj.execute-api.us-east-2.amazonaws.com/dev/collections/user/${collectionId}`,
+        {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: token
+          },
+          body: JSON.stringify({
+            name: newName
+          })
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to update collection name');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error("❌ Failed to update collection:", error);
+      throw error;
+    }
+  };
+
   return (
     <div className={`relative z-0 ${!isActive ? 'opacity-70' : ''}`}>
       <div
@@ -470,24 +533,23 @@ const CollectionItem = ({
           collection={collection}
           onClose={() => setShowEditModal(false)}
           onSave={async (newName) => {
-            // Implement your save logic here
             try {
+              setIsSaving(true);
               await updateCollectionName(collection.id, newName);
-              refreshUserCollections();
+              refreshUserCollections(); // Refresh the collections list
             } catch (error) {
+              // You might want to show an error toast here
               console.error('Failed to update collection name:', error);
+            } finally {
+              setIsSaving(false);
+              setShowEditModal(false);
             }
-            setShowEditModal(false);
           }}
           onDelete={async () => {
-            // Implement your delete logic here
-            try {
-              await deleteCollection(collection.id);
-              refreshUserCollections();
-            } catch (error) {
-              console.error('Failed to delete collection:', error);
-            }
+            await deleteUserCollection(collection.id); // Your existing function
+            refreshUserCollections();
           }}
+          isSaving={isSaving}
         />
       )}
     </div>
