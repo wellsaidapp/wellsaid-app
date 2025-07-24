@@ -266,10 +266,11 @@ const WellSaidApp = () => {
         return (
           <CollectionSelectionView
           selectedPerson={specialOccasionData.person}
-          onCollectionsSelected={(collections) => {
+          onCollectionsSelected={({ selectedCollections, isReturning }) => {
             setSpecialOccasionData(prev => ({
               ...prev,
-              collections
+              collections: selectedCollections,
+              isReturning: isReturning ?? false  // default to false if undefined
             }));
             setCurrentView('capture');
             setCaptureMode('milestone');

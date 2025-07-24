@@ -22,7 +22,10 @@ const CollectionSelectionView = ({ selectedPerson, onCollectionsSelected, onBack
   }, {});
 
   const handleContinue = () => {
-    onCollectionsSelected(selectedCollections);
+    onCollectionsSelected({
+      selectedCollections,
+      isReturning: false
+    });
   };
 
   if (!selectedPerson) {
