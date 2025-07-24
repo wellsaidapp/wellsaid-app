@@ -138,14 +138,14 @@ const CollectionItem = ({
               isActive ? collection.color : 'bg-gray-300'
             } flex items-center justify-center mr-3`}>
               {collection.type === 'custom' ? (
-                <div className="relative w-6 h-6">
-                  {/* Base icon: FolderOpen */}
-                  <FolderOpen className={`absolute w-6 h-6 ${isActive ? 'text-white' : 'text-gray-500'}`} />
+                <div className="relative w-6 h-6 flex items-center justify-center">
+                  <FolderOpen className={`w-5 h-5 ${isActive ? 'text-white' : 'text-gray-500'}`} />
 
-                  {/* Overlay circle + user icon (further top-left) */}
-                  <div className="absolute -top-3 -left-3 w-4 h-4 bg-gray-200 rounded-full flex items-center justify-center shadow-sm">
-                    <User className="w-2.5 h-2.5 text-black" />
-                  </div>
+                  {collection.type === 'custom' && (
+                    <div className="absolute -top-2.5 -left-2.5 w-4 h-4 bg-gray-200 rounded-full flex items-center justify-center shadow-sm">
+                      <User className="w-2.5 h-2.5 text-black" />
+                    </div>
+                  )}
                 </div>
               ) : (
                 <FolderOpen className={`w-5 h-5 ${isActive ? 'text-white' : 'text-gray-500'}`} />
