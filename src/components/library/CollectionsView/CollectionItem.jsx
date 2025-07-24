@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import CaptureCard from './CaptureCard'; // Make sure this import exists
-import { ChevronDown, ChevronUp, PlusCircle, FolderOpen, Calendar, Plus, Save, X, Brain, Zap, ArrowRight, Lightbulb, Clock, Pencil, User } from 'lucide-react';
+import { ChevronDown, ChevronUp, PlusCircle, FolderOpen, Calendar, Plus, Save, X, Brain, Zap, ArrowRight, Lightbulb, Clock, Pencil, User, Settings } from 'lucide-react';
 import { fetchAuthSession } from 'aws-amplify/auth';
 import { useSystemCollections } from '../../../context/SystemCollectionsContext';
 import { useUserCollections } from '../../../context/UserCollectionsContext';
 import { useInsights } from '../../../context/InsightContext';
+import EditUserCollectionsModal from './EditUserCollectionsModal';
 
 const CollectionItem = ({
   collection,
@@ -34,14 +35,16 @@ const CollectionItem = ({
     collections: [collection.id], // Automatically include the current collection
     isDraft: true
   });
-
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [editedName, setEditedName] = useState(collection.name);
   const [isExpanded, setIsExpanded] = useState(false);
   const [showCaptureCard, setShowCaptureCard] = useState(false);
-
+  console.log("Collection", collection);
+  console.log("Collections", collections);
   const handleCreateNew = () => {
     setIsCreating(true);
   };
-
+  const [showEditModal, setShowEditModal] = useState(false);
   const handleSaveDraft = async () => {
     setIsSaving(true); // Start loading
     const session = await fetchAuthSession();
@@ -155,9 +158,14 @@ const CollectionItem = ({
               <div className={`font-medium ${isActive ? 'text-gray-800' : 'text-gray-600'}`}>
                 {collection.name}
               </div>
-              <div className="text-sm text-gray-500">
-                {entries.length} insights
-                {showRecipient && collection.metadata?.personName && ` • For ${collection.metadata.personName}`}
+              <div className="text-sm text-gray-500 flex items-center gap-1">
+                <span>{entries.length} insights</span>
+                {collection.type === 'custom' && collection.personName && (
+                  <>
+                    <span>•</span>
+                    <span>For {collection.personName}</span>
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -177,11 +185,25 @@ const CollectionItem = ({
               </button>
             )}
             {isActive && (
-              expanded ? (
-                <ChevronUp className="w-5 h-5 text-gray-400" />
-              ) : (
-                <ChevronDown className="w-5 h-5 text-gray-400" />
-              )
+              <>
+                {collection.type === 'custom' && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowEditModal(true);
+                    }}
+                    className="text-gray-400 hover:text-gray-600 transition-colors"
+                    title="Collection Settings"
+                  >
+                    <Settings className="w-5 h-5" />
+                  </button>
+                )}
+                {expanded ? (
+                  <ChevronUp className="w-5 h-5 text-gray-400" />
+                ) : (
+                  <ChevronDown className="w-5 h-5 text-gray-400" />
+                )}
+              </>
             )}
           </div>
         </div>
@@ -442,6 +464,31 @@ const CollectionItem = ({
             </div>
           )}
         </div>
+      )}
+      {showEditModal && (
+        <EditUserCollectionsModal
+          collection={collection}
+          onClose={() => setShowEditModal(false)}
+          onSave={async (newName) => {
+            // Implement your save logic here
+            try {
+              await updateCollectionName(collection.id, newName);
+              refreshUserCollections();
+            } catch (error) {
+              console.error('Failed to update collection name:', error);
+            }
+            setShowEditModal(false);
+          }}
+          onDelete={async () => {
+            // Implement your delete logic here
+            try {
+              await deleteCollection(collection.id);
+              refreshUserCollections();
+            } catch (error) {
+              console.error('Failed to delete collection:', error);
+            }
+          }}
+        />
       )}
     </div>
   );
