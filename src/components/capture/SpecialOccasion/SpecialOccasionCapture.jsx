@@ -3,10 +3,12 @@ import React, { useState, useEffect, useRef } from 'react';
 import { User, Check, Plus, Mic, Send, Home, PlusCircle, Library, MicOff, ChevronDown, ChevronUp } from 'lucide-react';
 import WellSaidIcon from '../../../assets/icons/WellSaidIcon';
 import { useSystemCollections } from '../../../context/SystemCollectionsContext';
+import { fetchAuthSession } from 'aws-amplify/auth';
+import toast from 'react-hot-toast';
+import ToastMessage from '../../library/BookCreation/ToastMessage';
 
 const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete }) => {
     const { systemCollections } = useSystemCollections();
-    console.log("System Collections:", systemCollections);
     const [showContext, setShowContext] = useState(false);
     const [collectionName, setCollectionName] = useState('');
     const [hasAskedForName, setHasAskedForName] = useState(false);
@@ -41,6 +43,41 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
     const [showPeopleSelection, setShowPeopleSelection] = useState(false);
     const [showOccasionConfirmation, setShowOccasionConfirmation] = useState(false);
 
+    const createUserCollection = async (collectionName, person) => {
+      try {
+        const session = await fetchAuthSession();
+        const token = session.tokens?.idToken?.toString();
+
+        if (!token) throw new Error("Missing auth token");
+
+        const response = await fetch("https://aqaahphwfj.execute-api.us-east-2.amazonaws.com/dev/collections/user", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: token,
+          },
+          body: JSON.stringify({
+            name: collectionName,
+            personId: person.id,
+            personName: person.name
+          }),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          console.error("❌ Failed to create collection:", errorData);
+          throw new Error(errorData.error || "Unknown error creating collection");
+        }
+
+        const result = await response.json();
+        console.log("✅ Collection created:", result);
+        return result.collectionId;
+
+      } catch (err) {
+        console.error("❌ Error in createUserCollection:", err);
+        return null;
+      }
+    };
 
     const typeMessage = (text, isBot = true, delay = 1000) => {
       setIsTyping(true);
@@ -181,7 +218,7 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
         typeMessage("Would you like to add a final message or wrap up?", true, 1000);
     };
 
-    const handleInputSubmit = () => {
+    const handleInputSubmit = async () => {
       if (!currentInput.trim()) return;
 
       const input = currentInput.trim();
@@ -196,8 +233,23 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
         setMessages(prev => [...prev, { text: input, isBot: false }]);
         setCurrentInput('');
 
-        // Then proceed with normal flow
         typeMessage(`Creating "${input}" for ${occasion.person.name}`, true);
+
+        // 👉 CREATE THE COLLECTION IN RDS
+        const createdId = await createUserCollection(input, occasion.person);
+        if (createdId) {
+          console.log("📦 Stored collectionId:", createdId);
+          toast.custom((t) => (
+            <ToastMessage
+              type="success"
+              title="Collection Created"
+              message="Your special occasion collection was saved."
+              onDismiss={() => toast.dismiss(t.id)}
+            />
+          ), {
+            duration: 5000
+          });
+        }
 
         // Move to occasion type selection
         setConversationState('milestone_type');
@@ -399,44 +451,80 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
         </div>
 
         {/* Input Area - Fixed positioning */}
+        // In your return statement, modify the Input Area section:
         {conversationState !== 'milestone_init' && (
           <div className="fixed bottom-[72px] left-0 right-0 px-4 z-20">
             <div className="max-w-2xl mx-auto">
               <div className="bg-white rounded-xl shadow-md p-3">
                 <div className="flex gap-2 items-end">
                   <div className="flex-1">
-                    <textarea
-                      value={currentInput}
-                      onChange={(e) => setCurrentInput(e.target.value)}
-                      className="w-full p-2 border border-gray-200 rounded-xl focus:outline-none focus:border-blue-500 resize-none"
-                      rows={2}
-                      onKeyPress={(e) => {
-                        if (e.key === 'Enter' && !e.shiftKey) {
-                          e.preventDefault();
-                          handleInputSubmit();
-                        }
-                      }}
-                    />
+                    {/* Conditional rendering based on whether we're asking for collection name */}
+                    {!occasion.collectionName && occasion.collections?.length > 0 ? (
+                      <input
+                        type="text"
+                        value={currentInput}
+                        onChange={(e) => setCurrentInput(e.target.value)}
+                        placeholder="Enter collection name"
+                        className="w-full p-2 border border-gray-200 rounded-xl focus:outline-none focus:border-blue-500"
+                        onKeyPress={(e) => {
+                          if (e.key === 'Enter' && currentInput.trim()) {
+                            e.preventDefault();
+                            handleInputSubmit();
+                          }
+                        }}
+                      />
+                    ) : (
+                      <textarea
+                        value={currentInput}
+                        onChange={(e) => setCurrentInput(e.target.value)}
+                        className="w-full p-2 border border-gray-200 rounded-xl focus:outline-none focus:border-blue-500 resize-none"
+                        rows={2}
+                        onKeyPress={(e) => {
+                          if (e.key === 'Enter' && !e.shiftKey) {
+                            e.preventDefault();
+                            handleInputSubmit();
+                          }
+                        }}
+                      />
+                    )}
                   </div>
-                  <button
-                    onClick={toggleRecording}
-                    className={`p-3 rounded-xl transition-colors ${
-                      isRecording ? 'bg-red-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                    }`}
-                  >
-                    {isRecording ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
-                  </button>
-                  <button
-                    onClick={handleInputSubmit}
-                    disabled={!currentInput.trim()}
-                    className={`p-3 rounded-xl transition-colors ${
-                      currentInput.trim()
-                        ? 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600'
-                        : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                    }`}
-                  >
-                    <Send className="w-5 h-5" />
-                  </button>
+
+                  {/* Only show mic button when not asking for collection name */}
+                  {occasion.collectionName || occasion.collections?.length === 0 ? (
+                    <>
+                      <button
+                        onClick={toggleRecording}
+                        className={`p-3 rounded-xl transition-colors ${
+                          isRecording ? 'bg-red-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                        }`}
+                      >
+                        {isRecording ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
+                      </button>
+                      <button
+                        onClick={handleInputSubmit}
+                        disabled={!currentInput.trim()}
+                        className={`p-3 rounded-xl transition-colors ${
+                          currentInput.trim()
+                            ? 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600'
+                            : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                        }`}
+                      >
+                        <Send className="w-5 h-5" />
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      onClick={handleInputSubmit}
+                      disabled={!currentInput.trim()}
+                      className={`p-3 rounded-xl transition-colors ${
+                        currentInput.trim()
+                          ? 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600'
+                          : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                      }`}
+                    >
+                      <Send className="w-5 h-5" />
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
