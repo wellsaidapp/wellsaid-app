@@ -2,7 +2,6 @@ import { Sparkles, Library, ChevronRight } from 'lucide-react';
 
 const RecentUserCollections = ({
   userCollections,
-  occasionQuestions,
   setQuestionSet,
   setCurrentQuestion,
   setCurrentQuestionIndex,
@@ -20,14 +19,6 @@ const RecentUserCollections = ({
     if (collection.name.includes('Graduation')) occasionType = 'graduation';
     if (collection.name.includes('Wedding')) occasionType = 'wedding';
 
-    const questions = occasionQuestions[occasionType] || [
-      `What do you want to add to "${collection.name}"?`,
-      `What makes this collection special?`,
-      `What would you like to remember about ${collection.personName}?`
-    ];
-
-    setQuestionSet(questions);
-    setCurrentQuestion(questions[0] || '');
     setCurrentQuestionIndex(0);
     resetForm();
     setCurrentView('capture');

@@ -4,8 +4,6 @@ import { Lightbulb, ArrowRight, Pencil, Zap, Clock,
   Sparkles, Calendar
 } from 'lucide-react';
 
-import { OCCASION_QUESTIONS } from '../../constants/occasionQuestions';
-
 const CaptureOptionsModal = ({
   setShowCaptureOptions,
   setCurrentView,
@@ -15,16 +13,6 @@ const CaptureOptionsModal = ({
   setCurrentQuestion,
   setCurrentQuestionIndex,
 }) => {
-  // ✅ Scroll down 1px and lock body scroll when modal is shown
-  // useEffect(() => {
-  //   window.scrollTo(0, 1);
-  //   const originalOverflow = document.body.style.overflow;
-  //   document.body.style.overflow = 'hidden';
-  //
-  //   return () => {
-  //     document.body.style.overflow = originalOverflow;
-  //   };
-  // }, []);
 
   return (
     <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-[100] flex items-end">
@@ -105,13 +93,6 @@ const CaptureOptionsModal = ({
               };
 
               setSelectedOccasion(defaultOccasion); // ✅ set something useful
-              const questions = OCCASION_QUESTIONS['custom'] || [
-                `What is the special occasion?`,
-                `Why does it matter?`,
-                `What would you like to say?`
-              ];
-              setQuestionSet(questions);
-              setCurrentQuestion(questions[0] || '');
               setCurrentQuestionIndex(0);
               setCaptureMode('milestone');
               setShowCaptureOptions(false);
