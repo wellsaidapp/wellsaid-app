@@ -78,19 +78,11 @@ const WellSaidApp = () => {
   const { books, refreshBooks } = useBooks();
   const { refetchUser } = useUser();
   const [selectedPerson, setSelectedPerson] = useState(null);
+
   const [specialOccasionData, setSpecialOccasionData] = useState({
     person: null,
     collections: []
   });
-
-  // Handler when collections are selected
-  const handleCollectionsSelected = (collections) => {
-    setSpecialOccasionData(prev => ({
-      ...prev,
-      collections
-    }));
-    setCurrentView('specialOccasion');
-  };
 
   useEffect(() => {
     const storedAuthState = localStorage.getItem('wellsaid-auth-state');
@@ -217,7 +209,10 @@ const WellSaidApp = () => {
           case 'milestone':
             return <SpecialOccasionCapture
               setCurrentView={setCurrentView}
-              specialOccasionData={specialOccasionData}
+              occasionData={specialOccasionData || { person: null, collections: [] }}
+              onComplete={() => {
+                setSpecialOccasionData({ person: null, collections: [] });
+              }}
             />;
           default:
           return <CaptureView
