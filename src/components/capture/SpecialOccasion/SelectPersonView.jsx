@@ -3,6 +3,7 @@ import { usePeople } from '../../../context/PeopleContext';
 import PeopleList from '../../peopleView/subcomponents/PeopleList';
 import { useInsights } from '../../../context/InsightContext';
 import { useSystemCollections } from '../../../context/SystemCollectionsContext';
+import { SquareX, X, SquareArrowLeft } from 'lucide-react';
 
 const SelectPersonView = ({ onSelectPerson, onBack }) => {
   const { people } = usePeople();
@@ -22,29 +23,38 @@ const SelectPersonView = ({ onSelectPerson, onBack }) => {
   };
 
   return (
-    <div className="p-4 pb-[80px]">
-      <div className="flex items-center mb-6">
-        <button
-          onClick={onBack}
-          className="text-gray-500 hover:text-gray-700 mr-4"
-        >
-          ← Back
-        </button>
-        <h2 className="text-2xl font-bold">Who is this for?</h2>
+    <div className="fixed inset-0 bg-gradient-to-br from-blue-50 via-blue-50 to-indigo-50 z-50 flex flex-col">
+      {/* Top instruction bar */}
+      <div className="p-4 bg-white/80 backdrop-blur-sm border-b border-gray-200">
+        <div className="flex items-center max-w-4xl mx-auto">
+          <button
+            onClick={onBack}
+            className="text-gray-500 hover:text-gray-700 mr-4"
+          >
+          <SquareArrowLeft size={24} />
+          </button>
+          <h2 className="text-2xl font-bold">Who is this for?</h2>
+        </div>
       </div>
-      <PeopleList
-        individuals={people}
-        insights={insights}
-        totalCollectionsCount={systemCollectionIds.size}
-        onSelectPerson={handlePersonSelected}
-        sortField={sortField}
-        setSortField={setSortField}
-        sortDirection={sortDirection}
-        setSortDirection={setSortDirection}
-        onAddNewPerson={() => setShowAddPerson(true)}
-        selectedPersonId={selectedPersonId}
-        selectionMode={true}
-      />
+
+      {/* People list taking up remaining space */}
+      <div className="flex-1 overflow-y-auto pb-20">
+        <div className="max-w-4xl mx-auto p-4">
+          <PeopleList
+            individuals={people}
+            insights={insights}
+            totalCollectionsCount={systemCollectionIds.size}
+            onSelectPerson={handlePersonSelected}
+            sortField={sortField}
+            setSortField={setSortField}
+            sortDirection={sortDirection}
+            setSortDirection={setSortDirection}
+            onAddNewPerson={() => setShowAddPerson(true)}
+            selectedPersonId={selectedPersonId}
+            selectionMode={true}
+          />
+        </div>
+      </div>
     </div>
   );
 };

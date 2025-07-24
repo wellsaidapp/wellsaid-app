@@ -32,7 +32,7 @@ const HomeView = ({
   const { people, loadingPeople, refetchPeople } = usePeople();
   const { userCollections, loading } = useUserCollections();
   const [pdfTimestamp, setPdfTimestamp] = useState(null);
-  const { insights, loadingInsights } = useInsights();
+  const { insights, loadingInsights, refreshInsights } = useInsights();
   const {
     books,
     setBooks,
@@ -142,6 +142,7 @@ const HomeView = ({
       // ✅ Only refresh after confirmed deletion
       await refreshBooks();
       await refetchPeople();
+      await refrsehInsights();
     } catch (err) {
       console.error("❌ Book deletion failed:", err);
       // Optionally show toast or user feedback
