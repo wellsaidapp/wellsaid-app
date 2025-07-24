@@ -43,7 +43,7 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
     const [showPeopleSelection, setShowPeopleSelection] = useState(false);
     const [showOccasionConfirmation, setShowOccasionConfirmation] = useState(false);
 
-    const createUserCollection = async (collectionName, person) => {
+    const createUserCollection = async (collectionName, person, systemCollectionIds = []) => {
       try {
         const session = await fetchAuthSession();
         const token = session.tokens?.idToken?.toString();
@@ -59,7 +59,8 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
           body: JSON.stringify({
             name: collectionName,
             personId: person.id,
-            personName: person.name
+            personName: person.name,
+            systemCollectionIds,
           }),
         });
 
@@ -236,7 +237,7 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
         typeMessage(`Creating "${input}" for ${occasion.person.name}`, true);
 
         // 👉 CREATE THE COLLECTION IN RDS
-        const createdId = await createUserCollection(input, occasion.person);
+        const createdId = await createUserCollection(input, occasion.person, occasion.collections);
         if (createdId) {
           console.log("📦 Stored collectionId:", createdId);
           toast.custom((t) => (
