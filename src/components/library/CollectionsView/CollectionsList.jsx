@@ -68,7 +68,6 @@ const CollectionsList = ({
   };
 
   const visibleSystemCollections = getVisibleCollections(activeSystemCollections);
-  const visibleUserCollections = getVisibleCollections(activeUserCollections);
 
   // For library view, determine inactive collections
   const libraryInactiveCollections = !isPersonView
@@ -155,13 +154,13 @@ const CollectionsList = ({
       )}
 
       {/* User Collections */}
-      {visibleUserCollections.length > 0 && (
+      {activeUserCollections.length > 0 && (
         <div className="mb-6">
           <h3 className="text-md font-semibold text-gray-700 mb-3">
             {isPersonView ? 'Shared Custom Collections' : 'Custom Collections'}
           </h3>
           <div className="space-y-2">
-            {visibleUserCollections.map(collection => (
+            {activeUserCollections.map(collection => (
               <CollectionItem
                 key={collection.id}
                 collection={collection}
@@ -185,7 +184,7 @@ const CollectionsList = ({
       )}
 
       {/* Empty State */}
-      {visibleSystemCollections.length === 0 && visibleUserCollections.length === 0 && (
+      {visibleSystemCollections.length === 0 && activeUserCollections.length === 0 && (
         <div className="mb-6 flex justify-center">
           <div className="bg-gray-100 text-gray-600 text-sm px-4 py-2 rounded-md inline-block">
             {isPersonView

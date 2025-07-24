@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import CaptureCard from './CaptureCard'; // Make sure this import exists
-import { ChevronDown, ChevronUp, PlusCircle, FolderOpen, Calendar, Plus, Save, X, Brain, Zap, ArrowRight, Lightbulb, Clock, Pencil } from 'lucide-react';
+import { ChevronDown, ChevronUp, PlusCircle, FolderOpen, Calendar, Plus, Save, X, Brain, Zap, ArrowRight, Lightbulb, Clock, Pencil, User } from 'lucide-react';
 import { fetchAuthSession } from 'aws-amplify/auth';
 import { useSystemCollections } from '../../../context/SystemCollectionsContext';
 import { useUserCollections } from '../../../context/UserCollectionsContext';
@@ -137,8 +137,16 @@ const CollectionItem = ({
             <div className={`w-10 h-10 rounded-lg ${
               isActive ? collection.color : 'bg-gray-300'
             } flex items-center justify-center mr-3`}>
-              {collection.type === 'occasion' ? (
-                <Calendar className={`w-5 h-5 ${isActive ? 'text-white' : 'text-gray-500'}`} />
+              {collection.type === 'custom' ? (
+                <div className="relative w-6 h-6">
+                  {/* Base icon: FolderOpen */}
+                  <FolderOpen className={`absolute w-6 h-6 ${isActive ? 'text-white' : 'text-gray-500'}`} />
+
+                  {/* Overlay circle + user icon (further top-left) */}
+                  <div className="absolute -top-3 -left-3 w-4 h-4 bg-gray-200 rounded-full flex items-center justify-center shadow-sm">
+                    <User className="w-2.5 h-2.5 text-black" />
+                  </div>
+                </div>
               ) : (
                 <FolderOpen className={`w-5 h-5 ${isActive ? 'text-white' : 'text-gray-500'}`} />
               )}
