@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Save, Trash2, Pencil } from 'lucide-react';
 
@@ -46,6 +46,23 @@ const EditUserCollectionsModal = ({
       setIsDeleting(false);
     }
   };
+
+  useEffect(() => {
+    // Lock scroll
+    document.body.style.overflow = 'hidden';
+    document.body.style.overscrollBehavior = 'none';
+
+    // Prevent iOS pull-to-refresh by nudging scroll
+    if (window.scrollY === 0) {
+      window.scrollTo(0, 1); // scrolls down by 1px
+    }
+
+    return () => {
+      // Restore scroll
+      document.body.style.overflow = '';
+      document.body.style.overscrollBehavior = '';
+    };
+  }, []);
 
   return createPortal(
     <div className="fixed inset-0 z-[99] bg-black/50 backdrop-blur-sm flex items-center justify-center">
