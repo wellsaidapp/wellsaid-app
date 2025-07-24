@@ -7,22 +7,42 @@ const RecentUserCollections = ({
   setCurrentQuestionIndex,
   setCurrentView,
   setCaptureMode,
-  resetForm
+  resetForm,
+  setSpecialOccasionData
 }) => {
   const recentCollections = [...userCollections]
     .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))
     .slice(0, 2);
 
   const handleCollectionClick = (collection) => {
-    let occasionType = 'custom';
-    if (collection.name.includes('Birthday')) occasionType = 'milestone-birthday';
-    if (collection.name.includes('Graduation')) occasionType = 'graduation';
-    if (collection.name.includes('Wedding')) occasionType = 'wedding';
+    const questions = [
+      "Alright, let's get back to it.", // <- Placeholder question for returning collection
+      `What makes this collection special?`,
+      `What would you like to remember about ${collection.personName}?`
+    ];
 
+    // 🚀 Hydrate context for SpecialOccasionCapture
+    setQuestionSet(questions);
+    setCurrentQuestion(questions[0] || '');
     setCurrentQuestionIndex(0);
     resetForm();
+
+    // 🧠 Preload occasion context (assuming this sets the occasion state in parent):
+    setCaptureMode('milestone');
     setCurrentView('capture');
-    setCaptureMode('collection');
+    setSpecialOccasionData({
+      person: {
+        id: collection.personId,
+        name: collection.personName,
+      },
+      collections: collection.systemCollectionIds || [], // ✅ Might be empty array if not defined
+      type: 'custom',
+      questions,
+      isReturning: true,
+      currentQuestionIndex: 0,
+      reflections: [],
+      finalMessage: ''
+    });
   };
 
   const handleViewAll = () => {

@@ -12,7 +12,7 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
     const [showContext, setShowContext] = useState(false);
     const [collectionName, setCollectionName] = useState('');
     const [hasAskedForName, setHasAskedForName] = useState(false);
-
+    console.log("Occasion Data:", occasionData);
     const [occasion, setOccasion] = useState(() => ({
       person: occasionData.person || null,
       collections: occasionData.collections || [],
@@ -29,10 +29,21 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
     useEffect(() => {
       if (!initialized.current && occasion.person && occasion.collections?.length > 0) {
         initialized.current = true;
-        setHasAskedForName(true);
-        typeMessage("What do you want to name this collection?", true);
+
+        if (occasionData.isReturning) {
+          setHasAskedForName(true); // ✅ Prevent collection name prompt
+          setOccasion((prev) => ({
+            ...prev,
+            collectionName: occasionData.collectionName || 'Untitled'
+          }));
+          typeMessage("Alright, let's get back to it.", true); // 👈 Use your placeholder question here
+          setConversationState('milestone_type'); // Or jump to next state directly
+        } else {
+          setHasAskedForName(true);
+          typeMessage("What do you want to name this collection?", true);
+        }
       }
-    }, [occasion.person, occasion.collections]);
+    }, [occasion.person, occasion.collections, occasionData.isReturning]);
 
     const [messages, setMessages] = useState([]);
     const [currentInput, setCurrentInput] = useState('');

@@ -24,7 +24,8 @@ const HomeView = ({
   setCurrentView,
   setCaptureMode,
   currentView,
-  setLibraryDefaultViewMode
+  setLibraryDefaultViewMode,
+  setSpecialOccasionData
 }) => {
   const { userData, loadingUser, refetchUser } = useUser();
   const { people, loadingPeople, refetchPeople } = usePeople();
@@ -185,6 +186,7 @@ const HomeView = ({
             setCurrentView={setCurrentView}
             setCaptureMode={setCaptureMode}
             resetForm={resetForm}
+            setSpecialOccasionData={setSpecialOccasionData} 
           />
         )}
 

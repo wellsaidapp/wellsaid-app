@@ -192,6 +192,7 @@ const WellSaidApp = () => {
           currentView={currentView}
           setLibraryDefaultViewMode={setLibraryDefaultViewMode}
           books={books}
+          setSpecialOccasionData={setSpecialOccasionData}
         />;
       case 'capture':
         // Render different capture modes based on captureMode
