@@ -2,9 +2,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { User, Check, Plus, Mic, Send, Home, PlusCircle, Library, MicOff, ChevronDown, ChevronUp } from 'lucide-react';
 import WellSaidIcon from '../../../assets/icons/WellSaidIcon';
+import { useSystemCollections } from '../../../context/SystemCollectionsContext';
 
 const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete }) => {
-
+    const { systemCollections } = useSystemCollections();
+    console.log("System Collections:", systemCollections);
     const [showContext, setShowContext] = useState(false);
     const [collectionName, setCollectionName] = useState('');
     const [hasAskedForName, setHasAskedForName] = useState(false);
@@ -207,14 +209,7 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
       scrollToBottom();
 
       // Person management states
-      if (conversationState === 'person_selection') {
-          handlePersonSelection(input);
-      }
-      else if (conversationState.startsWith('person_creation')) {
-          handlePersonCreation(input);
-      }
-      // Occasion creation states
-      else if (conversationState === 'milestone_type') {
+      if (conversationState === 'milestone_type') {
           handleOccasionTypeSelection(input);
       }
       else if (conversationState === 'milestone_date') {
@@ -304,27 +299,6 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
       }, 100);
     };
 
-    // Handle edit action
-    const handleEdit = (field) => {
-        setShowOccasionConfirmation(false);
-
-        switch(field) {
-            case 'person':
-                setShowPeopleSelection(true);
-                break;
-            case 'type':
-                setConversationState('milestone_type');
-                typeMessage("What type of occasion is this?", true);
-                typeMessage("(e.g., 'birthday', 'wedding', 'graduation')", true, 1000);
-                break;
-            case 'date':
-                setConversationState('milestone_date');
-                typeMessage("When is this occasion happening?", true);
-                typeMessage("(e.g., 'next month', 'June 15th', 'sometime in the future')", true, 1000);
-                break;
-        }
-    };
-
     const toggleRecording = () => {
       setIsRecording(!isRecording);
       if (!isRecording) {
@@ -350,9 +324,52 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
             </div>
           </div>
 
-          {/* Scrollable content area */}
+          {/* Context Container */}
+          <div className="px-4 pt-2">
+            <div className="bg-white rounded-2xl shadow-lg p-4 mb-4">
+              <button
+                onClick={() => setShowContext(!showContext)}
+                className="w-full flex justify-between items-center"
+              >
+                <h3 className="font-semibold text-gray-800">Context</h3>
+                {showContext ? (
+                  <ChevronUp className="w-5 h-5 text-gray-500" />
+                ) : (
+                  <ChevronDown className="w-5 h-5 text-gray-500" />
+                )}
+              </button>
+
+              {showContext && (
+                <div className="mt-3">
+                  {/* Person chip */}
+                  {occasion.person && (
+                    <div className="inline-flex items-center bg-blue-100 text-blue-800 rounded-full px-3 py-1 mr-2 mb-2">
+                      <User className="w-4 h-4 mr-1" />
+                      <span>{occasion.person.name}</span>
+                    </div>
+                  )}
+
+                  {/* Collection chips with actual names and colors */}
+                  {occasion.collections?.map((collectionId) => {
+                    const collection = systemCollections.find(c => c.id === collectionId);
+                    if (!collection) return null;
+
+                    return (
+                      <div
+                        key={collectionId}
+                        className={`inline-flex items-center ${collection.color} text-white rounded-full px-3 py-1 mr-2 mb-2`}
+                      >
+                        <span>{collection.name}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Messages container */}
           <div className="flex-1 overflow-y-auto pb-[136px] px-4">
-            {/* Messages container */}
             <div className="bg-white rounded-2xl shadow-lg p-6 mb-4">
               <div className="space-y-4">
                 {messages.map((message, index) => (
