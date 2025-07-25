@@ -12,9 +12,10 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
     const [showContext, setShowContext] = useState(false);
     const [collectionName, setCollectionName] = useState('');
     const [hasAskedForName, setHasAskedForName] = useState(false);
-    console.log("Occasion Data:", occasionData);
+
     const [occasion, setOccasion] = useState(() => ({
       person: occasionData.person || null,
+      userCollectionId: occasionData.userCollectionId || null,
       collections: occasionData.collections || [],
       type: '',
       date: '',
@@ -23,6 +24,7 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
       questions: [],
       finalMessage: ''
     }));
+    console.log("Occasion Data:", occasionData);
     const [collectionCreated, setCollectionCreated] = useState(false);
     const initialized = useRef(false);
     const [isSavingExit, setIsSavingExit] = useState(false);

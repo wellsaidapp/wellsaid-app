@@ -13,7 +13,7 @@ const RecentUserCollections = ({
   const recentCollections = [...userCollections]
     .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))
     .slice(0, 2);
-
+  console.log("Recent Collections:", recentCollections);
   const handleCollectionClick = (collection) => {
     const questions = [
       "Alright, let's get back to it.", // <- Placeholder question for returning collection
@@ -35,6 +35,7 @@ const RecentUserCollections = ({
         id: collection.personId,
         name: collection.personName,
       },
+      userCollectionId: collection.id,
       collections: collection.systemCollectionIds || [], // ✅ Might be empty array if not defined
       type: 'custom',
       questions,
