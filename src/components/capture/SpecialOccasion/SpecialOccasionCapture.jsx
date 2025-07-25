@@ -227,10 +227,10 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
 
     return (
       <div className="fixed inset-0 bg-gradient-to-br from-blue-50 to-indigo-50 overflow-y-auto">
-        {/* Main content area - now accounts for bottom spacing */}
-        <div className="max-w-2xl mx-auto min-h-screen flex flex-col pb-[140px]"> {/* Total space for input + nav */}
-          {/* Header */}
-          <div className="p-4 pt-6 flex justify-between items-start">
+        {/* Fixed top header */}
+        <div className="fixed top-0 left-0 right-0 bg-gradient-to-br from-blue-50 to-indigo-50 z-20 border-b border-gray-100">
+          <div className="max-w-2xl mx-auto px-4 pt-6 pb-2 flex justify-between items-start">
+            {/* Header */}
             <div className="flex items-center gap-3">
               <WellSaidIcon size={50} />
               <div>
@@ -249,9 +249,9 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
             )}
           </div>
 
-          {/* Context Container */}
-          <div className="px-4 pt-2">
-            <div className="bg-white rounded-2xl shadow-lg p-4 mb-4">
+          {/* Context */}
+          <div className="max-w-2xl mx-auto px-4 pt-2 pb-3">
+            <div className="bg-white rounded-2xl shadow p-4">
               <button
                 onClick={() => setShowContext(!showContext)}
                 className="w-full flex justify-between items-center"
@@ -266,19 +266,15 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
 
               {showContext && (
                 <div className="mt-3">
-                  {/* Person chip */}
                   {occasion.person && (
                     <div className="inline-flex items-center bg-blue-100 text-blue-800 rounded-full px-3 py-1 mr-2 mb-2">
                       <User className="w-4 h-4 mr-1" />
                       <span>{occasion.person.name}</span>
                     </div>
                   )}
-
-                  {/* Collection chips with actual names and colors */}
                   {occasion.collections?.map((collectionId) => {
                     const collection = systemCollections.find(c => c.id === collectionId);
                     if (!collection) return null;
-
                     return (
                       <div
                         key={collectionId}
@@ -292,74 +288,69 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
               )}
             </div>
           </div>
+        </div>
 
-          {/* Messages container */}
-          <div className="flex-1 overflow-y-auto px-4 pb-[160px]"> {/* 👈 Key change here */}
-            <div className="bg-white rounded-2xl shadow-lg p-6">
-              <div className="space-y-4">
-                {messages.map((message, index) => {
-                  const showSparkles = shouldShowSparkles(index);
-                  const isLastMessage = index === messages.length - 1;
+        {/* Scrollable message area (no overflow-y-auto here) */}
+        <div className="max-w-2xl mx-auto px-4">
+          <div className="pt-[160px] pb-[240px]">
+            <div className="bg-white rounded-2xl shadow-lg p-6 space-y-4">
+              {messages.map((message, index) => {
+                const showSparkles = shouldShowSparkles(index);
+                const isLastMessage = index === messages.length - 1;
 
-                  return (
+                return (
+                  <div
+                    key={index}
+                    className={`flex flex-col relative ${message.isBot ? 'items-start' : 'items-end'}`}
+                  >
                     <div
-                      key={index}
-                      className={`flex flex-col relative ${
-                        message.isBot ? 'items-start' : 'items-end'
-                      }`}
+                      className={`max-w-xs lg:max-w-md px-4 py-2 rounded-2xl ${
+                        message.isBot
+                          ? 'bg-gray-100 text-gray-800'
+                          : 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white'
+                      } ${showSparkles ? 'mb-4' : ''}`}
                     >
-                      <div
-                        className={`max-w-xs lg:max-w-md px-4 py-2 rounded-2xl ${
-                          message.isBot
-                            ? 'bg-gray-100 text-gray-800'
-                            : 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white'
-                        } ${showSparkles ? 'mb-4' : ''}`}
-                      >
-                        {message.text}
-                      </div>
-
-                      {showSparkles && (
-                        <div className="-mt-3 ml-1">
-                          <button
-                            onClick={() => openInsightEditorModal(message)}
-                            className="p-2 bg-blue-100 hover:bg-blue-200 rounded-full shadow-sm border border-blue-300 transition"
-                            title="Turn this into an Insight Card"
-                          >
-                            <Sparkles className="w-4 h-4 text-blue-500" />
-                          </button>
-                        </div>
-                      )}
-
-                      {/* 👇 Add this only on the last visible message to ensure scroll */}
-                      {isLastMessage && (
-                        <div ref={messagesEndRef} className="h-4" />
-                      )}
+                      {message.text}
                     </div>
-                  );
-                })}
-                {isTyping && (
-                  <div className="flex justify-start">
-                    <div className="bg-gray-100 px-4 py-2 rounded-2xl">
-                      <div className="flex space-x-1">
-                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" />
-                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-100" />
-                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-200" />
+
+                    {showSparkles && (
+                      <div className="-mt-2 ml-1">
+                        <button
+                          onClick={() => openInsightEditorModal(message)}
+                          className="p-2 bg-blue-100 hover:bg-blue-200 rounded-full shadow-sm border border-blue-300 transition"
+                          title="Turn this into an Insight Card"
+                        >
+                          <Sparkles className="w-4 h-4 text-blue-500" />
+                        </button>
                       </div>
+                    )}
+
+                    {isLastMessage && <div ref={messagesEndRef} className="h-4" />}
+                  </div>
+                );
+              })}
+
+              {isTyping && (
+                <div className="flex justify-start">
+                  <div className="bg-gray-100 px-4 py-2 rounded-2xl">
+                    <div className="flex space-x-1">
+                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" />
+                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-100" />
+                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-200" />
                     </div>
                   </div>
-                )}
-              </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
 
-        {/* Input Area - FIXED: Proper positioning and spacing */}
+        {/* Input Area */}
         {conversationState !== 'milestone_init' && (
           <div className="fixed bottom-[60px] left-0 right-0 z-30 bg-white border-t border-gray-100">
             <div className="max-w-2xl mx-auto w-full px-4 py-3">
               <div className="flex gap-2 items-end w-full">
                 <div className="flex-1 min-w-0">
-                  {/* Conditional rendering based on whether we're asking for collection name */}
                   {!occasion.collectionName ? (
                     <input
                       type="text"
@@ -389,13 +380,14 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
                     />
                   )}
                 </div>
-                {/* Only show mic button when not asking for collection name */}
                 {occasion.collectionName || occasion.collections?.length === 0 ? (
                   <>
                     <button
                       onClick={toggleRecording}
                       className={`flex-shrink-0 p-3 rounded-xl transition-colors ${
-                        isRecording ? 'bg-red-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                        isRecording
+                          ? 'bg-red-500 text-white'
+                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                       }`}
                     >
                       {isRecording ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
@@ -435,7 +427,6 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
           <div className="fixed inset-0 bg-black bg-opacity-50 z-40 flex items-center justify-center">
             <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-xl relative z-50">
               <h2 className="text-xl font-bold mb-4">Save Insight</h2>
-
               <label className="block text-sm font-semibold text-gray-700 mb-1">Prompt</label>
               <input
                 type="text"
@@ -444,7 +435,6 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
                 className="w-full p-2 mb-4 border rounded-xl"
                 maxLength={255}
               />
-
               <label className="block text-sm font-semibold text-gray-700 mb-1">Response</label>
               <textarea
                 value={draftResponse}
@@ -453,7 +443,6 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
                 rows={3}
                 maxLength={255}
               />
-
               <div className="flex justify-end gap-2">
                 <button
                   onClick={() => setShowInsightModal(false)}
@@ -463,7 +452,6 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
                 </button>
                 <button
                   onClick={() => {
-                    // TODO: Save to insights (can wire this later)
                     console.log("💾 Saved Prompt/Response:", draftPrompt, draftResponse);
                     setShowInsightModal(false);
                   }}
