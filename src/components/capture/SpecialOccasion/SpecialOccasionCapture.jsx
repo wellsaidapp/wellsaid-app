@@ -147,6 +147,10 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
         const createdId = await createUserCollection(input, occasion.person, occasion.collections);
         if (createdId) {
           console.log("📦 Stored collectionId:", createdId);
+          setOccasion(prev => ({
+            ...prev,
+            userCollectionId: createdId
+          }));
           setTrackBotPrompts(true);
           setCollectionCreated(true);
           toast.custom((t) => (
@@ -223,6 +227,79 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
       setDraftPrompt(prompt);
       setDraftResponse(response);
       setShowInsightModal(true);
+    };
+
+    const handleSaveInsight = async () => {
+      if (!draftPrompt.trim() || !draftResponse.trim()) {
+        toast.error("Prompt and response are required");
+        return;
+      }
+
+      if (!occasion?.userCollectionId) {
+        toast.error("Missing collection ID");
+        return;
+      }
+
+      try {
+        const session = await fetchAuthSession();
+        const token = session.tokens?.idToken?.toString();
+
+        if (!token) throw new Error("No auth token");
+
+        const response = await fetch(
+          `https://aqaahphwfj.execute-api.us-east-2.amazonaws.com/dev/collections/user/${occasion.userCollectionId}/insight`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: token,
+            },
+            body: JSON.stringify({
+              prompt: draftPrompt,
+              response: draftResponse,
+              collectionId: occasion.userCollectionId
+            }),
+          }
+        );
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          console.error("❌ Insight save failed:", errorData);
+          toast.custom((t) => (
+            <ToastMessage
+              type="error"
+              title="Error Saving Insight"
+              message={errorData.error || "Unknown error"}
+              onDismiss={() => toast.dismiss(t.id)}
+            />
+          ));
+          return;
+        }
+
+        const savedInsight = await response.json();
+        console.log("✅ Insight saved:", savedInsight);
+
+        // Reset and close modal
+        setDraftPrompt('');
+        setDraftResponse('');
+        setShowInsightModal(false);
+        setInsightPromptCount(0);
+
+        toast.custom((t) => (
+          <ToastMessage
+            type="success"
+            title="Insight Saved"
+            message="This moment is now part of your collection."
+            onDismiss={() => toast.dismiss(t.id)}
+          />
+        ));
+
+        if (onComplete) onComplete(savedInsight); // optional callback
+
+      } catch (err) {
+        console.error("💥 Save Insight error:", err);
+        toast.error("Something went wrong saving your insight.");
+      }
     };
 
     return (
@@ -451,10 +528,7 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
                   Return
                 </button>
                 <button
-                  onClick={() => {
-                    console.log("💾 Saved Prompt/Response:", draftPrompt, draftResponse);
-                    setShowInsightModal(false);
-                  }}
+                  onClick={handleSaveInsight}
                   className="px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700"
                 >
                   Save
