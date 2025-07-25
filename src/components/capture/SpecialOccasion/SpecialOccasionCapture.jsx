@@ -175,7 +175,7 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
             setConversationState('chatting');
           } else {
             // 🔁 RETURNING SESSION: continue conversation
-            typeMessage("Welcome back! Let’s pick up where we left off.", true);
+            typeMessage("Welcome back! Let's pick up where we left off.", true);
             setConversationState('chatting');
           }
         }
@@ -227,8 +227,8 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
 
     return (
       <div className="fixed inset-0 bg-gradient-to-br from-blue-50 to-indigo-50 overflow-y-auto">
-        {/* Main content area */}
-        <div className="max-w-2xl mx-auto min-h-screen flex flex-col">
+        {/* Main content area - now accounts for bottom spacing */}
+        <div className="max-w-2xl mx-auto min-h-screen flex flex-col pb-[140px]"> {/* Total space for input + nav */}
           {/* Header */}
           <div className="p-4 pt-6 flex justify-between items-start">
             <div className="flex items-center gap-3">
@@ -294,39 +294,49 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
           </div>
 
           {/* Messages container */}
-          <div className="flex-1 overflow-y-auto pb-[136px] px-4">
-            <div className="bg-white rounded-2xl shadow-lg p-6 mb-4">
+          <div className="flex-1 overflow-y-auto px-4 pb-[160px]"> {/* 👈 Key change here */}
+            <div className="bg-white rounded-2xl shadow-lg p-6">
               <div className="space-y-4">
-                {messages.map((message, index) => (
-                  <div
-                    key={index}
-                    className={`flex flex-col relative ${
-                      message.isBot ? 'items-start' : 'items-end'
-                    }`}
-                  >
-                    <div
-                      className={`max-w-xs lg:max-w-md px-4 py-2 rounded-2xl ${
-                        message.isBot
-                          ? 'bg-gray-100 text-gray-800'
-                          : 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white'
-                      } ${shouldShowSparkles(index) ? 'mb-4' : ''}`}
-                    >
-                      {message.text}
-                    </div>
+                {messages.map((message, index) => {
+                  const showSparkles = shouldShowSparkles(index);
+                  const isLastMessage = index === messages.length - 1;
 
-                    {shouldShowSparkles(index) && (
-                      <div className="-mt-3 ml-1">
-                        <button
-                          onClick={() => openInsightEditorModal(message)}
-                          className="p-2 bg-blue-100 hover:bg-blue-200 rounded-full shadow-sm border border-blue-300 transition"
-                          title="Turn this into an Insight Card"
-                        >
-                          <Sparkles className="w-4 h-4 text-blue-500" />
-                        </button>
+                  return (
+                    <div
+                      key={index}
+                      className={`flex flex-col relative ${
+                        message.isBot ? 'items-start' : 'items-end'
+                      }`}
+                    >
+                      <div
+                        className={`max-w-xs lg:max-w-md px-4 py-2 rounded-2xl ${
+                          message.isBot
+                            ? 'bg-gray-100 text-gray-800'
+                            : 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white'
+                        } ${showSparkles ? 'mb-4' : ''}`}
+                      >
+                        {message.text}
                       </div>
-                    )}
-                  </div>
-                ))}
+
+                      {showSparkles && (
+                        <div className="-mt-3 ml-1">
+                          <button
+                            onClick={() => openInsightEditorModal(message)}
+                            className="p-2 bg-blue-100 hover:bg-blue-200 rounded-full shadow-sm border border-blue-300 transition"
+                            title="Turn this into an Insight Card"
+                          >
+                            <Sparkles className="w-4 h-4 text-blue-500" />
+                          </button>
+                        </div>
+                      )}
+
+                      {/* 👇 Add this only on the last visible message to ensure scroll */}
+                      {isLastMessage && (
+                        <div ref={messagesEndRef} className="h-4" />
+                      )}
+                    </div>
+                  );
+                })}
                 {isTyping && (
                   <div className="flex justify-start">
                     <div className="bg-gray-100 px-4 py-2 rounded-2xl">
@@ -340,74 +350,60 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
                 )}
               </div>
             </div>
-            <div ref={messagesEndRef} />
           </div>
         </div>
-        // In your return statement, modify the Input Area section:
+
+        {/* Input Area - FIXED: Proper positioning and spacing */}
         {conversationState !== 'milestone_init' && (
-          <div className="fixed bottom-[72px] left-0 right-0 px-4 z-20">
-            <div className="max-w-2xl mx-auto">
-              <div className="bg-white rounded-xl shadow-md p-3">
-                <div className="flex gap-2 items-end">
-                  <div className="flex-1">
-                    {/* Conditional rendering based on whether we're asking for collection name */}
-                    {!occasion.collectionName ? (
-                      <input
-                        type="text"
-                        value={currentInput}
-                        onChange={(e) => setCurrentInput(e.target.value)}
-                        placeholder="Enter collection name"
-                        className="w-full p-2 border border-gray-200 rounded-xl focus:outline-none focus:border-blue-500"
-                        onKeyPress={(e) => {
-                          if (e.key === 'Enter' && currentInput.trim()) {
-                            e.preventDefault();
-                            handleInputSubmit();
-                          }
-                        }}
-                      />
-                    ) : (
-                      <textarea
-                        value={currentInput}
-                        onChange={(e) => setCurrentInput(e.target.value)}
-                        className="w-full p-2 border border-gray-200 rounded-xl focus:outline-none focus:border-blue-500 resize-none"
-                        rows={2}
-                        onKeyPress={(e) => {
-                          if (e.key === 'Enter' && !e.shiftKey) {
-                            e.preventDefault();
-                            handleInputSubmit();
-                          }
-                        }}
-                      />
-                    )}
-                  </div>
-                  {/* Only show mic button when not asking for collection name */}
-                  {occasion.collectionName || occasion.collections?.length === 0 ? (
-                    <>
-                      <button
-                        onClick={toggleRecording}
-                        className={`p-3 rounded-xl transition-colors ${
-                          isRecording ? 'bg-red-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                        }`}
-                      >
-                        {isRecording ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
-                      </button>
-                      <button
-                        onClick={handleInputSubmit}
-                        disabled={!currentInput.trim()}
-                        className={`p-3 rounded-xl transition-colors ${
-                          currentInput.trim()
-                            ? 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600'
-                            : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                        }`}
-                      >
-                        <Send className="w-5 h-5" />
-                      </button>
-                    </>
+          <div className="fixed bottom-[60px] left-0 right-0 z-30 bg-white border-t border-gray-100">
+            <div className="max-w-2xl mx-auto w-full px-4 py-3">
+              <div className="flex gap-2 items-end w-full">
+                <div className="flex-1 min-w-0">
+                  {/* Conditional rendering based on whether we're asking for collection name */}
+                  {!occasion.collectionName ? (
+                    <input
+                      type="text"
+                      value={currentInput}
+                      onChange={(e) => setCurrentInput(e.target.value)}
+                      placeholder="Enter collection name"
+                      className="w-full p-2 border border-gray-200 rounded-xl focus:outline-none focus:border-blue-500"
+                      onKeyPress={(e) => {
+                        if (e.key === 'Enter' && currentInput.trim()) {
+                          e.preventDefault();
+                          handleInputSubmit();
+                        }
+                      }}
+                    />
                   ) : (
+                    <textarea
+                      value={currentInput}
+                      onChange={(e) => setCurrentInput(e.target.value)}
+                      className="w-full p-2 border border-gray-200 rounded-xl focus:outline-none focus:border-blue-500 resize-none"
+                      rows={2}
+                      onKeyPress={(e) => {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                          e.preventDefault();
+                          handleInputSubmit();
+                        }
+                      }}
+                    />
+                  )}
+                </div>
+                {/* Only show mic button when not asking for collection name */}
+                {occasion.collectionName || occasion.collections?.length === 0 ? (
+                  <>
+                    <button
+                      onClick={toggleRecording}
+                      className={`flex-shrink-0 p-3 rounded-xl transition-colors ${
+                        isRecording ? 'bg-red-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      }`}
+                    >
+                      {isRecording ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
+                    </button>
                     <button
                       onClick={handleInputSubmit}
                       disabled={!currentInput.trim()}
-                      className={`p-3 rounded-xl transition-colors ${
+                      className={`flex-shrink-0 p-3 rounded-xl transition-colors ${
                         currentInput.trim()
                           ? 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600'
                           : 'bg-gray-200 text-gray-400 cursor-not-allowed'
@@ -415,12 +411,26 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
                     >
                       <Send className="w-5 h-5" />
                     </button>
-                  )}
-                </div>
+                  </>
+                ) : (
+                  <button
+                    onClick={handleInputSubmit}
+                    disabled={!currentInput.trim()}
+                    className={`flex-shrink-0 p-3 rounded-xl transition-colors ${
+                      currentInput.trim()
+                        ? 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600'
+                        : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                    }`}
+                  >
+                    <Send className="w-5 h-5" />
+                  </button>
+                )}
               </div>
             </div>
           </div>
         )}
+
+        {/* Insight Modal */}
         {showInsightModal && (
           <div className="fixed inset-0 bg-black bg-opacity-50 z-40 flex items-center justify-center">
             <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-xl relative z-50">
