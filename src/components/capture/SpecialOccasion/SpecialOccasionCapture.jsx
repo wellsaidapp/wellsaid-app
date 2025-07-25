@@ -26,7 +26,7 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
     const [collectionCreated, setCollectionCreated] = useState(false);
     const initialized = useRef(false);
 
-
+    const contextSummary = `This collection was created to capture meaningful reflections, stories, and wisdom for a special occasion.`;
     const [trackBotPrompts, setTrackBotPrompts] = useState(false);
     const [insightPromptCount, setInsightPromptCount] = useState(0);
 
@@ -229,6 +229,43 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
       setShowInsightModal(true);
     };
 
+    const handleSaveExit = async (userCollectionId, contextSummary) => {
+      try {
+        const session = await fetchAuthSession();
+        const token = session.tokens?.idToken?.toString();
+        if (!token) throw new Error("Missing auth token");
+
+        const response = await fetch(
+          `https://aqaahphwfj.execute-api.us-east-2.amazonaws.com/dev/collections/user/${userCollectionId}/context`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: token
+            },
+            body: JSON.stringify({
+              userCollectionId,
+              context: contextSummary
+            })
+          }
+        );
+
+        if (!response.ok) {
+          const error = await response.json();
+          console.error("❌ Save Context failed:", error);
+          throw new Error(error.message || "Failed to save context");
+        }
+
+        const result = await response.json();
+        console.log("✅ Context saved:", result);
+        return result;
+
+      } catch (err) {
+        console.error("💥 Save Exit Error:", err);
+        // You can show a toast here
+      }
+    };
+
     const handleSaveInsight = async () => {
       if (!draftPrompt.trim() || !draftResponse.trim()) {
         toast.error("Prompt and response are required");
@@ -317,7 +354,17 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
             </div>
             {(collectionCreated || occasion?.collectionName) && (
               <button
-                onClick={() => setCurrentView('home')}
+                onClick={async () => {
+                  // Only attempt to save if collection exists
+                  if (occasion?.userCollectionId) {
+                    const contextSummary = `This collection captures thoughts and memories for ${occasion.person?.name || "someone special"}.`;
+
+                    await handleSaveExit(occasion.userCollectionId, contextSummary);
+                  }
+
+                  // Then exit
+                  setCurrentView('home');
+                }}
                 className="flex items-center gap-2 px-4 py-2 bg-white rounded-lg shadow-sm hover:bg-gray-50 transition-colors"
               >
                 <Save className="w-5 h-5 text-gray-600" />
