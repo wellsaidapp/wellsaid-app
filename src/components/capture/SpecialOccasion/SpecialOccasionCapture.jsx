@@ -1,6 +1,6 @@
 // Imports
 import React, { useState, useEffect, useRef } from 'react';
-import { User, Check, Plus, Mic, Send, Home, PlusCircle, Library, MicOff, ChevronDown, ChevronUp } from 'lucide-react';
+import { User, Check, Plus, Mic, Send, Home, PlusCircle, Library, MicOff, ChevronDown, ChevronUp, Save, Sparkles } from 'lucide-react';
 import WellSaidIcon from '../../../assets/icons/WellSaidIcon';
 import { useSystemCollections } from '../../../context/SystemCollectionsContext';
 import { fetchAuthSession } from 'aws-amplify/auth';
@@ -23,9 +23,17 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
       questions: [],
       finalMessage: ''
     }));
-
+    const [collectionCreated, setCollectionCreated] = useState(false);
     const initialized = useRef(false);
 
+
+    const [trackBotPrompts, setTrackBotPrompts] = useState(false);
+    const [insightPromptCount, setInsightPromptCount] = useState(0);
+
+    const [botPromptCount, setBotPromptCount] = useState(0);
+    const [showInsightModal, setShowInsightModal] = useState(false);
+    const [draftPrompt, setDraftPrompt] = useState('');
+    const [draftResponse, setDraftResponse] = useState('');
     useEffect(() => {
       if (!initialized.current && occasion.person) {
         initialized.current = true;
@@ -94,7 +102,17 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
     const typeMessage = (text, isBot = true, delay = 1000) => {
       setIsTyping(true);
       setTimeout(() => {
-        setMessages(prev => [...prev, { text, isBot, timestamp: Date.now() }]);
+        setMessages((prev) => {
+          const newMessages = [...prev, { text, isBot, timestamp: Date.now() }];
+
+          // 🧠 Start counting only after collection is created and tracking is enabled
+          if (isBot && trackBotPrompts && !text.startsWith("Creating") && !text.includes("What do you want to name")) {
+            setInsightPromptCount((count) => count + 1);
+          }
+
+          return newMessages;
+        });
+
         setIsTyping(false);
         scrollToBottom();
       }, delay);
@@ -104,130 +122,8 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
       messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     };
 
-    const handleMilestoneComplete = (input) => {
-        const normalizedInput = input.toLowerCase().trim();
-
-        if (normalizedInput.includes('save') || normalizedInput.includes('keep')) {
-            // In a real app, you would save to database here
-            typeMessage("Your reflection has been saved to your library!", true);
-            typeMessage("You can find it in your Milestones collection.", true, 1000);
-            setTimeout(() => setCurrentView('home'), 2000);
-        }
-        else if (normalizedInput.includes('share')) {
-            // In a real app, you would implement sharing logic here
-            typeMessage("Ready to share this meaningful reflection!", true);
-            typeMessage("Would you like to send it via message, email, or create a shareable link?", true, 1500);
-            setConversationState('milestone_sharing');
-        }
-        else if (normalizedInput.includes('edit')) {
-            setConversationState('milestone_editing');
-            typeMessage("Let's edit your reflection. What would you like to change?", true);
-            typeMessage("You can edit: 1) Occasion details 2) Reflections 3) Final message", true, 1500);
-        }
-        else {
-            typeMessage("I didn't quite catch that. Please choose 'save', 'share', or 'edit'.", true);
-        }
-    };
-
-    const handleMilestoneEditing = (input) => {
-        // Handle editing flow
-        if (input.includes('1') || input.includes('details')) {
-            setConversationState('milestone_confirm');
-            typeMessage("Let's update the occasion details. What should we change?", true);
-        }
-        else if (input.includes('2') || input.includes('reflect')) {
-            setConversationState('milestone_editing_reflections');
-            showReflectionsForEditing();
-        }
-        else if (input.includes('3') || input.includes('message')) {
-            setConversationState('milestone_editing_message');
-            typeMessage("What would you like your final message to say instead?", true);
-        }
-    };
-
-    const handleSpecialOccasionResponse = (input) => {
-      const entry = {
-        text: input,
-        author: 'user',
-        date: new Date().toISOString(),
-        collection: 'milestone',
-        occasionDetails: occasion,
-      };
-
-      // Wrap up and return to neutral state
-      typeMessage(`Got it — your message for ${occasion.person.name} has been saved.`, true);
-      setConversationState('confirming');
-      typeMessage(`Thanks for sharing that — it's been added to your collection.`, true);
-
-      // Give it a moment before transitioning
-      setTimeout(() => {
-        setCurrentView('home');
-      }, 4000);
-    };
-
-
-    const beginGuidedReflection = () => {
-        const questions = occasionTypes[occasion.type]?.questions || [
-            "What makes this occasion special?",
-            "What's your favorite memory with this person?",
-            "What hopes do you have for them in this next chapter?"
-        ];
-
-        setOccasion(prev => ({
-            ...prev,
-            currentQuestionIndex: 0,
-            questions
-        }));
-
-        typeMessage("Of course. Let's start here:", true);
-        typeMessage(questions[0], true, 1000);
-    };
-
-    const handleGuidedReflectionResponse = (input) => {
-        const { currentQuestionIndex, questions } = occasion;
-
-        // Save reflection
-        setOccasion(prev => ({
-            ...prev,
-            reflections: [
-                ...prev.reflections,
-                {
-                    question: questions[currentQuestionIndex],
-                    answer: input
-                }
-            ]
-        }));
-
-        // Check if we have more questions
-        if (currentQuestionIndex < questions.length - 1) {
-            setOccasion(prev => ({
-                ...prev,
-                currentQuestionIndex: currentQuestionIndex + 1
-            }));
-            typeMessage(questions[currentQuestionIndex + 1], true, 1500);
-        } else {
-            setConversationState('milestone_summary');
-            generateSummary();
-        }
-    };
-
-    const generateSummary = () => {
-        const { person, reflections } = occasion;
-        const themes = extractThemes(reflections);
-
-        setConversationState('milestone_summary');
-
-        typeMessage("Here's what we've gathered so far:", true);
-        typeMessage(`• Occasion: ${person.name}'s ${occasionTypes[occasion.type]?.name || 'Special Event'}`, true, 500);
-        typeMessage(`• Relationship: ${person.relationship}`, true, 500);
-        typeMessage(`• Themes: ${themes.join(', ')}`, true, 500);
-
-        // Show one example reflection
-        if (reflections.length > 0) {
-            typeMessage(`• Reflection: "${reflections[0].answer.substring(0, 50)}${reflections[0].answer.length > 50 ? '...' : ''}"`, true, 500);
-        }
-
-        typeMessage("Would you like to add a final message or wrap up?", true, 1000);
+    const handleCardSave = () => {
+      setInsightPromptCount(0); // 🧹 Reset after card save
     };
 
     const handleInputSubmit = async () => {
@@ -235,7 +131,7 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
 
       const input = currentInput.trim();
 
-      // Handle collection name input first
+      // 👣 First step: handle collection name
       if (!occasion.collectionName) {
         setCollectionName(input);
         setOccasion(prev => ({
@@ -247,10 +143,12 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
 
         typeMessage(`Creating "${input}" for ${occasion.person.name}`, true);
 
-        // 👉 CREATE THE COLLECTION IN RDS
+        // 📦 Create the collection in RDS
         const createdId = await createUserCollection(input, occasion.person, occasion.collections);
         if (createdId) {
           console.log("📦 Stored collectionId:", createdId);
+          setTrackBotPrompts(true);
+          setCollectionCreated(true);
           toast.custom((t) => (
             <ToastMessage
               type="success"
@@ -261,106 +159,37 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
           ), {
             duration: 5000
           });
+
+          // 🎯 Differentiate paths
+          if (!occasionData.isReturning) {
+            // 🧠 NEW COLLECTION: Inject AI-assisted starter question
+            const collectionNames = occasion.collections
+              .map((id) => systemCollections.find((c) => c.id === id)?.name)
+              .filter(Boolean)
+              .join(', ');
+
+            const contextString = `${occasion.person.name} (${occasion.person.relationship}) — focus on: ${collectionNames}`;
+            typeMessage(`Let's begin. Thinking about ${contextString}, what's something you'd want them to always remember?`, true);
+
+            // Optional: store this in a system prompt or use it to kick off a Lambda call
+            setConversationState('chatting');
+          } else {
+            // 🔁 RETURNING SESSION: continue conversation
+            typeMessage("Welcome back! Let’s pick up where we left off.", true);
+            setConversationState('chatting');
+          }
         }
 
-        // Move to occasion type selection
-        setConversationState('milestone_type');
         return;
       }
 
+      // 🗣 Handle normal chat input
       setMessages(prev => [...prev, { text: input, isBot: false }]);
       setCurrentInput('');
       scrollToBottom();
 
-      // Person management states
-      if (conversationState === 'milestone_type') {
-          handleOccasionTypeSelection(input);
-      }
-      else if (conversationState === 'milestone_date') {
-          handleOccasionDateSelection(input);
-      }
-      else if (conversationState === 'occasion_confirmation') {
-          handleOccasionConfirmation(input);
-      }
-      else if (conversationState === 'milestone_complete') {
-          handleMilestoneComplete(input);
-      }
-      else if (conversationState === 'milestone_sharing') {
-          handleMilestoneSharing(input);
-      }
-      else if (conversationState === 'milestone_editing') {
-          handleMilestoneEditing(input);
-      }
-      else if (conversationState === 'milestone_summary') {
-          handleMilestoneSummary(input);
-      }
-      else if (conversationState === 'milestone_freeform') {
-          handleMilestoneFreeform(input);
-      }
-      else if (conversationState === 'milestone_init') {
-          handleMilestoneInit(input);
-      } else if (conversationState === 'milestone_confirm') {
-          handleMilestoneConfirm(input);
-      } else if (conversationState === 'milestone_relationship') {
-          handleMilestoneRelationship(input);
-      } else if (conversationState === 'milestone_theme') {
-          handleMilestoneTheme(input);
-      } else if (conversationState === 'milestone_guided') {
-          handleGuidedReflectionResponse(input);
-      }
-      else if (conversationState === 'special_occasion_active') {
-          handleSpecialOccasionResponse(input);
-      }
-    };
-
-    const startOccasionFlow = (occasion) => {
-      if (!occasion?.person?.name || !occasion?.type) return;
-
-      // Step 1: Friendly intro
-      typeMessage(`Thanks! Let's start capturing something meaningful for ${occasion.person.name}.`, true);
-
-      // Step 2: Occasion-specific question
-      const promptByOccasionType = {
-        wedding: `What advice or wisdom would you want ${occasion.person.name} to carry with them into marriage?`,
-        birthday: `What do you appreciate most about ${occasion.person.name} at this stage in life?`,
-        graduation: `What do you hope ${occasion.person.name} remembers as they begin this next chapter?`,
-        anniversary: `What memories stand out to you from the journey with ${occasion.person.name}?`,
-        birth: `What values or truths do you hope will shape ${occasion.person.name} as they grow up?`,
-        other: `What insight or reflection do you want to share with ${occasion.person.name} during this milestone?`
-      };
-
-      const nextPrompt = promptByOccasionType[occasion.type] || promptByOccasionType.other;
-      typeMessage(nextPrompt, true);
-
-      // Step 3: Set conversation state
-      setConversationState('special_occasion_active');
-      setShowOccasionConfirmation(false);
-      setShowPeopleSelection(false);
-    };
-
-    const handleConfirmation = () => {
-      if (!occasion?.person?.name || !occasion?.type) return;
-
-      const promptByOccasionType = {
-        wedding: `What advice or wisdom would you want ${occasion.person.name} to carry with them into marriage?`,
-        birthday: `What do you appreciate most about ${occasion.person.name} at this stage in life?`,
-        graduation: `What do you hope ${occasion.person.name} remembers as they begin this next chapter?`,
-        anniversary: `What memories stand out to you from the journey with ${occasion.person.name}?`,
-        birth: `What values or truths do you hope will shape ${occasion.person.name} as they grow up?`,
-        other: `What insight or reflection do you want to share with ${occasion.person.name} during this milestone?`
-      };
-
-      const occasionLabel = promptByOccasionType[occasion.type] ? occasion.type : 'other';
-      const followUpPrompt = promptByOccasionType[occasionLabel];
-
-      setShowOccasionConfirmation(false);
-      setConversationState('special_occasion_active');
-      typeMessage(`Thanks! Let's start capturing something meaningful for ${occasion.person.name}.`, true);
-      typeMessage(followUpPrompt, true);
-
-      setTimeout(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-      }, 100);
+      // 🤖 Placeholder bot reply (can be replaced with OpenAI call)
+      typeMessage("That's a great thought. Want to expand on that?", true);
     };
 
     const toggleRecording = () => {
@@ -373,12 +202,35 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
       }
     };
 
+    const shouldShowSparkles = (index) => {
+      const botMessages = messages.filter((m) => m.isBot && !m.text.includes("Creating") && !m.text.includes("What do you want to name"));
+      const currentMessage = messages[index];
+
+      const eligibleIndex = botMessages.indexOf(currentMessage);
+      return eligibleIndex >= 2; // Show after 3rd eligible bot message
+    };
+
+    const isThirdBotMessage = (index) => {
+      const botMessages = messages.filter((m) => m.isBot);
+      return botMessages[2] && messages[index] === botMessages[2];
+    };
+
+    const openInsightEditorModal = (triggerMessage) => {
+      const priorUserMessage = messages.findLast((m, i) => i < messages.indexOf(triggerMessage) && !m.isBot);
+      const prompt = triggerMessage.text;
+      const response = priorUserMessage?.text || '';
+
+      setDraftPrompt(prompt);
+      setDraftResponse(response);
+      setShowInsightModal(true);
+    };
+
     return (
       <div className="fixed inset-0 bg-gradient-to-br from-blue-50 to-indigo-50 overflow-y-auto">
         {/* Main content area */}
         <div className="max-w-2xl mx-auto min-h-screen flex flex-col">
           {/* Header */}
-          <div className="p-4 pt-6">
+          <div className="p-4 pt-6 flex justify-between items-start">
             <div className="flex items-center gap-3">
               <WellSaidIcon size={50} />
               <div>
@@ -386,6 +238,15 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
                 <p className="text-sm text-gray-500">Special Occasion</p>
               </div>
             </div>
+            {collectionCreated && (
+              <button
+                onClick={() => setCurrentView('home')}
+                className="flex items-center gap-2 px-4 py-2 bg-white rounded-lg shadow-sm hover:bg-gray-50 transition-colors"
+              >
+                <Save className="w-5 h-5 text-gray-600" />
+                <span className="text-gray-700 font-medium">Exit</span>
+              </button>
+            )}
           </div>
 
           {/* Context Container */}
@@ -437,12 +298,33 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
             <div className="bg-white rounded-2xl shadow-lg p-6 mb-4">
               <div className="space-y-4">
                 {messages.map((message, index) => (
-                  <div key={index} className={`flex ${message.isBot ? 'justify-start' : 'justify-end'}`}>
-                    <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-2xl ${
-                      message.isBot ? 'bg-gray-100 text-gray-800' : 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white'
-                    }`}>
+                  <div
+                    key={index}
+                    className={`flex flex-col relative ${
+                      message.isBot ? 'items-start' : 'items-end'
+                    }`}
+                  >
+                    <div
+                      className={`max-w-xs lg:max-w-md px-4 py-2 rounded-2xl ${
+                        message.isBot
+                          ? 'bg-gray-100 text-gray-800'
+                          : 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white'
+                      } ${shouldShowSparkles(index) ? 'mb-4' : ''}`}
+                    >
                       {message.text}
                     </div>
+
+                    {shouldShowSparkles(index) && (
+                      <div className="-mt-3 ml-1">
+                        <button
+                          onClick={() => openInsightEditorModal(message)}
+                          className="p-2 bg-blue-100 hover:bg-blue-200 rounded-full shadow-sm border border-blue-300 transition"
+                          title="Turn this into an Insight Card"
+                        >
+                          <Sparkles className="w-4 h-4 text-blue-500" />
+                        </button>
+                      </div>
+                    )}
                   </div>
                 ))}
                 {isTyping && (
@@ -461,8 +343,6 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
             <div ref={messagesEndRef} />
           </div>
         </div>
-
-        {/* Input Area - Fixed positioning */}
         // In your return statement, modify the Input Area section:
         {conversationState !== 'milestone_init' && (
           <div className="fixed bottom-[72px] left-0 right-0 px-4 z-20">
@@ -500,7 +380,6 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
                       />
                     )}
                   </div>
-
                   {/* Only show mic button when not asking for collection name */}
                   {occasion.collectionName || occasion.collections?.length === 0 ? (
                     <>
@@ -538,6 +417,50 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
                     </button>
                   )}
                 </div>
+              </div>
+            </div>
+          </div>
+        )}
+        {showInsightModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 z-40 flex items-center justify-center">
+            <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-xl relative z-50">
+              <h2 className="text-xl font-bold mb-4">Save Insight</h2>
+
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Prompt</label>
+              <input
+                type="text"
+                value={draftPrompt}
+                onChange={(e) => setDraftPrompt(e.target.value)}
+                className="w-full p-2 mb-4 border rounded-xl"
+                maxLength={255}
+              />
+
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Response</label>
+              <textarea
+                value={draftResponse}
+                onChange={(e) => setDraftResponse(e.target.value)}
+                className="w-full p-2 mb-4 border rounded-xl resize-none"
+                rows={3}
+                maxLength={255}
+              />
+
+              <div className="flex justify-end gap-2">
+                <button
+                  onClick={() => setShowInsightModal(false)}
+                  className="px-4 py-2 rounded-md bg-gray-100 text-gray-700 hover:bg-gray-200"
+                >
+                  Return
+                </button>
+                <button
+                  onClick={() => {
+                    // TODO: Save to insights (can wire this later)
+                    console.log("💾 Saved Prompt/Response:", draftPrompt, draftResponse);
+                    setShowInsightModal(false);
+                  }}
+                  className="px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700"
+                >
+                  Save
+                </button>
               </div>
             </div>
           </div>
