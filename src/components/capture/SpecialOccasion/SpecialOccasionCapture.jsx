@@ -25,6 +25,8 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
     }));
     const [collectionCreated, setCollectionCreated] = useState(false);
     const initialized = useRef(false);
+    const [isSavingExit, setIsSavingExit] = useState(false);
+    const [isSavingInsight, setIsSavingInsight] = useState(false);
 
     const contextSummary = `This collection was created to capture meaningful reflections, stories, and wisdom for a special occasion.`;
     const [trackBotPrompts, setTrackBotPrompts] = useState(false);
@@ -257,12 +259,26 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
         }
 
         const result = await response.json();
-        console.log("✅ Context saved:", result);
+        toast.custom((t) => (
+          <ToastMessage
+            type="success"
+            title="Context Saved"
+            message="Collection summary successfully saved."
+            onDismiss={() => toast.dismiss(t.id)}
+          />
+        ));
         return result;
 
       } catch (err) {
+        toast.custom((t) => (
+          <ToastMessage
+            type="error"
+            title="Save Failed"
+            message={err.message || "Something went wrong saving the collection."}
+            onDismiss={() => toast.dismiss(t.id)}
+          />
+        ));
         console.error("💥 Save Exit Error:", err);
-        // You can show a toast here
       }
     };
 
@@ -355,20 +371,23 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
             {(collectionCreated || occasion?.collectionName) && (
               <button
                 onClick={async () => {
-                  // Only attempt to save if collection exists
-                  if (occasion?.userCollectionId) {
-                    const contextSummary = `This collection captures thoughts and memories for ${occasion.person?.name || "someone special"}.`;
-
-                    await handleSaveExit(occasion.userCollectionId, contextSummary);
-                  }
-
-                  // Then exit
+                  setIsSavingExit(true);
+                  await handleSaveExit(occasion.userCollectionId, contextSummary);
+                  setIsSavingExit(false);
                   setCurrentView('home');
                 }}
-                className="flex items-center gap-2 px-4 py-2 bg-white rounded-lg shadow-sm hover:bg-gray-50 transition-colors"
+                disabled={isSavingExit}
+                className="flex items-center gap-2 px-4 py-2 bg-white rounded-lg shadow-sm hover:bg-gray-50 transition-colors disabled:opacity-60"
               >
-                <Save className="w-5 h-5 text-gray-600" />
-                <span className="text-gray-700 font-medium">Exit</span>
+                {isSavingExit ? (
+                  <svg className="animate-spin h-5 w-5 text-gray-600" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 00-8 8z" />
+                  </svg>
+                ) : (
+                  <Save className="w-5 h-5 text-gray-600" />
+                )}
+                <span className="text-gray-700 font-medium">{isSavingExit ? 'Saving...' : 'Exit'}</span>
               </button>
             )}
           </div>
@@ -575,10 +594,21 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
                   Return
                 </button>
                 <button
-                  onClick={handleSaveInsight}
-                  className="px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700"
+                  onClick={async () => {
+                    setIsSavingInsight(true);
+                    await handleSaveInsight();
+                    setIsSavingInsight(false);
+                  }}
+                  disabled={isSavingInsight}
+                  className="px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700 flex items-center gap-2 disabled:opacity-60"
                 >
-                  Save
+                  {isSavingInsight ? (
+                    <svg className="animate-spin h-4 w-4 text-white" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 00-8 8z" />
+                    </svg>
+                  ) : null}
+                  <span>{isSavingInsight ? "Saving..." : "Save"}</span>
                 </button>
               </div>
             </div>
