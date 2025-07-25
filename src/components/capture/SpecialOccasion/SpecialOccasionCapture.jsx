@@ -238,7 +238,7 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
                 <p className="text-sm text-gray-500">Special Occasion</p>
               </div>
             </div>
-            {collectionCreated && (
+            {(collectionCreated || occasion?.collectionName) && (
               <button
                 onClick={() => setCurrentView('home')}
                 className="flex items-center gap-2 px-4 py-2 bg-white rounded-lg shadow-sm hover:bg-gray-50 transition-colors"
