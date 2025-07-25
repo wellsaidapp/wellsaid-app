@@ -27,7 +27,7 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
     const initialized = useRef(false);
 
     useEffect(() => {
-      if (!initialized.current && occasion.person && occasion.collections?.length > 0) {
+      if (!initialized.current && occasion.person) {
         initialized.current = true;
 
         if (occasionData.isReturning) {
@@ -236,7 +236,7 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
       const input = currentInput.trim();
 
       // Handle collection name input first
-      if (!occasion.collectionName && occasion.collections?.length > 0) {
+      if (!occasion.collectionName) {
         setCollectionName(input);
         setOccasion(prev => ({
           ...prev,
@@ -471,7 +471,7 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
                 <div className="flex gap-2 items-end">
                   <div className="flex-1">
                     {/* Conditional rendering based on whether we're asking for collection name */}
-                    {!occasion.collectionName && occasion.collections?.length > 0 ? (
+                    {!occasion.collectionName ? (
                       <input
                         type="text"
                         value={currentInput}
