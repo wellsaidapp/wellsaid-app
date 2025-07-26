@@ -4,7 +4,7 @@ import { Home, Edit3, Library, Users, User } from 'lucide-react';
 
 
 
-const BottomNav = ({ currentView, setCurrentView, setShowCaptureOptions }) => {
+const BottomNav = ({ currentView, setCurrentView, setShowCaptureOptions, visible = true }) => {
 
   const handleCaptureClick = () => {
     if (currentView === 'home') {
@@ -17,6 +17,8 @@ const BottomNav = ({ currentView, setCurrentView, setShowCaptureOptions }) => {
       setTimeout(() => setShowCaptureOptions(true), 100);
     }
   };
+
+  if (!visible) return null;
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-1 bg-white border-t border-gray-100 backdrop-blur-lg bg-white/95 z-50 overflow-y-auto">

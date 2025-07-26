@@ -9,13 +9,24 @@ const MainLayout = ({
   setCurrentView,
   setShowCaptureOptions
 }) => {
+  // Define which views should hide the bottom nav
+  const hideNavViews = [
+    'capture',
+  ];
+
+  // Calculate if nav should be visible
+  const isNavVisible = !hideNavViews.includes(currentView);
+
   return (
-    <div className="relative min-h-screen overflow-y-auto">
+    <div className={`relative min-h-screen overflow-y-auto ${
+      !isNavVisible ? 'pb-0' : 'pb-16'
+    }`}>
       <Header />
       <main className="flex-grow">
         {children}
       </main>
       <BottomNav
+        visible={isNavVisible}
         currentView={currentView}
         setCurrentView={setCurrentView}
         setShowCaptureOptions={setShowCaptureOptions}
