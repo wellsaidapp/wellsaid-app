@@ -29,11 +29,16 @@ const WeeklyProgress = ({ weekInsights, weeklyGoal, userStreak }) => {
       {weekInsights >= weeklyGoal ? (
         <div className="text-center p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-100">
           <Trophy className="text-blue-500 mx-auto mb-2" size={24} />
-          <p className="text-blue-700 font-medium">Weekly goal achieved! Streak continues!</p>
+          <p className="text-blue-700 font-medium">
+            {userStreak === 1
+              ? "Great job! You’ve started a new streak!"
+              : `Weekly goal achieved! ${userStreak > 1 ? "Streak continues!" : ""}`}
+          </p>
         </div>
       ) : (
         <p className="text-gray-600 text-center">
-          {weeklyGoal - weekInsights} more insight{weeklyGoal - weekInsights !== 1 ? 's' : ''} to maintain your streak
+          {weeklyGoal - weekInsights} more insight{weeklyGoal - weekInsights !== 1 ? 's' : ''} to{' '}
+          {userStreak > 0 ? 'maintain' : 'start'} your streak
         </p>
       )}
     </div>
