@@ -6,6 +6,7 @@ import { useSystemCollections } from '../../../context/SystemCollectionsContext'
 import { fetchAuthSession } from 'aws-amplify/auth';
 import toast from 'react-hot-toast';
 import ToastMessage from '../../library/BookCreation/ToastMessage';
+import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
 
 const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete }) => {
     const { systemCollections } = useSystemCollections();
@@ -38,6 +39,14 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
     const [showInsightModal, setShowInsightModal] = useState(false);
     const [draftPrompt, setDraftPrompt] = useState('');
     const [draftResponse, setDraftResponse] = useState('');
+
+    const {
+      transcript,
+      listening,
+      resetTranscript,
+      browserSupportsSpeechRecognition
+    } = useSpeechRecognition();
+
     useEffect(() => {
       if (!initialized.current && occasion.person) {
         initialized.current = true;
@@ -60,11 +69,17 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
     const [messages, setMessages] = useState([]);
     const [currentInput, setCurrentInput] = useState('');
     const [isTyping, setIsTyping] = useState(false);
-    const [isRecording, setIsRecording] = useState(false);
     const [conversationState, setConversationState] = useState('init');
     const messagesEndRef = useRef(null);
     const [showPeopleSelection, setShowPeopleSelection] = useState(false);
     const [showOccasionConfirmation, setShowOccasionConfirmation] = useState(false);
+
+    useEffect(() => {
+      if (listening) return; // Wait for it to finish
+      if (transcript && transcript !== currentInput) {
+        setCurrentInput(transcript);
+      }
+    }, [transcript, listening]);
 
     const createUserCollection = async (collectionName, person, systemCollectionIds = []) => {
       try {
@@ -133,6 +148,13 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
     const handleInputSubmit = async () => {
       if (!currentInput.trim()) return;
 
+      // 🎤 Stop mic recording when sending message
+      if (listening) {
+        await SpeechRecognition.stopListening();
+        setIsRecording(false);
+        resetTranscript(); // Reset the transcript
+      }
+
       const input = currentInput.trim();
 
       // 👣 First step: handle collection name
@@ -200,13 +222,22 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
       typeMessage("That's a great thought. Want to expand on that?", true);
     };
 
-    const toggleRecording = () => {
-      setIsRecording(!isRecording);
-      if (!isRecording) {
-        setTimeout(() => {
-          setCurrentInput("This would be transcribed speech...");
-          setIsRecording(false);
-        }, 3000);
+    // Change this:
+    const toggleRecording = async () => {
+      if (!browserSupportsSpeechRecognition) {
+        toast.error('Speech recognition is not supported in this browser.');
+        return;
+      }
+
+      if (listening) {
+        await SpeechRecognition.stopListening();
+        resetTranscript();
+      } else {
+        resetTranscript();
+        await SpeechRecognition.startListening({
+          continuous: false,
+          language: 'en-US'
+        });
       }
     };
 
@@ -529,14 +560,14 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
                 {occasion.collectionName || occasion.collections?.length === 0 ? (
                   <>
                     <button
-                      onClick={toggleRecording}
+                      onClick={toggleRecording} // or submit if you choose option 2
                       className={`flex-shrink-0 p-3 rounded-xl transition-colors ${
-                        isRecording
+                        listening
                           ? 'bg-red-500 text-white'
                           : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                       }`}
                     >
-                      {isRecording ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
+                      {listening ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
                     </button>
                     <button
                       onClick={handleInputSubmit}
