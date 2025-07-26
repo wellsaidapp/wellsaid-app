@@ -16,7 +16,7 @@ import PDFViewerWrapper from '../library/BooksView/PDFViewerWrapper';
 import BookEditor from '../library/BooksView/BookEditor';
 import BookPreviewModal from './BookPreviewModal'
 import { fetchAuthSession } from 'aws-amplify/auth';
-import { parseISO, isThisWeek, addHours } from 'date-fns';
+import { parseISO, isThisWeek, addHours, isAfter } from 'date-fns';
 
 const HomeView = ({
   showCaptureOptions,
@@ -65,18 +65,27 @@ const HomeView = ({
   const weeklyGoal = userData?.weeklyGoal ?? 5;
   const userStreak = userData?.streak ?? 0;
 
-  insights.forEach(i => {
-    const parsed = parseISO(i.date);
-    const adjusted = addHours(parsed, 5);
-  });
+  const getStartOfWeekCentral = () => {
+    const now = new Date();
 
-  // ✅ Actual weekly insights count
+    // Get current UTC day (0 = Sunday, 6 = Saturday)
+    const utcDay = now.getUTCDay();
+
+    // How many days since last Saturday?
+    const daysSinceSaturday = (utcDay + 1) % 7; // Saturday = 6 → 0
+
+    const start = new Date(now);
+    start.setUTCDate(now.getUTCDate() - daysSinceSaturday);
+    start.setUTCHours(5, 0, 0, 0); // 12:00 AM Central = 5:00 AM UTC
+    return start;
+  };
+
+  const startOfWeek = getStartOfWeekCentral();
+
   const weekInsights = insights.filter(i => {
-    const parsed = parseISO(i.date);
-    const adjusted = addHours(parsed, 5);
-    return isThisWeek(adjusted);
+    const parsed = parseISO(i.createdAt);
+    return isAfter(addHours(parsed, 0), startOfWeek);
   }).length;
-
 
   const recentBooks = getRecentBooks(2);
   const resetForm = () => {
@@ -169,6 +178,12 @@ const HomeView = ({
     };
   }, [editingBook, showPdfViewer, showCaptureOptions]);
 
+  insights.forEach(i => {
+    const parsed = parseISO(i.createdAt);
+    console.log("🕓 Insight:", i.createdAt, "| Parsed:", parsed.toISOString());
+  });
+  console.log("📅 Start of week (UTC):", startOfWeek.toISOString());
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-blue-50 to-indigo-50 pb-20 overflow-y-auto">
       <div className="p-4">
@@ -186,7 +201,7 @@ const HomeView = ({
             setCurrentView={setCurrentView}
             setCaptureMode={setCaptureMode}
             resetForm={resetForm}
-            setSpecialOccasionData={setSpecialOccasionData} 
+            setSpecialOccasionData={setSpecialOccasionData}
           />
         )}
 
