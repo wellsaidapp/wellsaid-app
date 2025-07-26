@@ -560,7 +560,7 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
         {conversationState !== 'milestone_init' && (
           <div className="fixed bottom-0 left-0 right-0 z-30 bg-white border-t border-gray-100">
             <div className="max-w-2xl mx-auto w-full px-4 py-3">
-              <div className="flex gap-2 items-end w-full">
+              <div className="flex gap-2 items-center w-full">
                 <div className="flex-1 min-w-0">
                   {!occasion.collectionName ? (
                     <input
