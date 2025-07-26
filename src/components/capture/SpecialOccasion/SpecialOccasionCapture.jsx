@@ -1,12 +1,46 @@
 // Imports
 import React, { useState, useEffect, useRef } from 'react';
-import { User, Check, Plus, Mic, Send, Home, PlusCircle, Library, MicOff, ChevronDown, ChevronUp, Save, Sparkles } from 'lucide-react';
+import { User, Check, Plus, Mic, Send, Home, PlusCircle, Library, MicOff, ChevronDown, ChevronUp, Save, Sparkles, SendIcon } from 'lucide-react';
 import WellSaidIcon from '../../../assets/icons/WellSaidIcon';
 import { useSystemCollections } from '../../../context/SystemCollectionsContext';
 import { fetchAuthSession } from 'aws-amplify/auth';
 import toast from 'react-hot-toast';
 import ToastMessage from '../../library/BookCreation/ToastMessage';
 import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
+
+const ChatInput = ({ userInput, setUserInput, onSubmit }) => {
+  const textareaRef = useRef();
+
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto'; // reset height
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+    }
+  }, [userInput]);
+
+  const handleChange = (e) => {
+    setUserInput(e.target.value);
+  };
+
+  const handleSubmit = () => {
+    onSubmit();
+    setUserInput(''); // reset
+    textareaRef.current.style.height = 'auto'; // shrink after submission
+  };
+
+  return (
+    <div className="relative w-full">
+      <textarea
+        ref={textareaRef}
+        value={userInput}
+        onChange={handleChange}
+        placeholder="Type your message..."
+        rows={1}
+        className="w-full resize-none overflow-hidden rounded-xl p-3 pr-10 text-[16px] leading-relaxed border focus:outline-none"
+      />
+    </div>
+  );
+};
 
 const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete }) => {
     const { systemCollections } = useSystemCollections();
@@ -543,17 +577,10 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
                       }}
                     />
                   ) : (
-                    <textarea
-                      value={currentInput}
-                      onChange={(e) => setCurrentInput(e.target.value)}
-                      className="w-full p-2 border border-gray-200 rounded-xl focus:outline-none focus:border-blue-500 resize-none"
-                      rows={2}
-                      onKeyPress={(e) => {
-                        if (e.key === 'Enter' && !e.shiftKey) {
-                          e.preventDefault();
-                          handleInputSubmit();
-                        }
-                      }}
+                    <ChatInput
+                      userInput={currentInput}
+                      setUserInput={setCurrentInput}
+                      onSubmit={handleInputSubmit}
                     />
                   )}
                 </div>
