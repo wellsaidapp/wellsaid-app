@@ -1,6 +1,6 @@
 // Imports
 import React, { useState, useEffect, useRef } from 'react';
-import { User, Check, Plus, Mic, Send, Home, PlusCircle, Library, MicOff, ChevronDown, ChevronUp, Save, Sparkles, SendIcon } from 'lucide-react';
+import { User, Check, Plus, Mic, Send, Home, PlusCircle, Library, MicOff, ChevronDown, ChevronUp, Save, Sparkles, SendIcon, X } from 'lucide-react';
 import WellSaidIcon from '../../../assets/icons/WellSaidIcon';
 import { useSystemCollections } from '../../../context/SystemCollectionsContext';
 import { fetchAuthSession } from 'aws-amplify/auth';
@@ -34,6 +34,12 @@ const ChatInput = ({ userInput, setUserInput, onSubmit }) => {
         ref={textareaRef}
         value={userInput}
         onChange={handleChange}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            handleSubmit();
+          }
+        }}
         placeholder="Type your message..."
         rows={1}
         className="w-full resize-none overflow-hidden rounded-xl p-3 pr-10 text-[16px] leading-relaxed border focus:outline-none"
@@ -47,6 +53,7 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
     const [showContext, setShowContext] = useState(false);
     const [collectionName, setCollectionName] = useState('');
     const [hasAskedForName, setHasAskedForName] = useState(false);
+    const [hasPostedMessage, setHasPostedMessage] = useState(false);
 
     const [occasion, setOccasion] = useState(() => ({
       person: occasionData.person || null,
@@ -250,6 +257,7 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
       // 🗣 Handle normal chat input
       setMessages(prev => [...prev, { text: input, isBot: false }]);
       setCurrentInput('');
+      setHasPostedMessage(true);
       scrollToBottom();
 
       // 🤖 Placeholder bot reply (can be replaced with OpenAI call)
@@ -436,26 +444,36 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
               </div>
             </div>
             {(collectionCreated || occasion?.collectionName) && (
-              <button
-                onClick={async () => {
-                  setIsSavingExit(true);
-                  await handleSaveExit(occasion.userCollectionId, contextSummary);
-                  setIsSavingExit(false);
-                  setCurrentView('home');
-                }}
-                disabled={isSavingExit}
-                className="flex items-center gap-2 px-4 py-2 bg-white rounded-lg shadow-sm hover:bg-gray-50 transition-colors disabled:opacity-60"
-              >
-                {isSavingExit ? (
-                  <svg className="animate-spin h-5 w-5 text-gray-600" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 00-8 8z" />
-                  </svg>
-                ) : (
-                  <Save className="w-5 h-5 text-gray-600" />
-                )}
-                <span className="text-gray-700 font-medium">{isSavingExit ? 'Saving...' : 'Exit'}</span>
-              </button>
+              hasPostedMessage ? (
+                <button
+                  onClick={async () => {
+                    setIsSavingExit(true);
+                    await handleSaveExit(occasion.userCollectionId, contextSummary);
+                    setIsSavingExit(false);
+                    setCurrentView('home');
+                  }}
+                  disabled={isSavingExit}
+                  className="flex items-center gap-2 px-4 py-2 bg-white rounded-lg shadow-sm hover:bg-gray-50 transition-colors disabled:opacity-60"
+                >
+                  {isSavingExit ? (
+                    <svg className="animate-spin h-5 w-5 text-gray-600" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 00-8 8z" />
+                    </svg>
+                  ) : (
+                    <Save className="w-5 h-5 text-gray-600" />
+                  )}
+                  <span className="text-gray-700 font-medium">{isSavingExit ? 'Saving...' : 'Exit'}</span>
+                </button>
+              ) : (
+                <button
+                  onClick={() => setCurrentView('home')}
+                  className="flex items-center gap-2 px-4 py-2 bg-white rounded-lg shadow-sm hover:bg-gray-50 transition-colors"
+                >
+                  <X className="w-5 h-5 text-gray-600" />
+                  <span className="text-gray-700 font-medium">Cancel</span>
+                </button>
+              )
             )}
           </div>
 
