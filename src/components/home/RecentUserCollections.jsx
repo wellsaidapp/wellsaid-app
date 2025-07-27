@@ -36,6 +36,7 @@ const RecentUserCollections = ({
         name: collection.personName,
       },
       userCollectionId: collection.id,
+      userCollectionName: collection.name,
       collections: collection.systemCollectionIds || [], // ✅ Might be empty array if not defined
       type: 'custom',
       questions,

@@ -8,7 +8,7 @@ import toast from 'react-hot-toast';
 import ToastMessage from '../../library/BookCreation/ToastMessage';
 import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
 
-const callOpenAI = async (userPrompt, systemPrompt) => {
+const callOpenAI = async (userPrompt, systemPrompt, history = []) => {
   try {
     const session = await fetchAuthSession();
     const token = session.tokens?.idToken?.toString();
@@ -21,7 +21,8 @@ const callOpenAI = async (userPrompt, systemPrompt) => {
       },
       body: JSON.stringify({
         message: userPrompt,
-        systemPrompt: systemPrompt
+        systemPrompt: systemPrompt,
+        history,
       }),
     });
 
@@ -90,6 +91,7 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
     const [occasion, setOccasion] = useState(() => ({
       person: occasionData.person || null,
       userCollectionId: occasionData.userCollectionId || null,
+      userCollectionName: occasionData.userCollectionName || null,
       collections: occasionData.collections || [],
       type: '',
       date: '',
@@ -128,7 +130,7 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
           setHasAskedForName(true); // ✅ Prevent collection name prompt
           setOccasion((prev) => ({
             ...prev,
-            collectionName: occasionData.collectionName || 'Untitled'
+            userCollectionName: occasionData.userCollectionName || 'Untitled'
           }));
           typeMessage("Alright, let's get back to it.", true); // 👈 Use your placeholder question here
           setConversationState('milestone_type'); // Or jump to next state directly
@@ -140,17 +142,48 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
     }, [occasion.person, occasion.collections, occasionData.isReturning]);
 
     const buildSystemPromptFromOccasion = (occasion, systemCollections) => {
-      if (!occasion?.person) return null;
+      if (!occasion?.person || !occasion?.userCollectionName || !occasion?.collections) return null;
 
       const name = occasion.person.name;
-      const relationship = occasion.person.relationship || 'loved one';
+      const occasionTitle = occasion.userCollectionName;
 
-      const collectionNames = (occasion.collections || [])
-        .map((id) => systemCollections.find((c) => c.id === id)?.name)
+      const topics = occasion.collections
+        .map(id => systemCollections.find(c => c.id === id)?.name)
         .filter(Boolean)
-        .join(', ') || 'important themes';
+        .join(', ');
 
-      return `You are a warm and thoughtful assistant helping users reflect on meaningful topics for ${name}, their ${relationship}. The topics include: ${collectionNames}. Keep responses short (2–3 sentences) and end with a thoughtful question that encourages personal reflection.`;
+        return `You are a warm, emotionally intelligent assistant named WellSaid. Your role is to help users reflect on meaningful life moments and capture wisdom they can later share with someone they love.
+
+        This session centers on **${occasionTitle}**, which is a meaningful moment involving **${name}**.
+
+        Use the following context to guide your response:
+
+        1. **Occasion**: ${occasionTitle}
+        2. **Person**: ${name}
+        3. **Themes**: ${topics}
+
+        Instructions:
+        - Mention either **${name}** or **${occasionTitle}**, but not both in the same sentence unless it adds clarity or flow.
+        - Focus on **one theme** at a time and name it explicitly.
+        - Ask only **one open-ended question**.
+        - Keep responses short (**2–3 sentences**).
+        - Briefly explain how the question relates to the occasion or theme.
+        - Write like a thoughtful coach or guide — avoid vague or generic language.
+
+        Format:
+        - Start with a sentence that references the occasion or person.
+        - Follow with a sentence that ties in a theme by name.
+        - Finish with a reflective, open-ended question.`;
+    };
+
+    const buildHistoryForAI = (messages, limit = 6) => {
+      // keep only the last N human/bot turns
+      const last = messages.slice(-limit);
+
+      return last.map(m => ({
+        role: m.isBot ? 'assistant' : 'user',
+        content: m.text
+      }));
     };
 
     const [messages, setMessages] = useState([]);
@@ -244,11 +277,11 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
       const input = currentInput.trim();
 
       // Step 1: Handle collection name logic
-      if (!occasion.collectionName) {
+      if (!occasion.userCollectionName) {
         setCollectionName(input);
         setOccasion(prev => ({
           ...prev,
-          collectionName: input
+          userCollectionName: input
         }));
         setMessages(prev => [...prev, { text: input, isBot: false }]);
         setCurrentInput('');
@@ -297,9 +330,12 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
         const systemPrompt =
           buildSystemPromptFromOccasion(occasion, systemCollections) ||
           "You are a legacy guide helping users reflect on meaningful life experiences with loved ones. Keep replies brief and end with a thoughtful question.";
-
         console.log("BUILT SYSTEM PROMPT:", systemPrompt);
-        const reply = await callOpenAI(input, systemPrompt);
+
+        const historyForAI = buildHistoryForAI(messages);
+        console.log("MESSAGE HISTORY FOR AI:", historyForAI);
+
+        const reply = await callOpenAI(input, systemPrompt, historyForAI);
 
         if (reply) {
           typeMessage(reply, true);
@@ -492,7 +528,7 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
                 <p className="text-sm text-gray-500">Special Occasion</p>
               </div>
             </div>
-            {(collectionCreated || occasion?.collectionName) && (
+            {(collectionCreated || occasion?.userCollectionName) && (
               hasPostedMessage ? (
                 <button
                   onClick={async () => {
@@ -533,7 +569,9 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
                 onClick={() => setShowContext(!showContext)}
                 className="w-full flex justify-between items-center"
               >
-                <h3 className="font-semibold text-gray-800">Context</h3>
+                <h3 className="font-semibold text-gray-800">
+                  {occasion.userCollectionName || 'Context'}
+                </h3>
                 {showContext ? (
                   <ChevronUp className="w-5 h-5 text-gray-500" />
                 ) : (
@@ -629,7 +667,7 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
             <div className="max-w-2xl mx-auto w-full px-4 py-3">
               <div className="flex gap-2 items-center w-full">
                 <div className="flex-1 min-w-0">
-                  {!occasion.collectionName ? (
+                  {!occasion.userCollectionName ? (
                     <input
                       type="text"
                       value={currentInput}
@@ -651,7 +689,7 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
                     />
                   )}
                 </div>
-                {occasion.collectionName || occasion.collections?.length === 0 ? (
+                {occasion.userCollectionName || occasion.collections?.length === 0 ? (
                   <>
                     <button
                       onClick={toggleRecording} // or submit if you choose option 2
