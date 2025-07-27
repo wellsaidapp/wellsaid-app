@@ -8,6 +8,38 @@ import toast from 'react-hot-toast';
 import ToastMessage from '../../library/BookCreation/ToastMessage';
 import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
 
+const callOpenAI = async (userPrompt, systemPrompt) => {
+  try {
+    const session = await fetchAuthSession();
+    const token = session.tokens?.idToken?.toString();
+
+    const response = await fetch('https://aqaahphwfj.execute-api.us-east-2.amazonaws.com/dev/ai', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: token,
+      },
+      body: JSON.stringify({
+        message: userPrompt,
+        systemPrompt: systemPrompt
+      }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data?.error || 'Failed to get response from AI');
+    }
+
+    console.log("🤖 GPT Response:", data.reply);
+    return data.reply;
+
+  } catch (err) {
+    console.error("❌ Error calling OpenAI Lambda:", err);
+    return null;
+  }
+};
+
 const ChatInput = ({ userInput, setUserInput, onSubmit }) => {
   const textareaRef = useRef();
 
@@ -107,6 +139,20 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
       }
     }, [occasion.person, occasion.collections, occasionData.isReturning]);
 
+    const buildSystemPromptFromOccasion = (occasion, systemCollections) => {
+      if (!occasion?.person) return null;
+
+      const name = occasion.person.name;
+      const relationship = occasion.person.relationship || 'loved one';
+
+      const collectionNames = (occasion.collections || [])
+        .map((id) => systemCollections.find((c) => c.id === id)?.name)
+        .filter(Boolean)
+        .join(', ') || 'important themes';
+
+      return `You are a warm and thoughtful assistant helping users reflect on meaningful topics for ${name}, their ${relationship}. The topics include: ${collectionNames}. Keep responses short (2–3 sentences) and end with a thoughtful question that encourages personal reflection.`;
+    };
+
     const [messages, setMessages] = useState([]);
     const [currentInput, setCurrentInput] = useState('');
     const [isTyping, setIsTyping] = useState(false);
@@ -189,16 +235,15 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
     const handleInputSubmit = async () => {
       if (!currentInput.trim()) return;
 
-      // 🎤 Stop mic recording when sending message
       if (listening) {
         await SpeechRecognition.stopListening();
         setIsRecording(false);
-        resetTranscript(); // Reset the transcript
+        resetTranscript();
       }
 
       const input = currentInput.trim();
 
-      // 👣 First step: handle collection name
+      // Step 1: Handle collection name logic
       if (!occasion.collectionName) {
         setCollectionName(input);
         setOccasion(prev => ({
@@ -210,14 +255,9 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
 
         typeMessage(`Creating "${input}" for ${occasion.person.name}`, true);
 
-        // 📦 Create the collection in RDS
         const createdId = await createUserCollection(input, occasion.person, occasion.collections);
         if (createdId) {
-          console.log("📦 Stored collectionId:", createdId);
-          setOccasion(prev => ({
-            ...prev,
-            userCollectionId: createdId
-          }));
+          setOccasion(prev => ({ ...prev, userCollectionId: createdId }));
           setTrackBotPrompts(true);
           setCollectionCreated(true);
           toast.custom((t) => (
@@ -227,13 +267,9 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
               message="Your special occasion collection was saved."
               onDismiss={() => toast.dismiss(t.id)}
             />
-          ), {
-            duration: 5000
-          });
+          ));
 
-          // 🎯 Differentiate paths
           if (!occasionData.isReturning) {
-            // 🧠 NEW COLLECTION: Inject AI-assisted starter question
             const collectionNames = occasion.collections
               .map((id) => systemCollections.find((c) => c.id === id)?.name)
               .filter(Boolean)
@@ -241,11 +277,8 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
 
             const contextString = `${occasion.person.name} (${occasion.person.relationship}) — focus on: ${collectionNames}`;
             typeMessage(`Let's begin. Thinking about ${contextString}, what's something you'd want them to always remember?`, true);
-
-            // Optional: store this in a system prompt or use it to kick off a Lambda call
             setConversationState('chatting');
           } else {
-            // 🔁 RETURNING SESSION: continue conversation
             typeMessage("Welcome back! Let's pick up where we left off.", true);
             setConversationState('chatting');
           }
@@ -254,14 +287,30 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
         return;
       }
 
-      // 🗣 Handle normal chat input
+      // Step 2: Handle chat input and call OpenAI
       setMessages(prev => [...prev, { text: input, isBot: false }]);
       setCurrentInput('');
       setHasPostedMessage(true);
       scrollToBottom();
 
-      // 🤖 Placeholder bot reply (can be replaced with OpenAI call)
-      typeMessage("That's a great thought. Want to expand on that?", true);
+      try {
+        const systemPrompt =
+          buildSystemPromptFromOccasion(occasion, systemCollections) ||
+          "You are a legacy guide helping users reflect on meaningful life experiences with loved ones. Keep replies brief and end with a thoughtful question.";
+
+        console.log("BUILT SYSTEM PROMPT:", systemPrompt);
+        const reply = await callOpenAI(input, systemPrompt);
+
+        if (reply) {
+          typeMessage(reply, true);
+        } else {
+          typeMessage("Hmm, I didn't catch that. Could you try rephrasing?", true);
+        }
+
+      } catch (err) {
+        console.error("💥 OpenAI API call error:", err);
+        typeMessage("Sorry, I had trouble thinking. Can you try again?", true);
+      }
     };
 
     // Change this:
