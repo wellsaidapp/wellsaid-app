@@ -180,9 +180,9 @@ const HomeView = ({
 
   insights.forEach(i => {
     const parsed = parseISO(i.createdAt);
-    console.log("🕓 Insight:", i.createdAt, "| Parsed:", parsed.toISOString());
+    // console.log("🕓 Insight:", i.createdAt, "| Parsed:", parsed.toISOString());
   });
-  console.log("📅 Start of week (UTC):", startOfWeek.toISOString());
+  // console.log("📅 Start of week (UTC):", startOfWeek.toISOString());
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-blue-50 to-indigo-50 pb-20 overflow-y-auto">

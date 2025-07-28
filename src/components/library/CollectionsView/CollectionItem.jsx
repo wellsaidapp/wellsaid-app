@@ -39,8 +39,8 @@ const CollectionItem = ({
   const [editedName, setEditedName] = useState(collection.name);
   const [isExpanded, setIsExpanded] = useState(false);
   const [showCaptureCard, setShowCaptureCard] = useState(false);
-  console.log("Collection", collection);
-  console.log("Collections", collections);
+  // console.log("Collection", collection);
+  // console.log("Collections", collections);
   const handleCreateNew = () => {
     setIsCreating(true);
   };

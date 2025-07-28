@@ -100,7 +100,7 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
       questions: [],
       finalMessage: ''
     }));
-    console.log("Occasion Data:", occasionData);
+    // console.log("Occasion Data:", occasionData);
     const [collectionCreated, setCollectionCreated] = useState(false);
     const initialized = useRef(false);
     const [isSavingExit, setIsSavingExit] = useState(false);
@@ -237,7 +237,7 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
         }
 
         const result = await response.json();
-        console.log("✅ Collection created:", result);
+        // console.log("✅ Collection created:", result);
         return result.collectionId;
 
       } catch (err) {
@@ -604,7 +604,7 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
         }
 
         const savedInsight = await response.json();
-        console.log("✅ Insight saved:", savedInsight);
+        // console.log("✅ Insight saved:", savedInsight);
 
         // Reset and close modal
         setInsightDraft({ prompt: '', response: '' });

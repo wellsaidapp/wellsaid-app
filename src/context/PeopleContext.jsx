@@ -42,7 +42,7 @@ export const PeopleProvider = ({ children }) => {
       const raw = await response.json();
       const people = Array.isArray(raw) ? raw : raw.people || [];
       setPeople(people);
-      console.log('👥 People Loaded:', people);
+      // console.log('👥 People Loaded:', people);
     } catch (err) {
       console.error('❌ Failed to load people:', err);
       setPeople([]);
@@ -52,14 +52,14 @@ export const PeopleProvider = ({ children }) => {
   }, []);
 
   const refreshPeople = useCallback(async (preserveSelectedId = null) => {
-    console.log("🔄 [refreshPeople] Starting refresh...");
+    // console.log("🔄 [refreshPeople] Starting refresh...");
     try {
       await fetchPeople();
-      console.log("🔄 [refreshPeople] Refresh completed. Current people:", people);
+      // console.log("🔄 [refreshPeople] Refresh completed. Current people:", people);
 
       if (preserveSelectedId) {
         const refreshed = people.find(p => p.id === preserveSelectedId);
-        console.log(`🔄 [refreshPeople] Found refreshed person with ID ${preserveSelectedId}:`, refreshed);
+        // console.log(`🔄 [refreshPeople] Found refreshed person with ID ${preserveSelectedId}:`, refreshed);
         return refreshed || null;
       }
       return people;

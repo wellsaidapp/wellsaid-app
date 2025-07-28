@@ -31,7 +31,7 @@ export const InsightProvider = ({ children }) => {
 
       const data = await res.json();
       setInsights(data);
-      console.log("Insights loaded:", data.length);
+      // console.log("Insights loaded:", data.length);
     } catch (err) {
       console.error('Insight fetch error:', err);
       setInsights([]);
@@ -41,13 +41,13 @@ export const InsightProvider = ({ children }) => {
   }, []);
 
   const refreshInsights = useCallback(() => {
-    console.log("Manually refreshing insights...");
+    // console.log("Manually refreshing insights...");
     return fetchInsights();
   }, [fetchInsights]);
 
   useEffect(() => {
     const handleAuthChange = () => {
-      console.log("Auth change - refreshing insights");
+      // console.log("Auth change - refreshing insights");
       fetchInsights();
     };
 

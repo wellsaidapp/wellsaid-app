@@ -33,7 +33,7 @@ export const UserCollectionsProvider = ({ children }) => {
       const raw = await response.json();
       const collections = Array.isArray(raw) ? raw : raw.collections || [];
       setUserCollections(collections);
-      console.log("User Collections:", collections);
+      // console.log("User Collections:", collections);
     } catch (err) {
       console.error("Error fetching user collections:", err);
       setUserCollections([]);
@@ -43,13 +43,13 @@ export const UserCollectionsProvider = ({ children }) => {
   }, []);
 
   const refreshUserCollections = useCallback(() => {
-    console.log("Manually refreshing user collections...");
+    // console.log("Manually refreshing user collections...");
     return fetchUserCollections();
   }, [fetchUserCollections]);
 
   useEffect(() => {
     const handleAuthChange = () => {
-      console.log("Auth change - refreshing user collections");
+      // console.log("Auth change - refreshing user collections");
       fetchUserCollections();
     };
 

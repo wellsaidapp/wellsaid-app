@@ -14,8 +14,8 @@ const CaptureCard = ({
   onCollectionToggle,
   onPersonToggle
 }) => {
-  console.log("Collection inside:", activeCollectionId);
-  console.log("Entry card info:", entry);
+  // console.log("Collection inside:", activeCollectionId);
+  // console.log("Entry card info:", entry);
   const [isEditing, setIsEditing] = useState(false);
   const [editedEntry, setEditedEntry] = useState(entry);
   const promptRef = useRef(null);

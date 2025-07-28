@@ -17,11 +17,11 @@ export const UserProvider = ({ children }) => {
     }
     try {
       const user = await getCurrentUser();
-      console.log("🧑 Current Cognito user:", user);
+      // console.log("🧑 Current Cognito user:", user);
       if (!user) throw new Error("No signed-in user");
 
       const session = await fetchAuthSession();
-      console.log("🪪 Session tokens:", session.tokens);
+      // console.log("🪪 Session tokens:", session.tokens);
       const idToken = session.tokens?.idToken?.toString();
 
       if (!idToken) throw new Error("Missing ID token");
@@ -58,7 +58,7 @@ export const UserProvider = ({ children }) => {
       }
 
       setUserData(data);
-      console.log("✅ Loaded user data:", data);
+      // console.log("✅ Loaded user data:", data);
     } catch (err) {
       console.error("❌ Failed to load user data:", err.message);
     } finally {

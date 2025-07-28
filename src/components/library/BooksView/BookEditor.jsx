@@ -25,7 +25,7 @@ const BookEditor = ({
   const [activeTab, setActiveTab] = useState('content'); // 'content' or 'design'
   const [showCropper, setShowCropper] = useState(false);
   const [selectedImage, setSelectedImage] = useState(null);
-  console.log("User Data from Book Editor:", userData);
+  // console.log("User Data from Book Editor:", userData);
   const [fontStyle, setFontStyle] = useState(book.fontStyle || 'serif');
   const [isBlackAndWhite, setIsBlackAndWhite] = useState(book.isBlackAndWhite || false);
   // Initialize editor with book content
@@ -38,14 +38,14 @@ const BookEditor = ({
       }
       setDescription(book.description || '');
       setBackCoverNote(book.backCoverNote || '');
-      console.log("📘 UserData at save time:", userData);
+      // console.log("📘 UserData at save time:", userData);
       // Handle cover image conversion if it's a URL
       if (book.coverImage && book.coverImage.startsWith('http')) {
         try {
           const base64Image = await fetchImageAsBase64(book.coverImage);
           setCoverImage(base64Image);
         } catch (error) {
-          console.error('Failed to convert cover image:', error);
+          // console.error('Failed to convert cover image:', error);
           setCoverImage(null);
         }
       } else {
@@ -122,7 +122,7 @@ const BookEditor = ({
   };
 
   const handleSave = async () => {
-    console.log("📘 UserData at save time:", userData);
+    // console.log("📘 UserData at save time:", userData);
     setIsSaving(true);
     try {
       const updatedBook = {
@@ -162,7 +162,7 @@ const BookEditor = ({
           keyFromUrl = keyFromUrl.replace('public/', '');
         }
 
-        console.log("📦 Attempting to upload PDF to:", keyFromUrl);
+        // console.log("📦 Attempting to upload PDF to:", keyFromUrl);
 
         const uploadResult = await uploadData({
           key: keyFromUrl,
@@ -175,7 +175,7 @@ const BookEditor = ({
 
         await uploadResult.result; // 🧠 Await upload completion
 
-        console.log("✅ Upload completed successfully");
+        // console.log("✅ Upload completed successfully");
 
       } catch (uploadError) {
         console.error("❌ PDF upload to S3 failed:", uploadError);
@@ -188,7 +188,7 @@ const BookEditor = ({
           const userId = session.tokens?.idToken?.payload?.sub;
           const coverKey = `Users/Active/${userId}/books/${book.id}-cover.jpeg`;
 
-          console.log("📸 Uploading cover image to:", coverKey);
+          // console.log("📸 Uploading cover image to:", coverKey);
 
           const coverBlob = await (await fetch(coverImage)).blob();
 
@@ -202,13 +202,13 @@ const BookEditor = ({
           });
 
           await coverUploadResult.result;
-          console.log("✅ Cover image uploaded successfully");
+          // console.log("✅ Cover image uploaded successfully");
           // Bust cache by updating the coverImage field with a timestamped URL
           if (book.coverImage) {
             updatedBook.coverImage = `${book.coverImage.split('?')[0]}?ts=${Date.now()}`;
           }
         } else {
-          console.log("📸 No new cover image to upload (existing URL)");
+          // console.log("📸 No new cover image to upload (existing URL)");
         }
       } catch (coverError) {
         console.error("❌ Error uploading cover image:", coverError);
@@ -242,7 +242,7 @@ const BookEditor = ({
           throw new Error(`RDS update failed: ${error}`);
         }
 
-        console.log("📝 RDS book update succeeded");
+        // console.log("📝 RDS book update succeeded");
       } catch (rdsError) {
         console.error("❌ Error updating book in RDS:", rdsError);
       }
