@@ -71,9 +71,9 @@ const AddPersonFlow = ({ onComplete, onCancel }) => {
   const BOTTOM_NAV_HEIGHT = '64px';
 
   useEffect(() => {
-    console.log('🎯 AddPersonFlow mounted');
-    console.log('✅ hasInitialized.current:', hasInitialized.current);
-    console.log('✅ messages.length:', messages.length);
+    // console.log('🎯 AddPersonFlow mounted');
+    // console.log('✅ hasInitialized.current:', hasInitialized.current);
+    // console.log('✅ messages.length:', messages.length);
 
     if (!hasInitialized.current && messages.length === 0) {
       hasInitialized.current = true;
@@ -82,7 +82,7 @@ const AddPersonFlow = ({ onComplete, onCancel }) => {
     }
 
     return () => {
-      console.log('🧹 Cleaning up AddPersonFlow');
+      // console.log('🧹 Cleaning up AddPersonFlow');
     };
   }, []);
 

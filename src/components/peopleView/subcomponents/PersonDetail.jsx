@@ -37,12 +37,12 @@ const PersonDetail = ({
   onDeleteBook
 }) => {
 
-  console.log("👤 [PersonDetail] Rendering with person:", {
-    id: person.id,
-    name: person.name,
-    avatarUrl: person.avatarUrl ? 'exists' : 'null',
-    avatarUrlLocation: person.avatarUrl
-  });
+  // console.log("👤 [PersonDetail] Rendering with person:", {
+  //   id: person.id,
+  //   name: person.name,
+  //   avatarUrl: person.avatarUrl ? 'exists' : 'null',
+  //   avatarUrlLocation: person.avatarUrl
+  // });
   const { systemCollections } = useSystemCollections();
   const { userCollections, loading } = useUserCollections();
 

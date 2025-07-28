@@ -27,7 +27,7 @@ const LibraryView = ({
   setCurrentView,
   defaultViewMode = 'collections'
 }) => {
-  console.log("INDIVIDUALS IN LIBRARY:", individuals);
+  // console.log("INDIVIDUALS IN LIBRARY:", individuals);
   const { insights, setInsights, refreshInsights } = useInsights();
   const { systemCollections, loading: loadingSystem } = useSystemCollections();
   const { userCollections, loading: loadingUser } = useUserCollections();
@@ -333,9 +333,9 @@ const LibraryView = ({
     }
   }, [selectedFilters, searchQuery]);
 
-  useEffect(() => {
-    console.log('Selected book changed:', selectedBook);
-  }, [selectedBook]);
+  // useEffect(() => {
+    // console.log('Selected book changed:', selectedBook);
+  // }, [selectedBook]);
 
   useEffect(() => {
     const modalIsOpen = showBookCreation || showPdfViewer || editingBook || isAnyModalOpen;
@@ -387,9 +387,9 @@ const LibraryView = ({
   // console.log("🧮 Sorted Books:", sortedBooks.map(b => ({ id: b.id, name: b.name })));
   //
   // Add this to your LibraryView component (where setNewBook is called)
-  useEffect(() => {
-    console.log('📘 newBook state updated:', newBook);
-  }, [newBook]); // This will run every time newBook changes
+  // useEffect(() => {
+  //   console.log('📘 newBook state updated:', newBook);
+  // }, [newBook]); // This will run every time newBook changes
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-blue-50 to-indigo-50 pb-20">
@@ -503,19 +503,19 @@ const LibraryView = ({
                   books={sortedBooks}
                   onViewBook={(book) => {
                     // Enhanced initial log
-                    console.groupCollapsed('📘 Book Clicked:', book.name);
-                    console.log('📚 Raw book data:', JSON.parse(JSON.stringify(book)));
+                    // console.groupCollapsed('📘 Book Clicked:', book.name);
+                    // console.log('📚 Raw book data:', JSON.parse(JSON.stringify(book)));
 
                     const latestBook = books.find(b => b.id === book.id) || book;
-                    console.log('🔍 Latest book from context:', {
-                      id: latestBook.id,
-                      status: latestBook.status,
-                      insights: latestBook.insightIds?.length,
-                      hasCover: !!latestBook.coverImage
-                    });
+                    // console.log('🔍 Latest book from context:', {
+                    //   id: latestBook.id,
+                    //   status: latestBook.status,
+                    //   insights: latestBook.insightIds?.length,
+                    //   hasCover: !!latestBook.coverImage
+                    // });
 
                     if (latestBook.status === "Draft") {
-                      console.log('✏️ Editing DRAFT book');
+                      // console.log('✏️ Editing DRAFT book');
 
                       // Pre-process the data before setting state
                       const draftPayload = {
@@ -535,27 +535,27 @@ const LibraryView = ({
                         existingBookId: latestBook.id,
                       };
 
-                      console.log('🔄 Draft payload prepared:', {
-                        keyFields: {
-                          existingId: draftPayload.existingBookId,
-                          entries: draftPayload.selectedEntries.length,
-                          coverType: draftPayload.coverImage ? 'image' : `color: ${draftPayload.color}`
-                        }
-                      });
+                      // console.log('🔄 Draft payload prepared:', {
+                      //   keyFields: {
+                      //     existingId: draftPayload.existingBookId,
+                      //     entries: draftPayload.selectedEntries.length,
+                      //     coverType: draftPayload.coverImage ? 'image' : `color: ${draftPayload.color}`
+                      //   }
+                      // });
 
                       setNewBook(draftPayload);
                       setEntryOrder(latestBook.insightIds);
                       setBookCreationStep(0);
                       setShowBookCreation(true);
 
-                      console.log('🏁 Modal opening with draft data');
+                      // console.log('🏁 Modal opening with draft data');
                     } else {
-                      console.log('👀 Viewing PUBLISHED book');
+                      // console.log('👀 Viewing PUBLISHED book');
                       setSelectedBook(latestBook);
                       setShowPdfViewer(true);
                     }
 
-                    console.groupEnd();
+                    // console.groupEnd();
                   }}
                   onStartNewBook={handleStartNewBook}
                   isCreating={currentView === 'arrangeBook'}

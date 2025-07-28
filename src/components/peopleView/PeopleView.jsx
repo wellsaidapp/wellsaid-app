@@ -24,12 +24,12 @@ const PeopleView = ({
   selectedPerson,
   setSelectedPerson
 }) => {
-  console.log("📄 PeopleView rendering");
-  console.log("🔍 individuals (from props):", individuals);
+  // console.log("📄 PeopleView rendering");
+  // console.log("🔍 individuals (from props):", individuals);
 
   const { systemCollections } = useSystemCollections();
   const { people, refetchPeople, updatePerson, refreshPeople } = usePeople();
-  console.log("🧠 people (from context):", people);
+  // console.log("🧠 people (from context):", people);
   const { userData, loading: loadingAppUser, refetchUser } = useUser();
   const [isCompletingAddPerson, setIsCompletingAddPerson] = useState(false);
   const { books, loadingBooks, updateBook, refreshBooks } = useBooks();
@@ -191,18 +191,18 @@ const PeopleView = ({
   }, {});
 
   const handleAvatarSave = async (croppedImage) => {
-    console.log("📸 [handleAvatarSave] Starting avatar upload process");
+    // console.log("📸 [handleAvatarSave] Starting avatar upload process");
     if (!selectedPerson?.id) {
       console.error("❌ No person selected");
       return;
     }
 
     const personId = selectedPerson.id;
-    console.log(`📸 [handleAvatarSave] Processing avatar for person ID: ${personId}`);
+    // console.log(`📸 [handleAvatarSave] Processing avatar for person ID: ${personId}`);
     setIsUploadingAvatar(true); // 🌀 Start spinner here
 
     try {
-      console.log("📸 [handleAvatarSave] Preparing image data...");
+      // console.log("📸 [handleAvatarSave] Preparing image data...");
       setCroppedAvatarImage(croppedImage);
       setShowAvatarCropper(false);
       setAvatarUploadTemp(null);
@@ -232,7 +232,7 @@ const PeopleView = ({
 
       const imageBlob = new Blob(byteArrays, { type: 'image/jpeg' });
 
-      console.log("📸 [handleAvatarSave] Uploading image to S3...");
+      // console.log("📸 [handleAvatarSave] Uploading image to S3...");
       // ✅ Upload to S3
       await uploadData({
         key: fileName,
@@ -258,7 +258,7 @@ const PeopleView = ({
       const avatarUrl = cleanUrl; // Use this clean URL for storage
       const cacheBustedUrl = `${avatarUrl}?t=${Date.now()}`;
 
-      console.log("📸 [handleAvatarSave] Updating database record...");
+      // console.log("📸 [handleAvatarSave] Updating database record...");
       // ✅ Store clean version in DB
       await fetch(`https://aqaahphwfj.execute-api.us-east-2.amazonaws.com/dev/people/${personId}`, {
         method: 'PATCH',
@@ -270,7 +270,7 @@ const PeopleView = ({
       });
 
       // ✅ Update local context and rehydrate
-      console.log("📸 [handleAvatarSave] Updating local state...");
+      // console.log("📸 [handleAvatarSave] Updating local state...");
       updatePerson({ id: personId, avatarUrl: cacheBustedUrl });
       setSelectedPerson(prev => ({
         ...prev,
@@ -278,12 +278,12 @@ const PeopleView = ({
       }));
 
       // ✅ Rehydrate from server but preserve the selected person
-      console.log("📸 [handleAvatarSave] Refreshing people data...");
+      // console.log("📸 [handleAvatarSave] Refreshing people data...");
       const refreshedPerson = await refreshPeople(personId);
-      console.log("📸 [handleAvatarSave] Refresh completed. Refreshed person:", refreshedPerson);
+      // console.log("📸 [handleAvatarSave] Refresh completed. Refreshed person:", refreshedPerson);
 
       if (refreshedPerson) {
-        console.log("📸 [handleAvatarSave] Updating selected person with refreshed data");
+        // console.log("📸 [handleAvatarSave] Updating selected person with refreshed data");
         setSelectedPerson(refreshedPerson);
       } else {
         console.warn("⚠️ [handleAvatarSave] No refreshed person data returned");
