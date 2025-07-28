@@ -11,7 +11,7 @@ pdfjs.GlobalWorkerOptions.workerSrc =
     : '/pdf.worker.min.js';
 
 export default function PDFViewerWrapper({ book, onClose, onEdit, userData }) {
-  console.log("User Data in PDFViewerWrapper:", userData);
+  // console.log("User Data in PDFViewerWrapper:", userData);
   const file = book.status === "Published"
     ? book.publishedBook
     : null;
