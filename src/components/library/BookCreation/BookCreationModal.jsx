@@ -86,7 +86,7 @@ const BookCreationModal = ({
   const [isPublishing, setIsPublishing] = useState(false);
 
   const [showExitConfirmation, setShowExitConfirmation] = useState(false);
-  console.log("User Data:", userData.avatarUrl);
+  // console.log("User Data:", userData.avatarUrl);
   const isTouchDevice = () =>
     typeof window !== 'undefined' &&
     ('ontouchstart' in window || navigator.maxTouchPoints > 0);
