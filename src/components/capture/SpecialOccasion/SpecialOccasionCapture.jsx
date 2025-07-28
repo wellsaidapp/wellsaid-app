@@ -519,11 +519,29 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
     }, [showInsightModal, insightDraft.prompt, insightDraft.response]);
 
     const handleContinueClick = () => {
+      // Optional: Add a confirmation message to the thread
       setMessages((prev) => [
         ...prev,
-        { isUser: true, text: "Yes, let's keep going!" },
+        {
+          isBot: true,
+          text: "Great! Let's keep going...",
+          type: "system",
+        },
       ]);
-      // Optionally trigger another AI prompt or flow here
+
+      // Clear the continuation prompt
+      setMessages((prev) => prev.filter((m) => m.type !== 'continuePrompt'));
+
+      // Optionally re-trigger assistant with a new starter question
+      setTimeout(() => {
+        setMessages((prev) => [
+          ...prev,
+          {
+            isBot: true,
+            text: "What else would you like to reflect on about this occasion?",
+          },
+        ]);
+      }, 300); // slight delay for pacing
     };
 
     const handleStopClick = async () => {

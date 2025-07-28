@@ -15,6 +15,7 @@ const CaptureCard = ({
   onPersonToggle
 }) => {
   console.log("Collection inside:", activeCollectionId);
+  console.log("Entry card info:", entry);
   const [isEditing, setIsEditing] = useState(false);
   const [editedEntry, setEditedEntry] = useState(entry);
   const promptRef = useRef(null);
@@ -233,7 +234,7 @@ const CaptureCard = ({
             </span>
           )}
           <span className="text-xs text-gray-500">
-            {new Date(entry.date).toLocaleDateString()}
+            {new Date(entry.createdAt).toLocaleDateString()}
           </span>
         </div>
 
