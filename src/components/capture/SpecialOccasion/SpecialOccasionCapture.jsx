@@ -41,6 +41,47 @@ const callOpenAI = async (userPrompt, systemPrompt, history = []) => {
   }
 };
 
+const generateContextSummary = async ({ person, relationship, eventType, goal, insights }) => {
+  try {
+    const session = await fetchAuthSession();
+    const token = session.tokens?.idToken?.toString();
+
+    if (!token) throw new Error("No auth token found");
+
+    // Use the parameters directly instead of occasion
+    console.log("Payload being sent to Lambda:", {
+      person,
+      relationship,
+      event: eventType,
+      goal,
+      insights
+    });
+
+    const response = await fetch('https://2rjszrulkb.execute-api.us-east-2.amazonaws.com/dev/ai/userCollectionContext', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: token
+      },
+      body: JSON.stringify({
+        person,
+        relationship,
+        event: eventType,
+        goal,
+        insights // Array of { prompt, response }
+      })
+    });
+
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.error || 'Failed to generate summary');
+
+    return result.summary;
+  } catch (err) {
+    console.error('🧠 Failed to generate context summary:', err);
+    return null;
+  }
+};
+
 const ChatInput = ({ userInput, setUserInput, onSubmit }) => {
   const textareaRef = useRef();
 
@@ -82,14 +123,16 @@ const ChatInput = ({ userInput, setUserInput, onSubmit }) => {
 };
 
 const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete }) => {
+    console.log("OCCASION DATA RECEIVED:", occasionData);
     const { systemCollections } = useSystemCollections();
     const [showContext, setShowContext] = useState(false);
     const [collectionName, setCollectionName] = useState('');
     const [hasAskedForName, setHasAskedForName] = useState(false);
     const [hasPostedMessage, setHasPostedMessage] = useState(false);
-
+    const [sessionInsights, setSessionInsights] = useState([]);
     const [occasion, setOccasion] = useState(() => ({
       person: occasionData.person || null,
+      relationship: occasionData.relationshiop || null,
       userCollectionId: occasionData.userCollectionId || null,
       userCollectionName: occasionData.userCollectionName || null,
       collections: occasionData.collections || [],
@@ -518,6 +561,30 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
       }
     }, [showInsightModal, insightDraft.prompt, insightDraft.response]);
 
+    const generateAndSaveContext = async () => {
+      try {
+        if (!occasion?.userCollectionId || !occasion.person) return;
+
+        // Get the AI-generated summary
+        const aiGeneratedSummary = await generateContextSummary({
+          person: occasion.person.name,
+          relationship: occasion.person.relationship,
+          eventType: occasion.userCollectionName,
+          goal: contextSummary, // Original context goes here as the "goal"
+          insights: sessionInsights
+        });
+
+        console.log("🧠 Generated Summary:", aiGeneratedSummary); // Log the AI output
+
+        if (aiGeneratedSummary) {
+          // Pass the AI-generated summary to save
+          await handleSaveExit(occasion.userCollectionId, aiGeneratedSummary);
+        }
+      } catch (err) {
+        console.error("❌ Failed to generate/save context:", err);
+      }
+    };
+
     const handleContinueClick = () => {
       // Optional: Add a confirmation message to the thread
       setMessages((prev) => [
@@ -547,6 +614,15 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
     const handleStopClick = async () => {
       try {
         setIsSavingExit(true);
+
+        // Generate final context summary before exiting
+        const summary = await generateContextSummary({
+          person: occasion.person.name,
+          relationship: occasion.person.relationship,
+          eventType: occasion.userCollectionName,
+          goal: contextSummary,
+          insights: sessionInsights
+        });
         await handleSaveExit(occasion.userCollectionId, contextSummary);
         setIsSavingExit(false);
         setCurrentView('home');
@@ -605,7 +681,11 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
 
         const savedInsight = await response.json();
         // console.log("✅ Insight saved:", savedInsight);
-
+        // Track the insight in session state
+        setSessionInsights(prev => [...prev, {
+          prompt: insightDraft.prompt,
+          response: insightDraft.response
+        }]);
         // Reset and close modal
         setInsightDraft({ prompt: '', response: '' });
         setShowInsightModal(false);
@@ -620,6 +700,9 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
             type: 'continuePrompt', // optional, for cleaner render logic
           },
         ]);
+
+        // Generate and save context summary
+        await generateAndSaveContext();
 
         toast.custom((t) => (
           <ToastMessage

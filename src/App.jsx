@@ -80,8 +80,14 @@ const WellSaidApp = () => {
   const [selectedPerson, setSelectedPerson] = useState(null);
 
   const [specialOccasionData, setSpecialOccasionData] = useState({
-    person: null,
-    collections: []
+    person: {
+      id: null,
+      name: '',
+      relationship: '',
+      avatarUrl: ''
+    },
+    collections: [],
+    isReturning: false
   });
 
   useEffect(() => {
@@ -210,7 +216,13 @@ const WellSaidApp = () => {
           case 'milestone':
             return <SpecialOccasionCapture
               setCurrentView={setCurrentView}
-              occasionData={specialOccasionData || { person: null, collections: [] }}
+              occasionData={{
+                ...specialOccasionData,
+                person: {
+                  ...specialOccasionData.person,
+                  relationship: specialOccasionData.person?.relationship || 'Unspecified'
+                }
+              }}
               onComplete={() => {
                 setSpecialOccasionData({ person: null, collections: [] });
               }}
@@ -255,7 +267,11 @@ const WellSaidApp = () => {
             onSelectPerson={(person) => {
               setSpecialOccasionData(prev => ({
                 ...prev,
-                person
+                person: {
+                  id: person.id,
+                  name: person.name,
+                  relationship: person.relationship
+                }
               }));
               setCurrentView('specialOccasionSelectCollections');
             }}

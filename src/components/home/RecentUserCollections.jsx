@@ -1,4 +1,5 @@
 import { Sparkles, Library, ChevronRight } from 'lucide-react';
+import { usePeople } from '../../context/PeopleContext';
 
 const RecentUserCollections = ({
   userCollections,
@@ -10,11 +11,14 @@ const RecentUserCollections = ({
   resetForm,
   setSpecialOccasionData
 }) => {
+  const { people } = usePeople();
   const recentCollections = [...userCollections]
     .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))
     .slice(0, 2);
   // console.log("Recent Collections:", recentCollections);
   const handleCollectionClick = (collection) => {
+
+    const person = people.find(p => p.id === collection.personId);
     const questions = [
       "Alright, let's get back to it.", // <- Placeholder question for returning collection
       `What makes this collection special?`,
@@ -34,6 +38,7 @@ const RecentUserCollections = ({
       person: {
         id: collection.personId,
         name: collection.personName,
+        relationship: person?.relationship || 'Unspecified',
       },
       userCollectionId: collection.id,
       userCollectionName: collection.name,
