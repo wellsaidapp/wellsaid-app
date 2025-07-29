@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Book, Heart, FilePen, Library, Share2, BookOpen, Trash2 } from 'lucide-react';
+import { Book, Heart, FilePen, Library, Share2, BookOpen, Trash2, PencilLine } from 'lucide-react';
 import DeleteBookModal from './DeleteBookModal';
 import { useSystemCollections } from '../../../context/SystemCollectionsContext';
 import { useUserCollections } from '../../../context/UserCollectionsContext';
@@ -143,10 +143,11 @@ const BookItem = ({
               </button>
               <button
                 onClick={() => onViewBook(book)}
-                className="p-1.5 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors"
+                className="flex items-center gap-2 px-3 py-1 border rounded-md hover:bg-gray-100"
                 title={book.status === 'Draft' ? 'Continue editing' : 'View book'}
               >
-                <BookOpen className="w-4 h-4" />
+                {book.status === 'Published' ? <BookOpen className="w-4 h-4" /> : <PencilLine className="w-4 h-4" />}
+                {book.status === 'Published' ? 'View' : 'Edit'}
               </button>
             </div>
           </div>

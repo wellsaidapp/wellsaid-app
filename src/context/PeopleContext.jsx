@@ -40,9 +40,14 @@ export const PeopleProvider = ({ children }) => {
       );
 
       const raw = await response.json();
-      const people = Array.isArray(raw) ? raw : raw.people || [];
+      const peopleRaw = Array.isArray(raw) ? raw : raw.people || [];
+      const timestamp = Date.now();
+      const people = peopleRaw.map(p => ({
+        ...p,
+        avatarUrl: p.avatarUrl ? `${p.avatarUrl}?t=${timestamp}` : null
+      }));
       setPeople(people);
-      // console.log('👥 People Loaded:', people);
+      console.log('👥 People Loaded:', people);
     } catch (err) {
       console.error('❌ Failed to load people:', err);
       setPeople([]);

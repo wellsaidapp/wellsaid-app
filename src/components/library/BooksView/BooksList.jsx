@@ -49,7 +49,7 @@ const BooksList = ({
     setPersonFilter('');
     setCollectionFilter('');
   };
-
+  // console.log("BOOKS IN LIST:", books);
   return (
     <div className="mb-6">
       {/* Create New Book */}
