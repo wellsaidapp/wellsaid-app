@@ -80,6 +80,19 @@ const PeopleView = ({
   const [showAvatarCropper, setShowAvatarCropper] = useState(false);
 
   useEffect(() => {
+    if (selectedBook?.status === "Published") {
+      setScrollBlocked(true);
+    }
+  }, [selectedBook]);
+
+  useEffect(() => {
+    if (showBookCreation) {
+      setScrollBlocked(true);
+    }
+  }, [showBookCreation]);
+
+
+  useEffect(() => {
     const modalIsOpen =
       editingBook !== null ||
       selectedBook?.status === "Published" ||
@@ -416,17 +429,6 @@ const PeopleView = ({
     );
   }
 
-  useEffect(() => {
-    if (selectedBook?.status === "Published") {
-      setScrollBlocked(true);
-    }
-  }, [selectedBook]);
-
-  useEffect(() => {
-    if (showBookCreation) {
-      setScrollBlocked(true);
-    }
-  }, [showBookCreation]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-blue-50 to-indigo-50 pb-20">
