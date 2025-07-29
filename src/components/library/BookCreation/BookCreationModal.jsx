@@ -203,6 +203,31 @@ const BookCreationModal = ({
 
         const bookId = bookResponse.bookId;
 
+        if (newBook.coverImage && !newBook.coverImage.startsWith("https://")) {
+          const userId = userData?.id || (await fetchAuthSession())?.userSub;
+          const coverImageUrl = await uploadCoverImageToS3(newBook.coverImage, userId, bookId);
+
+          // Update the book with just the cover image S3 URL
+          await saveBookToRDS({
+            existingBookId: bookId,
+            name: newBook.title,
+            description: newBook.description,
+            backCoverNote: newBook.backCoverNote,
+            fontStyle: newBook.fontStyle,
+            isBlackAndWhite: newBook.isBlackAndWhite,
+            color: newBook.color || 'bg-blue-500',
+            status: actionType === 'publish' ? 'Published' : 'Draft',
+            personId: newBook.recipient,
+            personName: newBook.recipientName,
+            coverImage: coverImageUrl,
+            publishedBook: null,
+            publishedContent: null,
+            insightIds: newBook.selectedEntries,
+            collectionIds: newBook.selectedCollections,
+            savedOn: new Date().toISOString().split('T')[0]
+          });
+        }
+
         // Update local state with the book ID if it's new
         if (!newBook.existingBookId) {
           setNewBook(prev => ({ ...prev, existingBookId: bookId }));
