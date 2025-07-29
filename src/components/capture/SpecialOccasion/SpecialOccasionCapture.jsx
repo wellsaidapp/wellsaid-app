@@ -141,7 +141,8 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
       reflections: [],
       currentQuestionIndex: 0,
       questions: [],
-      finalMessage: ''
+      finalMessage: '',
+      context: occasionData.context
     }));
     // console.log("Occasion Data:", occasionData);
     const [collectionCreated, setCollectionCreated] = useState(false);
@@ -782,25 +783,35 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
 
               {showContext && (
                 <div className="mt-3">
-                  {occasion.person && (
-                    <div className="inline-flex items-center bg-blue-100 text-blue-800 rounded-full px-3 py-1 mr-2 mb-2">
-                      <User className="w-4 h-4 mr-1" />
-                      <span>{occasion.person.name}</span>
+                  {/* If returning collection, show context pill */}
+                  {occasionData?.context ? (
+                    <div className="bg-gray-100 text-gray-700 rounded-lg px-4 py-3 text-sm shadow-inner">
+                      {occasionData.context}
                     </div>
+                  ) : (
+                    <>
+                      {/* Original rendering for new collections */}
+                      {occasion.person && (
+                        <div className="inline-flex items-center bg-blue-100 text-blue-800 rounded-full px-3 py-1 mr-2 mb-2">
+                          <User className="w-4 h-4 mr-1" />
+                          <span>{occasion.person.name}</span>
+                        </div>
+                      )}
+                      {occasion.collections?.map((collectionId) => {
+                        const collection = systemCollections.find(c => c.id === collectionId);
+                        if (!collection) return null;
+                        return (
+                          <div
+                            key={collectionId}
+                            className={`inline-flex items-center ${collection.color} text-white rounded-full px-3 py-1 mr-2 mb-2`}
+                          >
+                            <Library className="w-4 h-4 mr-1" />
+                            <span>{collection.name}</span>
+                          </div>
+                        );
+                      })}
+                    </>
                   )}
-                  {occasion.collections?.map((collectionId) => {
-                    const collection = systemCollections.find(c => c.id === collectionId);
-                    if (!collection) return null;
-                    return (
-                      <div
-                        key={collectionId}
-                        className={`inline-flex items-center ${collection.color} text-white rounded-full px-3 py-1 mr-2 mb-2`}
-                      >
-                        <Library className="w-4 h-4 mr-1" />
-                        <span>{collection.name}</span>
-                      </div>
-                    );
-                  })}
                 </div>
               )}
             </div>

@@ -33,6 +33,7 @@ export const UserCollectionsProvider = ({ children }) => {
       const raw = await response.json();
       const collections = Array.isArray(raw) ? raw : raw.collections || [];
       setUserCollections(collections);
+      console.log("USER COLLECTIONS LOADED:", collections);
       // console.log("User Collections:", collections);
     } catch (err) {
       console.error("Error fetching user collections:", err);

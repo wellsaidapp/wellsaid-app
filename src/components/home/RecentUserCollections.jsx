@@ -48,7 +48,8 @@ const RecentUserCollections = ({
       isReturning: true,
       currentQuestionIndex: 0,
       reflections: [],
-      finalMessage: ''
+      finalMessage: '',
+      context: collection.context
     });
   };
 
