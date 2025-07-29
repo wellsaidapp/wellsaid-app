@@ -90,7 +90,7 @@ const BookCreationModal = ({
   const isTouchDevice = () =>
     typeof window !== 'undefined' &&
     ('ontouchstart' in window || navigator.maxTouchPoints > 0);
-
+  console.log("NEW BOOK:", newBook);
   const moveEntry = (fromIndex, toIndex) => {
     console.log('Moving entry:', fromIndex, '→', toIndex);
     setEntryOrder(prev => {
@@ -181,8 +181,10 @@ const BookCreationModal = ({
     if (actionType === 'publish' || actionType === 'draft') {
       setIsPublishing(true);
       try {
-        // First create/update the book record to get the book ID
-        const bookResponse = await saveBookToRDS({
+        const userId = userData?.id || (await fetchAuthSession())?.userSub;
+
+        // First build initial book payload
+        const initialPayload = {
           existingBookId: newBook.existingBookId,
           name: newBook.title,
           description: newBook.description,
@@ -199,42 +201,32 @@ const BookCreationModal = ({
           insightIds: newBook.selectedEntries,
           collectionIds: newBook.selectedCollections,
           savedOn: new Date().toISOString().split('T')[0]
-        });
+        };
 
+        const bookResponse = await saveBookToRDS(initialPayload);
         const bookId = bookResponse.bookId;
-
-        if (newBook.coverImage && !newBook.coverImage.startsWith("https://")) {
-          const userId = userData?.id || (await fetchAuthSession())?.userSub;
-          const coverImageUrl = await uploadCoverImageToS3(newBook.coverImage, userId, bookId);
-
-          // Update the book with just the cover image S3 URL
-          await saveBookToRDS({
-            existingBookId: bookId,
-            name: newBook.title,
-            description: newBook.description,
-            backCoverNote: newBook.backCoverNote,
-            fontStyle: newBook.fontStyle,
-            isBlackAndWhite: newBook.isBlackAndWhite,
-            color: newBook.color || 'bg-blue-500',
-            status: actionType === 'publish' ? 'Published' : 'Draft',
-            personId: newBook.recipient,
-            personName: newBook.recipientName,
-            coverImage: coverImageUrl,
-            publishedBook: null,
-            publishedContent: null,
-            insightIds: newBook.selectedEntries,
-            collectionIds: newBook.selectedCollections,
-            savedOn: new Date().toISOString().split('T')[0]
-          });
-        }
 
         // Update local state with the book ID if it's new
         if (!newBook.existingBookId) {
           setNewBook(prev => ({ ...prev, existingBookId: bookId }));
         }
 
+        let finalCoverImageUrl = initialPayload.coverImage;
+
+        // If base64 or data URL, upload cover image and update
+        if (newBook.coverImage && !newBook.coverImage.startsWith("https://")) {
+          finalCoverImageUrl = await uploadCoverImageToS3(newBook.coverImage, userId, bookId);
+
+          if (actionType === 'draft') {
+            await saveBookToRDS({
+              ...initialPayload,
+              existingBookId: bookId,
+              coverImage: finalCoverImageUrl,
+            });
+          }
+        }
+
         if (actionType === 'publish') {
-          // Generate PDF and upload assets only for publishing
           const pdfBlob = await generateBookPDF(
             newBook,
             entryOrder,
@@ -244,27 +236,13 @@ const BookCreationModal = ({
             newBook.isBlackAndWhite
           );
 
-          const userId = userData?.id || (await fetchAuthSession())?.userSub;
+          const pdfUrl = await uploadPDFToS3(pdfBlob, userId, bookId);
 
-          // Upload assets in parallel
-          const [coverImageUrl, pdfUrl] = await Promise.all([
-            uploadCoverImageToS3(newBook.coverImage, userId, bookId),
-            uploadPDFToS3(pdfBlob, userId, bookId)
-          ]);
-
-          // Update the book record with the S3 URLs
           await saveBookToRDS({
+            ...initialPayload,
             existingBookId: bookId,
-            name: newBook.title,
-            description: newBook.description,
-            backCoverNote: newBook.backCoverNote,
-            fontStyle: newBook.fontStyle,
-            isBlackAndWhite: newBook.isBlackAndWhite,
-            color: newBook.color || 'bg-blue-500',
             status: 'Published',
-            personId: newBook.recipient,
-            personName: newBook.recipientName,
-            coverImage: coverImageUrl,
+            coverImage: finalCoverImageUrl,
             publishedBook: pdfUrl,
             publishedContent: entryOrder.map(id => {
               const insight = insights.find(i => i.id === id);
@@ -272,13 +250,10 @@ const BookCreationModal = ({
                 prompt: insight.prompt,
                 response: insight.response
               } : null;
-            }).filter(Boolean),
-            insightIds: newBook.selectedEntries,
-            collectionIds: newBook.selectedCollections,
-            savedOn: new Date().toISOString().split('T')[0]
+            }).filter(Boolean)
           });
 
-          // Desktop download behavior
+          // Optional download
           if (!isTouchDevice()) {
             const url = URL.createObjectURL(pdfBlob);
             const a = document.createElement('a');
@@ -293,37 +268,18 @@ const BookCreationModal = ({
           }
         }
 
-        // Add small delay to ensure spinner completes its animation
+        // Toast + cleanup
         await new Promise(resolve => setTimeout(resolve, 300));
-
-        // Replace your current success toast with this conditional version:
         const successToast = actionType === 'publish' ? (
           toast.success(
             (t) => (
               <ToastMessage
                 type="success"
-                title={isTouchDevice() ? "Book Published!" : "Book Published"}
-                message={
-                  isTouchDevice()
-                    ? <span className="block space-y-1">
-                        <span className="block">Your book "{newBook.title || 'Untitled Book'}" is ready!</span>
-                        <span className="block">
-                          Access it anytime from <span className="font-semibold">My Books</span>.
-                        </span>
-                      </span>
-                    : `"${newBook.title || 'Untitled Book'}" has been published.`
-                }
+                title="Book Published"
+                message={`"${newBook.title || 'Untitled Book'}" has been published.`}
                 onDismiss={() => toast.dismiss(t.id)}
               />
-            ),
-            {
-              duration: isTouchDevice() ? 5000 : 4000,
-              position: 'bottom-center',
-              style: {
-                marginBottom: '2rem',
-                zIndex: 9999
-              }
-            }
+            )
           )
         ) : (
           toast.success(
@@ -331,31 +287,14 @@ const BookCreationModal = ({
               <ToastMessage
                 type="success"
                 title="Draft Saved"
-                message={
-                  isTouchDevice()
-                    ? <span className="block space-y-1">
-                        <span className="block">Your draft "{newBook.title || 'Untitled Book'}" was saved.</span>
-                        <span className="block">
-                          You can continue editing from <span className="font-semibold">My Books</span>.
-                        </span>
-                      </span>
-                    : `Draft "${newBook.title || 'Untitled Book'}" was successfully saved`
-                }
+                message={`Draft "${newBook.title || 'Untitled Book'}" was successfully saved`}
                 onDismiss={() => toast.dismiss(t.id)}
               />
-            ),
-            {
-              duration: isTouchDevice() ? 5000 : 4000,
-              position: 'bottom-center',
-              style: {
-                marginBottom: '2rem',
-                zIndex: 9999
-              }
-            }
+            )
           )
         );
 
-        await new Promise(resolve => setTimeout(resolve, 300)); // Small delay
+        await new Promise(resolve => setTimeout(resolve, 300));
         successToast;
 
         await refreshBooks();
@@ -363,6 +302,7 @@ const BookCreationModal = ({
         await refreshInsights();
         resetCreationState();
         onClose();
+
       } catch (error) {
         console.error('Error during book completion:', error);
         toast.error(`Failed to ${actionType === 'publish' ? 'publish' : 'save'} book`);
@@ -370,7 +310,7 @@ const BookCreationModal = ({
         setIsPublishing(false);
       }
     } else {
-      // Cancel logic remains the same
+      // Cancel behavior unchanged
       const hasChanges = (
         newBook.title ||
         newBook.description ||
