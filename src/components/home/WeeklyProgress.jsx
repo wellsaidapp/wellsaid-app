@@ -3,6 +3,15 @@ import { Zap, Trophy } from 'lucide-react';
 const WeeklyProgress = ({ weekInsights, weeklyGoal, userStreak }) => {
   const progressPercent = (weekInsights / weeklyGoal) * 100;
 
+  const isCurrentWeekComplete = () => {
+    const now = new Date();
+    const utcDay = now.getUTCDay(); // 6 = Saturday
+    const utcHour = now.getUTCHours();
+
+    // Week is "complete" starting Saturday 5:00am UTC = 12:00am CST
+    return utcDay > 6 || (utcDay === 6 && utcHour >= 5);
+  };
+
   return (
     <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 mb-6 shadow-sm border border-white/50">
       <div className="flex items-center justify-between mb-4">
@@ -30,9 +39,15 @@ const WeeklyProgress = ({ weekInsights, weeklyGoal, userStreak }) => {
         <div className="text-center p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-100">
           <Trophy className="text-blue-500 mx-auto mb-2" size={24} />
           <p className="text-blue-700 font-medium">
-            {userStreak === 1
+            {userStreak === 0
               ? "Great job! You’ve started a new streak!"
-              : `Weekly goal achieved! ${userStreak > 1 ? "Streak continues!" : ""}`}
+              : userStreak === 1 && !isCurrentWeekComplete()
+              ? "You're on track to build your streak!"
+              : userStreak === 1 && isCurrentWeekComplete()
+              ? "Great job! You’ve completed your first full week!"
+              : userStreak > 1 && !isCurrentWeekComplete()
+              ? `You're keeping it going! Week ${userStreak + 1} is on track!`
+              : `Streak continues! You’ve completed ${userStreak} weeks!`}
           </p>
         </div>
       ) : (
