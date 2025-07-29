@@ -21,7 +21,7 @@ export const SystemCollectionsProvider = ({ children }) => {
       }
 
       const response = await fetch(
-        'https://aqaahphwfj.execute-api.us-east-2.amazonaws.com/dev/collections/system',
+        'https://2rjszrulkb.execute-api.us-east-2.amazonaws.com/dev/collections/system',
         {
           headers: {
             'Content-Type': 'application/json',

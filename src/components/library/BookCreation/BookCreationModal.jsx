@@ -105,7 +105,7 @@ const BookCreationModal = ({
     const session = await fetchAuthSession();
     const token = session.tokens?.idToken?.toString();
 
-    const res = await fetch('https://aqaahphwfj.execute-api.us-east-2.amazonaws.com/dev/books', {
+    const res = await fetch('https://2rjszrulkb.execute-api.us-east-2.amazonaws.com/dev/books', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

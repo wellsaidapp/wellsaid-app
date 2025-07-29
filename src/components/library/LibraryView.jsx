@@ -131,7 +131,7 @@ const LibraryView = ({
       const token = session.tokens?.idToken?.toString();
 
       const response = await fetch(
-        `https://aqaahphwfj.execute-api.us-east-2.amazonaws.com/dev/books/${book.id}`,
+        `https://2rjszrulkb.execute-api.us-east-2.amazonaws.com/dev/books/${book.id}`,
         {
           method: 'DELETE',
           headers: {

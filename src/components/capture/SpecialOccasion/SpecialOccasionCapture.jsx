@@ -13,7 +13,7 @@ const callOpenAI = async (userPrompt, systemPrompt, history = []) => {
     const session = await fetchAuthSession();
     const token = session.tokens?.idToken?.toString();
 
-    const response = await fetch('https://aqaahphwfj.execute-api.us-east-2.amazonaws.com/dev/ai', {
+    const response = await fetch('https://2rjszrulkb.execute-api.us-east-2.amazonaws.com/dev/ai', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -216,7 +216,7 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
 
         if (!token) throw new Error("Missing auth token");
 
-        const response = await fetch("https://aqaahphwfj.execute-api.us-east-2.amazonaws.com/dev/collections/user", {
+        const response = await fetch("https://2rjszrulkb.execute-api.us-east-2.amazonaws.com/dev/collections/user", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -381,7 +381,7 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
         const session = await fetchAuthSession();
         const token = session.tokens?.idToken?.toString();
 
-        const response = await fetch('https://aqaahphwfj.execute-api.us-east-2.amazonaws.com/dev/ai/promptResponse', {
+        const response = await fetch('https://2rjszrulkb.execute-api.us-east-2.amazonaws.com/dev/ai/promptResponse', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -461,7 +461,7 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
         if (!token) throw new Error("Missing auth token");
 
         const response = await fetch(
-          `https://aqaahphwfj.execute-api.us-east-2.amazonaws.com/dev/collections/user/${userCollectionId}/context`,
+          `https://2rjszrulkb.execute-api.us-east-2.amazonaws.com/dev/collections/user/${userCollectionId}/context`,
           {
             method: 'POST',
             headers: {
@@ -574,7 +574,7 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
         if (!token) throw new Error("No auth token");
 
         const response = await fetch(
-          `https://aqaahphwfj.execute-api.us-east-2.amazonaws.com/dev/collections/user/${occasion.userCollectionId}/insight`,
+          `https://2rjszrulkb.execute-api.us-east-2.amazonaws.com/dev/collections/user/${occasion.userCollectionId}/insight`,
           {
             method: 'POST',
             headers: {

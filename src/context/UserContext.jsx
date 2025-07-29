@@ -26,7 +26,7 @@ export const UserProvider = ({ children }) => {
 
       if (!idToken) throw new Error("Missing ID token");
 
-      const res = await fetch("https://aqaahphwfj.execute-api.us-east-2.amazonaws.com/dev/users/me", {
+      const res = await fetch("https://2rjszrulkb.execute-api.us-east-2.amazonaws.com/dev/users/me", {
         method: "GET",
         headers: {
           Authorization: idToken

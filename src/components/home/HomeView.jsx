@@ -132,7 +132,7 @@ const HomeView = ({
       const token = session.tokens?.idToken?.toString();
 
       const response = await fetch(
-        `https://aqaahphwfj.execute-api.us-east-2.amazonaws.com/dev/books/${book.id}`,
+        `https://2rjszrulkb.execute-api.us-east-2.amazonaws.com/dev/books/${book.id}`,
         {
           method: 'DELETE',
           headers: {
@@ -150,7 +150,7 @@ const HomeView = ({
       // ✅ Only refresh after confirmed deletion
       await refreshBooks();
       await refetchPeople();
-      await refrsehInsights();
+      await refreshInsights();
     } catch (err) {
       console.error("❌ Book deletion failed:", err);
       // Optionally show toast or user feedback

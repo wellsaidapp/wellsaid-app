@@ -218,7 +218,7 @@ const BookEditor = ({
       try {
         const token = (await fetchAuthSession()).tokens?.idToken?.toString();
         const patchResponse = await fetch(
-          `https://aqaahphwfj.execute-api.us-east-2.amazonaws.com/dev/books/${book.id}`,
+          `https://2rjszrulkb.execute-api.us-east-2.amazonaws.com/dev/books/${book.id}`,
           {
             method: "PATCH",
             headers: {

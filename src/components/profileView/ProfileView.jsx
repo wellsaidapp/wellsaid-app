@@ -168,7 +168,7 @@ const ProfileView = ({ user, insights = [], individuals = [], collections = [], 
 
       if (!idToken) throw new Error("Could not get user ID token");
 
-      const response = await fetch('https://aqaahphwfj.execute-api.us-east-2.amazonaws.com/dev/users/settings/account', {
+      const response = await fetch('https://2rjszrulkb.execute-api.us-east-2.amazonaws.com/dev/users/settings/account', {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',

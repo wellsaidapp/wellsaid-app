@@ -68,7 +68,7 @@ const CollectionItem = ({
 
     try {
       const res = await fetch(
-        'https://aqaahphwfj.execute-api.us-east-2.amazonaws.com/dev/insights',
+        'https://2rjszrulkb.execute-api.us-east-2.amazonaws.com/dev/insights',
         {
           method: 'POST',
           headers: {
@@ -135,7 +135,7 @@ const CollectionItem = ({
     }
 
     const response = await fetch(
-      `https://aqaahphwfj.execute-api.us-east-2.amazonaws.com/dev/collections/user/${collectionId}`,
+      `https://2rjszrulkb.execute-api.us-east-2.amazonaws.com/dev/collections/user/${collectionId}`,
       {
         method: 'DELETE',
         headers: {
@@ -163,7 +163,7 @@ const CollectionItem = ({
 
     try {
       const response = await fetch(
-        `https://aqaahphwfj.execute-api.us-east-2.amazonaws.com/dev/collections/user/${collectionId}`,
+        `https://2rjszrulkb.execute-api.us-east-2.amazonaws.com/dev/collections/user/${collectionId}`,
         {
           method: 'PATCH',
           headers: {

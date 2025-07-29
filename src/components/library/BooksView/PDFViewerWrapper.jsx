@@ -182,7 +182,7 @@ export default function PDFViewerWrapper({ book, onClose, onEdit, userData }) {
     const token = session.tokens?.idToken?.toString();
 
     try {
-      const response = await fetch(`https://aqaahphwfj.execute-api.us-east-2.amazonaws.com/dev/books/${book.id}/share`, {
+      const response = await fetch(`https://2rjszrulkb.execute-api.us-east-2.amazonaws.com/dev/books/${book.id}/share`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -212,7 +212,7 @@ export default function PDFViewerWrapper({ book, onClose, onEdit, userData }) {
         });
 
         try {
-          await fetch(`https://aqaahphwfj.execute-api.us-east-2.amazonaws.com/dev/books/${book.id}/share`, {
+          await fetch(`https://2rjszrulkb.execute-api.us-east-2.amazonaws.com/dev/books/${book.id}/share`, {
             method: 'PATCH',
             headers: {
               'Content-Type': 'application/json',

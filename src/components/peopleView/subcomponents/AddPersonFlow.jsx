@@ -168,7 +168,7 @@ const AddPersonFlow = ({ onComplete, onCancel }) => {
       const idToken = session.tokens?.idToken?.toString();
       if (!idToken) throw new Error("Missing ID token");
 
-      const response = await fetch('https://aqaahphwfj.execute-api.us-east-2.amazonaws.com/dev/people', {
+      const response = await fetch('https://2rjszrulkb.execute-api.us-east-2.amazonaws.com/dev/people', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -14,7 +14,7 @@ const Step4Cover = ({ newBook, setNewBook, coverImageState, setCoverImageState }
         const token = session.tokens?.idToken?.toString();
 
         const res = await fetch(
-          `https://aqaahphwfj.execute-api.us-east-2.amazonaws.com/dev/books/${bookId}/coverImage`,
+          `https://2rjszrulkb.execute-api.us-east-2.amazonaws.com/dev/books/${bookId}/coverImage`,
           {
             method: 'GET',
             headers: {

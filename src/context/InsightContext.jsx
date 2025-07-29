@@ -21,7 +21,7 @@ export const InsightProvider = ({ children }) => {
       }
 
       const res = await fetch(
-        'https://aqaahphwfj.execute-api.us-east-2.amazonaws.com/dev/insights',
+        'https://2rjszrulkb.execute-api.us-east-2.amazonaws.com/dev/insights',
         {
           headers: { Authorization: token }
         }

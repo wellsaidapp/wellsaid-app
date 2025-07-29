@@ -49,7 +49,7 @@ const PeopleView = ({
       const token = session.tokens?.idToken?.toString();
 
       const response = await fetch(
-        `https://aqaahphwfj.execute-api.us-east-2.amazonaws.com/dev/books/${book.id}`,
+        `https://2rjszrulkb.execute-api.us-east-2.amazonaws.com/dev/books/${book.id}`,
         {
           method: 'DELETE',
           headers: {
@@ -260,7 +260,7 @@ const PeopleView = ({
 
       // console.log("📸 [handleAvatarSave] Updating database record...");
       // ✅ Store clean version in DB
-      await fetch(`https://aqaahphwfj.execute-api.us-east-2.amazonaws.com/dev/people/${personId}`, {
+      await fetch(`https://2rjszrulkb.execute-api.us-east-2.amazonaws.com/dev/people/${personId}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -302,7 +302,7 @@ const PeopleView = ({
       const idToken = session?.tokens?.idToken?.toString();
       if (!idToken) throw new Error("No ID token found");
 
-      await fetch(`https://aqaahphwfj.execute-api.us-east-2.amazonaws.com/dev/people/${personId}`, {
+      await fetch(`https://2rjszrulkb.execute-api.us-east-2.amazonaws.com/dev/people/${personId}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',

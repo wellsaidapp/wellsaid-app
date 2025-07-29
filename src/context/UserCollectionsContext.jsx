@@ -21,7 +21,7 @@ export const UserCollectionsProvider = ({ children }) => {
       }
 
       const response = await fetch(
-        'https://aqaahphwfj.execute-api.us-east-2.amazonaws.com/dev/collections/user',
+        'https://2rjszrulkb.execute-api.us-east-2.amazonaws.com/dev/collections/user',
         {
           headers: {
             'Content-Type': 'application/json',

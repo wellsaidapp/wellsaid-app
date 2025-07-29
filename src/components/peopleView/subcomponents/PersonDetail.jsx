@@ -192,7 +192,7 @@ const PersonDetail = ({
       }
 
       const response = await fetch(
-        `https://aqaahphwfj.execute-api.us-east-2.amazonaws.com/dev/people/${person.id}`,
+        `https://2rjszrulkb.execute-api.us-east-2.amazonaws.com/dev/people/${person.id}`,
         {
           method: 'DELETE',
           headers: {

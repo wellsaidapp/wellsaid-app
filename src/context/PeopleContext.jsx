@@ -30,7 +30,7 @@ export const PeopleProvider = ({ children }) => {
       }
 
       const response = await fetch(
-        'https://aqaahphwfj.execute-api.us-east-2.amazonaws.com/dev/people',
+        'https://2rjszrulkb.execute-api.us-east-2.amazonaws.com/dev/people',
         {
           headers: {
             'Content-Type': 'application/json',

@@ -44,7 +44,7 @@ const CaptureCard = ({
       }
 
       const res = await fetch(
-        `https://aqaahphwfj.execute-api.us-east-2.amazonaws.com/dev/insights/${entry.id}?collectionId=${entry.collections[0]}&type=${deleteType}`,
+        `https://2rjszrulkb.execute-api.us-east-2.amazonaws.com/dev/insights/${entry.id}?collectionId=${entry.collections[0]}&type=${deleteType}`,
         {
           method: 'DELETE',
           headers: { Authorization: token }
@@ -77,7 +77,7 @@ const CaptureCard = ({
       const session = await fetchAuthSession();
       const token = session.tokens?.idToken?.toString();
 
-      const res = await fetch(`https://aqaahphwfj.execute-api.us-east-2.amazonaws.com/dev/insights/${entry.id}`, {
+      const res = await fetch(`https://2rjszrulkb.execute-api.us-east-2.amazonaws.com/dev/insights/${entry.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -122,7 +122,7 @@ const CaptureCard = ({
       const session = await fetchAuthSession();
       const token = session.tokens?.idToken?.toString();
 
-      const res = await fetch(`https://aqaahphwfj.execute-api.us-east-2.amazonaws.com/dev/insights/${entry.id}`, {
+      const res = await fetch(`https://2rjszrulkb.execute-api.us-east-2.amazonaws.com/dev/insights/${entry.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

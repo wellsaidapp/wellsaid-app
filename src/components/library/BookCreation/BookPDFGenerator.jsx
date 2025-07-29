@@ -713,7 +713,7 @@ const renderBackCoverPage = async (
       }
 
       const response = await fetch(
-        'https://aqaahphwfj.execute-api.us-east-2.amazonaws.com/dev/users/avatar',
+        'https://2rjszrulkb.execute-api.us-east-2.amazonaws.com/dev/users/avatar',
         {
           method: 'GET',
           headers: {
