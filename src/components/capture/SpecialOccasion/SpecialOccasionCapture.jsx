@@ -7,6 +7,7 @@ import { fetchAuthSession } from 'aws-amplify/auth';
 import toast from 'react-hot-toast';
 import ToastMessage from '../../library/BookCreation/ToastMessage';
 import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
+import Typewriter from '../../landingPage/utils/Typewriter'
 
 const ChatInput = ({ userInput, setUserInput, onSubmit }) => {
   const textareaRef = useRef();
@@ -79,7 +80,7 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
     const [conversationTranscript, setConversationTranscript] = useState([]);
     const [insightCount, setInsightCount] = useState(0);
     const [aiMessageCount, setAiMessageCount] = useState(0);
-
+    const generateMessageId = () => Date.now() + Math.random().toString(36).substr(2, 9);
 
     const contextSummary = `This collection was created to capture meaningful reflections, stories, and wisdom for a special occasion.`;
     const [trackBotPrompts, setTrackBotPrompts] = useState(false);
@@ -205,10 +206,21 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
     };
 
     const addToTranscript = (text, isBot) => {
-      setConversationTranscript(prev => [
-        ...prev,
-        { text, isBot, timestamp: Date.now() }
-      ]);
+      const newEntry = {
+        id: generateMessageId(),
+        text,
+        isBot,
+        timestamp: Date.now()
+      };
+
+      setConversationTranscript(prev => {
+        // Prevent duplicates by checking the last message
+        const lastMessage = prev[prev.length - 1];
+        if (lastMessage && lastMessage.text === text && lastMessage.isBot === isBot) {
+          return prev;
+        }
+        return [...prev, newEntry];
+      });
     };
 
     const buildSystemPromptFromOccasion = (occasion, systemCollections) => {
@@ -308,21 +320,24 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
       }
     };
 
-    const typeMessage = (text, isBot = true, delay = 1000, addToTranscript = true) => {
+    const typeMessage = (text, isBot = true, delay = 300) => {
       setIsTyping(true);
+
+      // Add to transcript immediately (full message)
+      if (isBot) {
+        addToTranscript(text, true);
+      }
+
+      // Create a message object with typing flag
+      const newMessage = {
+        text,
+        isBot,
+        timestamp: Date.now(),
+        isTyping: isBot // Only bot messages should type
+      };
+
       setTimeout(() => {
-        setMessages((prev) => {
-          const newMessages = [...prev, { text, isBot, timestamp: Date.now() }];
-          if (isBot && addToTranscript) {
-            setConversationTranscript(prevTranscript => [
-              ...prevTranscript,
-              { text, isBot, timestamp: Date.now() }
-            ]);
-          }
-          return newMessages;
-        });
-        setIsTyping(false);
-        scrollToBottom();
+        setMessages(prev => [...prev, newMessage]);
       }, delay);
     };
 
@@ -353,12 +368,13 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
           userCollectionName: input
         }));
 
-        // Add user message to messages and transcript
-        setMessages(prev => [...prev, { text: input, isBot: false, timestamp: Date.now() }]);
-        setConversationTranscript(prev => [
-          ...prev,
-          { text: input, isBot: false, timestamp: Date.now() }
-        ]);
+        // Add user message (only once)
+        addToTranscript(input, false);
+        setMessages(prev => [...prev, {
+          text: input,
+          isBot: false,
+          timestamp: Date.now()
+        }]);
         setCurrentInput('');
 
         typeMessage(`Creating "${input}" for ${occasion.person.name}`, true);
@@ -395,13 +411,14 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
         return;
       }
 
-      // Step 2: Handle chat input and call OpenAI
-      // Add user message to messages and transcript
-      setMessages(prev => [...prev, { text: input, isBot: false, timestamp: Date.now() }]);
-      setConversationTranscript(prev => [
-        ...prev,
-        { text: input, isBot: false, timestamp: Date.now() }
-      ]);
+      // Step 2: Handle chat input
+      // Add user message (only once)
+      addToTranscript(input, false);
+      setMessages(prev => [...prev, {
+        text: input,
+        isBot: false,
+        timestamp: Date.now()
+      }]);
       setCurrentInput('');
       setHasPostedMessage(true);
       scrollToBottom();
@@ -410,21 +427,19 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
         const systemPrompt =
           buildSystemPromptFromOccasion(occasion, systemCollections) ||
           "You are a legacy guide helping users reflect on meaningful life experiences with loved ones. Keep replies brief and end with a thoughtful question.";
-        console.log("BUILT SYSTEM PROMPT:", systemPrompt);
 
         const historyForAI = buildHistoryForAI(messages);
-        console.log("MESSAGE HISTORY FOR AI:", historyForAI);
-
         const reply = await callOpenAI(input, systemPrompt, historyForAI);
 
         if (reply) {
+          // typeMessage will handle adding bot response to transcript
           typeMessage(reply, true);
         } else {
           typeMessage("Hmm, I didn't catch that. Could you try rephrasing?", true);
         }
 
       } catch (err) {
-        console.error("💥 OpenAI API call error:", err);
+        console.error("OpenAI API call error:", err);
         typeMessage("Sorry, I had trouble thinking. Can you try again?", true);
       }
     };
@@ -873,6 +888,7 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
               {messages.map((message, index) => {
                 const showSparkles = shouldShowSparkles(index);
                 const isLastMessage = index === messages.length - 1;
+
                 if (message.type === 'continuePrompt') {
                   return (
                     <div key={index} className="flex flex-col items-start">
@@ -933,7 +949,26 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
                           : 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white'
                       } ${showSparkles ? 'mb-4' : ''}`}
                     >
-                      {message.text}
+                      {/* Modified part: Use Typewriter for bot messages that should animate */}
+                      {message.isBot && message.isTyping && index === messages.length - 1 ? (
+                        <>
+                          <Typewriter
+                            text={message.text}
+                            speed={20}
+                            onComplete={() => {
+                              // Update the message to mark typing as complete
+                              setMessages(prev => prev.map((msg, i) =>
+                                i === index ? {...msg, isTyping: false} : msg
+                              ));
+                              setIsTyping(false);
+                              scrollToBottom();
+                            }}
+                          />
+                          <span className="ml-1 inline-block w-2 h-4 bg-gray-400 animate-pulse align-middle" />
+                        </>
+                      ) : (
+                        message.text
+                      )}
                     </div>
 
                     {showSparkles && (
@@ -976,7 +1011,7 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
                 );
               })}
 
-              {isTyping && (
+              {isTyping && messages[messages.length - 1]?.isBot !== true && (
                 <div className="flex justify-start">
                   <div className="bg-gray-100 px-4 py-2 rounded-2xl">
                     <div className="flex space-x-1">
