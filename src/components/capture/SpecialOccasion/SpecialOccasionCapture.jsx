@@ -8,80 +8,6 @@ import toast from 'react-hot-toast';
 import ToastMessage from '../../library/BookCreation/ToastMessage';
 import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
 
-const callOpenAI = async (userPrompt, systemPrompt, history = []) => {
-  try {
-    const session = await fetchAuthSession();
-    const token = session.tokens?.idToken?.toString();
-
-    const response = await fetch('https://2rjszrulkb.execute-api.us-east-2.amazonaws.com/dev/ai', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: token,
-      },
-      body: JSON.stringify({
-        message: userPrompt,
-        systemPrompt: systemPrompt,
-        history,
-      }),
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data?.error || 'Failed to get response from AI');
-    }
-
-    console.log("🤖 GPT Response:", data.reply);
-    return data.reply;
-
-  } catch (err) {
-    console.error("❌ Error calling OpenAI Lambda:", err);
-    return null;
-  }
-};
-
-const generateContextSummary = async ({ person, relationship, eventType, goal, insights }) => {
-  try {
-    const session = await fetchAuthSession();
-    const token = session.tokens?.idToken?.toString();
-
-    if (!token) throw new Error("No auth token found");
-
-    // Use the parameters directly instead of occasion
-    console.log("Payload being sent to Lambda:", {
-      person,
-      relationship,
-      event: eventType,
-      goal,
-      insights
-    });
-
-    const response = await fetch('https://2rjszrulkb.execute-api.us-east-2.amazonaws.com/dev/ai/userCollectionContext', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: token
-      },
-      body: JSON.stringify({
-        person,
-        relationship,
-        event: eventType,
-        goal,
-        insights // Array of { prompt, response }
-      })
-    });
-
-    const result = await response.json();
-    if (!response.ok) throw new Error(result.error || 'Failed to generate summary');
-
-    return result.summary;
-  } catch (err) {
-    console.error('🧠 Failed to generate context summary:', err);
-    return null;
-  }
-};
-
 const ChatInput = ({ userInput, setUserInput, onSubmit }) => {
   const textareaRef = useRef();
 
@@ -150,6 +76,11 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
     const [isSavingExit, setIsSavingExit] = useState(false);
     const [isSavingInsight, setIsSavingInsight] = useState(false);
 
+    const [conversationTranscript, setConversationTranscript] = useState([]);
+    const [insightCount, setInsightCount] = useState(0);
+    const [aiMessageCount, setAiMessageCount] = useState(0);
+
+
     const contextSummary = `This collection was created to capture meaningful reflections, stories, and wisdom for a special occasion.`;
     const [trackBotPrompts, setTrackBotPrompts] = useState(false);
     const [insightPromptCount, setInsightPromptCount] = useState(0);
@@ -192,6 +123,93 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
         }
       }
     }, [occasion.person, occasion.collections, occasionData.isReturning]);
+
+    const callOpenAI = async (userPrompt, systemPrompt, history = []) => {
+      try {
+        const session = await fetchAuthSession();
+        const token = session.tokens?.idToken?.toString();
+        // Increment AI message count before making the call
+        setAiMessageCount(prev => prev + 1);
+        console.log("Incrementing aiMessageCount (callOpenAI)");
+        const response = await fetch('https://2rjszrulkb.execute-api.us-east-2.amazonaws.com/dev/ai', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: token,
+          },
+          body: JSON.stringify({
+            message: userPrompt,
+            systemPrompt: systemPrompt,
+            history,
+          }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data?.error || 'Failed to get response from AI');
+        }
+
+        console.log("🤖 GPT Response:", data.reply);
+        return data.reply;
+
+      } catch (err) {
+        console.error("❌ Error calling OpenAI Lambda:", err);
+        return null;
+      }
+    };
+
+    const generateContextSummary = async ({ person, relationship, eventType, goal, insights, previousContext }) => {
+      try {
+        const session = await fetchAuthSession();
+        const token = session.tokens?.idToken?.toString();
+
+        if (!token) throw new Error("No auth token found");
+        // Increment AI message count before making the call
+        setAiMessageCount(prev => prev + 1);
+        console.log("Incrementing aiMessageCount (generateContextSummary)");
+        // Use the parameters directly instead of occasion
+        console.log("Payload being sent to Lambda:", {
+          person,
+          relationship,
+          event: eventType,
+          goal,
+          insights,
+          previousContext
+        });
+
+        const response = await fetch('https://2rjszrulkb.execute-api.us-east-2.amazonaws.com/dev/ai/userCollectionContext', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: token
+          },
+          body: JSON.stringify({
+            person,
+            relationship,
+            event: eventType,
+            goal,
+            insights,
+            previousContext
+          })
+        });
+
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || 'Failed to generate summary');
+
+        return result.summary;
+      } catch (err) {
+        console.error('🧠 Failed to generate context summary:', err);
+        return null;
+      }
+    };
+
+    const addToTranscript = (text, isBot) => {
+      setConversationTranscript(prev => [
+        ...prev,
+        { text, isBot, timestamp: Date.now() }
+      ]);
+    };
 
     const buildSystemPromptFromOccasion = (occasion, systemCollections) => {
       if (!occasion?.person || !occasion?.userCollectionName || !occasion?.collections) return null;
@@ -290,20 +308,19 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
       }
     };
 
-    const typeMessage = (text, isBot = true, delay = 1000) => {
+    const typeMessage = (text, isBot = true, delay = 1000, addToTranscript = true) => {
       setIsTyping(true);
       setTimeout(() => {
         setMessages((prev) => {
           const newMessages = [...prev, { text, isBot, timestamp: Date.now() }];
-
-          // 🧠 Start counting only after collection is created and tracking is enabled
-          if (isBot && trackBotPrompts && !text.startsWith("Creating") && !text.includes("What do you want to name")) {
-            setInsightPromptCount((count) => count + 1);
+          if (isBot && addToTranscript) {
+            setConversationTranscript(prevTranscript => [
+              ...prevTranscript,
+              { text, isBot, timestamp: Date.now() }
+            ]);
           }
-
           return newMessages;
         });
-
         setIsTyping(false);
         scrollToBottom();
       }, delay);
@@ -335,7 +352,13 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
           ...prev,
           userCollectionName: input
         }));
-        setMessages(prev => [...prev, { text: input, isBot: false }]);
+
+        // Add user message to messages and transcript
+        setMessages(prev => [...prev, { text: input, isBot: false, timestamp: Date.now() }]);
+        setConversationTranscript(prev => [
+          ...prev,
+          { text: input, isBot: false, timestamp: Date.now() }
+        ]);
         setCurrentInput('');
 
         typeMessage(`Creating "${input}" for ${occasion.person.name}`, true);
@@ -373,7 +396,12 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
       }
 
       // Step 2: Handle chat input and call OpenAI
-      setMessages(prev => [...prev, { text: input, isBot: false }]);
+      // Add user message to messages and transcript
+      setMessages(prev => [...prev, { text: input, isBot: false, timestamp: Date.now() }]);
+      setConversationTranscript(prev => [
+        ...prev,
+        { text: input, isBot: false, timestamp: Date.now() }
+      ]);
       setCurrentInput('');
       setHasPostedMessage(true);
       scrollToBottom();
@@ -424,7 +452,9 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
       try {
         const session = await fetchAuthSession();
         const token = session.tokens?.idToken?.toString();
-
+        // Increment AI message count before making the call
+        setAiMessageCount(prev => prev + 1);
+        console.log("Incrementing aiMessageCount (generatePromptAndResponse)");
         const response = await fetch('https://2rjszrulkb.execute-api.us-east-2.amazonaws.com/dev/ai/promptResponse', {
           method: 'POST',
           headers: {
@@ -498,7 +528,7 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
       setShowInsightModal(true);
     };
 
-    const handleSaveExit = async (userCollectionId, contextSummary) => {
+    const handleSaveExit = async (userCollectionId, contextSummary, exitData) => {
       try {
         const session = await fetchAuthSession();
         const token = session.tokens?.idToken?.toString();
@@ -514,7 +544,13 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
             },
             body: JSON.stringify({
               userCollectionId,
-              context: contextSummary
+              context: contextSummary,
+              sessionMetrics: { // Add the new metrics
+                transcript: exitData.transcript,
+                insightCount: exitData.insightCount,
+                aiMessageCount: exitData.aiMessageCount,
+                // Any other metrics you want to track
+              }
             })
           }
         );
@@ -562,29 +598,29 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
       }
     }, [showInsightModal, insightDraft.prompt, insightDraft.response]);
 
-    const generateAndSaveContext = async () => {
-      try {
-        if (!occasion?.userCollectionId || !occasion.person) return;
-
-        // Get the AI-generated summary
-        const aiGeneratedSummary = await generateContextSummary({
-          person: occasion.person.name,
-          relationship: occasion.person.relationship,
-          eventType: occasion.userCollectionName,
-          goal: contextSummary, // Original context goes here as the "goal"
-          insights: sessionInsights
-        });
-
-        console.log("🧠 Generated Summary:", aiGeneratedSummary); // Log the AI output
-
-        if (aiGeneratedSummary) {
-          // Pass the AI-generated summary to save
-          await handleSaveExit(occasion.userCollectionId, aiGeneratedSummary);
-        }
-      } catch (err) {
-        console.error("❌ Failed to generate/save context:", err);
-      }
-    };
+    // const generateAndSaveContext = async () => {
+    //   try {
+    //     if (!occasion?.userCollectionId || !occasion.person) return;
+    //
+    //     // Get the AI-generated summary
+    //     const aiGeneratedSummary = await generateContextSummary({
+    //       person: occasion.person.name,
+    //       relationship: occasion.person.relationship,
+    //       eventType: occasion.userCollectionName,
+    //       goal: contextSummary, // Original context goes here as the "goal"
+    //       insights: sessionInsights
+    //     });
+    //
+    //     console.log("🧠 Generated Summary:", aiGeneratedSummary); // Log the AI output
+    //
+    //     if (aiGeneratedSummary) {
+    //       // Pass the AI-generated summary to save
+    //       await handleSaveExit(occasion.userCollectionId, aiGeneratedSummary);
+    //     }
+    //   } catch (err) {
+    //     console.error("❌ Failed to generate/save context:", err);
+    //   }
+    // };
 
     const handleContinueClick = () => {
       // Optional: Add a confirmation message to the thread
@@ -616,15 +652,27 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
       try {
         setIsSavingExit(true);
 
+        // Prepare exit data
+        const exitData = {
+          transcript: conversationTranscript,
+          insightCount,
+          aiMessageCount,
+        };
+
         // Generate final context summary before exiting
         const summary = await generateContextSummary({
           person: occasion.person.name,
           relationship: occasion.person.relationship,
           eventType: occasion.userCollectionName,
           goal: contextSummary,
-          insights: sessionInsights
+          insights: sessionInsights,
+          previousContext: occasion.context
         });
-        await handleSaveExit(occasion.userCollectionId, contextSummary);
+
+        // Use the AI-generated summary if available, otherwise fallback to default
+        const finalSummary = summary || contextSummary;
+
+        await handleSaveExit(occasion.userCollectionId, finalSummary, exitData);
         setIsSavingExit(false);
         setCurrentView('home');
       } catch (err) {
@@ -703,8 +751,8 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
         ]);
 
         // Generate and save context summary
-        await generateAndSaveContext();
-
+        // await generateAndSaveContext();
+        setInsightCount(prev => prev + 1);
         toast.custom((t) => (
           <ToastMessage
             type="success"
