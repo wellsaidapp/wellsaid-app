@@ -298,9 +298,9 @@ const QuickCreateCapture = ({ setCurrentView, userContext }) => {
 
   return (
     <div className="fixed inset-0 bg-gradient-to-br from-blue-50 to-indigo-50 overflow-y-auto">
-      {/* Fixed top header - reduced padding */}
+      {/* Fixed top header - matches SpecialOccasionCapture structure */}
       <div className="fixed top-0 left-0 right-0 bg-gradient-to-br from-blue-50 to-indigo-50 z-20 border-b border-gray-100">
-        <div className="max-w-2xl mx-auto px-4 pt-4 pb-2 flex justify-between items-start"> {/* Reduced pt-6 to pt-4 */}
+        <div className="max-w-2xl mx-auto px-4 pt-6 pb-2 flex justify-between items-start">
           <div className="flex items-center gap-3">
             <WellSaidIcon size={50} />
             <div>
@@ -317,8 +317,8 @@ const QuickCreateCapture = ({ setCurrentView, userContext }) => {
           </button>
         </div>
 
-        {/* Moved Context inside fixed header */}
-        <div className="max-w-2xl mx-auto px-4 pb-2"> {/* Removed pt-2 since it's inside fixed container */}
+        {/* Context - matches spacing from SpecialOccasionCapture */}
+        <div className="max-w-2xl mx-auto px-4 pt-2 pb-3">
           <div className="bg-white rounded-2xl shadow p-4">
             <button
               onClick={() => setShowContext(!showContext)}
@@ -357,9 +357,9 @@ const QuickCreateCapture = ({ setCurrentView, userContext }) => {
         </div>
       </div>
 
-      {/* Message area - adjusted padding */}
+      {/* Message area - adjusted padding to match SpecialOccasionCapture */}
       <div className="max-w-2xl mx-auto px-4">
-        <div className="pt-[180px] pb-[180px]"> {/* Reduced top padding */}
+        <div className="pt-[160px] pb-[240px]">
           <div className="bg-white rounded-2xl shadow-lg p-6 space-y-4">
             {messages.map((message, index) => (
               <div
