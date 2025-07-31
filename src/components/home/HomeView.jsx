@@ -210,7 +210,6 @@ const HomeView = ({
           weeklyGoal={weeklyGoal}
           userStreak={userStreak}
         />
-
         <SharedBooksSection
           books={recentBooks}
           onViewBook={(book) => {
