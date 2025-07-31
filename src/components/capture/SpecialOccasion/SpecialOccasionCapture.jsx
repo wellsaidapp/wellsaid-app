@@ -406,7 +406,32 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
               .join(', ');
 
             const contextString = `${occasion.person.name} (${occasion.person.relationship}) — focus on: ${collectionNames}`;
-            typeMessage(`Let's begin. Thinking about ${contextString}, what's something you'd want them to always remember?`, true);
+
+            // Instead of typeMessage, we'll trigger the AI call
+            try {
+              const systemPrompt = buildSystemPromptFromOccasion(occasion, systemCollections) ||
+                "You are a legacy guide helping users reflect on meaningful life experiences with loved ones. Keep replies brief and end with a thoughtful question.";
+
+              // Start with a clean history for the first question
+              const reply = await callOpenAI(
+                `Begin the conversation about ${contextString}`,
+                systemPrompt,
+                [] // Empty history for first message
+              );
+
+              if (reply) {
+                typeMessage(reply, true);
+                setAiPromptCount(prev => prev + 1);
+              } else {
+                // Fallback if AI fails
+                typeMessage(`Let's begin. Thinking about ${contextString}, what's something you'd want them to always remember?`, true);
+              }
+            } catch (err) {
+              console.error("Error generating first question:", err);
+              // Fallback message if there's an error
+              typeMessage(`Let's begin. Thinking about ${contextString}, what's something you'd want them to always remember?`, true);
+            }
+
             setConversationState('chatting');
           } else {
             typeMessage("Welcome back! Let's pick up where we left off.", true);
