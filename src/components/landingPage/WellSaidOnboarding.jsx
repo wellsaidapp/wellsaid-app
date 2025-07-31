@@ -16,6 +16,76 @@ import WellSaidIconOnboarding from '../../assets/icons/WellSaidIconOnboarding';
 // Components
 import Typewriter from './utils/Typewriter.jsx';
 
+const NameInputStep = ({ onSubmit }) => {
+  const [inputValue, setInputValue] = useState('');
+
+  const handleSubmit = () => {
+    const trimmedValue = inputValue.trim();
+    if (trimmedValue) {
+      onSubmit('name', trimmedValue);
+      setInputValue('');
+    }
+  };
+
+  return (
+    <>
+      <div className="flex-1 relative">
+        <User className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
+        <input
+          type="text"
+          value={inputValue}
+          onChange={(e) => setInputValue(e.target.value)}
+          placeholder="Enter your name"
+          className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-blue-500"
+          onKeyPress={(e) => e.key === 'Enter' && handleSubmit()}
+        />
+      </div>
+      <button
+        onClick={handleSubmit}
+        className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white p-3 rounded-xl hover:from-blue-600 hover:to-indigo-600 transition-colors"
+      >
+        <ArrowRight className="w-5 h-5" />
+      </button>
+    </>
+  );
+};
+
+const EmailInputStep = ({ onSubmit }) => {
+  const [inputValue, setInputValue] = useState('');
+
+  const handleSubmit = () => {
+    const trimmedValue = inputValue.trim();
+    if (trimmedValue) {
+      onSubmit('email', trimmedValue);
+      setInputValue('');
+    }
+  };
+
+  return (
+    <>
+      <div className="flex-1 relative">
+        <Mail className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
+        <input
+          type="email"
+          value={inputValue}
+          onChange={(e) => setInputValue(e.target.value)}
+          inputMode="email"
+          autoComplete="email"
+          placeholder="your@email.com"
+          className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-blue-500"
+          onKeyPress={(e) => e.key === 'Enter' && handleSubmit()}
+        />
+      </div>
+      <button
+        onClick={handleSubmit}
+        className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white p-3 rounded-xl hover:from-blue-600 hover:to-indigo-600 transition-colors"
+      >
+        <ArrowRight className="w-5 h-5" />
+      </button>
+    </>
+  );
+};
+
 const WellSaidOnboarding = ({ onComplete }) => {
   // Start directly with registration
   const [currentStep, setCurrentStep] = useState('registration');
@@ -606,71 +676,9 @@ const WellSaidOnboarding = ({ onComplete }) => {
           <div className="bg-white rounded-2xl shadow-lg p-4">
             <div className="flex gap-2">
               {!userData.name ? (
-                <>
-                  <div className="flex-1 relative">
-                    <User className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
-                    <input
-                      type="text"
-                      placeholder="Enter your name"
-                      className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-blue-500"
-                      onKeyPress={(e) => {
-                        if (e.key === 'Enter' && e.target.value.trim()) {
-                          handleRegistrationSubmit('name', e.target.value.trim());
-                          e.target.value = ''; // Clear the input after submission
-                        }
-                      }}
-                      ref={(input) => {
-                        // Auto-focus the name input when it appears
-                        if (input && !userData.name) input.focus();
-                      }}
-                    />
-                  </div>
-                  <button
-                    onClick={(e) => {
-                      const input = e.target.parentElement.querySelector('input');
-                      if (input.value.trim()) {
-                        handleRegistrationSubmit('name', input.value.trim());
-                        input.value = ''; // Clear the input after submission
-                      }
-                    }}
-                    className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white p-3 rounded-xl hover:from-blue-600 hover:to-indigo-600 transition-colors"
-                  >
-                    <ArrowRight className="w-5 h-5" />
-                  </button>
-                </>
+                <NameInputStep onSubmit={handleRegistrationSubmit} />
               ) : !userData.email ? (
-                <>
-                  <div className="flex-1 relative">
-                    <Mail className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
-                    <input
-                      type="email" // Proper email type for better mobile keyboards and validation
-                      inputMode="email" // Additional hint for mobile devices
-                      autoComplete="email" // Helps with autofill
-                      placeholder="your@email.com"
-                      className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-blue-500"
-                      onKeyPress={(e) => {
-                        if (e.key === 'Enter' && e.target.value.trim()) {
-                          handleRegistrationSubmit('email', e.target.value.trim());
-                        }
-                      }}
-                      ref={(input) => {
-                        // Auto-focus the email input when it appears
-                        if (input && userData.name && !userData.email) input.focus();
-                      }}
-                    />
-                  </div>
-                  <button
-                    onClick={(e) => {
-                      const input = e.target.parentElement.querySelector('input');
-                      if (input.value.trim()) {
-                        handleRegistrationSubmit('email', input.value.trim());
-                      }
-                    }}
-                    className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white p-3 rounded-xl hover:from-blue-600 hover:to-indigo-600 transition-colors"
-                  >
-                    <ArrowRight className="w-5 h-5" />
-                  </button>
-                </>
+                <EmailInputStep onSubmit={handleRegistrationSubmit} />
               ) : null}
             </div>
           </div>
