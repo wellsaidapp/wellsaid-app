@@ -13,7 +13,7 @@ const WeeklyProgress = ({ weekInsights, weeklyGoal, userStreak }) => {
   };
 
   return (
-    <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 mb-6 shadow-sm border border-white/50">
+    <div>
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold text-gray-800">Weekly Progress</h3>
         <div className="flex items-center text-orange-500 bg-orange-50 px-3 py-1 rounded-full">

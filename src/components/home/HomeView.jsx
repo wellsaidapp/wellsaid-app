@@ -204,29 +204,33 @@ const HomeView = ({
             setSpecialOccasionData={setSpecialOccasionData}
           />
         )}
-
-        <WeeklyProgress
-          weekInsights={weekInsights}
-          weeklyGoal={weeklyGoal}
-          userStreak={userStreak}
-        />
-        <SharedBooksSection
-          books={recentBooks}
-          onViewBook={(book) => {
-            setSelectedBook(book);
-            setShowPdfViewer(true);
-          }}
-          setCurrentView={setCurrentView}
-          setLibraryDefaultViewMode={setLibraryDefaultViewMode}
-          userData={userData}
-          onDeleteBook={handleDeleteBook}
-        />
-
-        <LegacyStats
-          insightsCount={insights.length}
-          individualsCount={people.length}
-          booksCount={getPublishedBooksCount()}
-        />
+        <div className="bg-white rounded-xl shadow-sm p-4 mb-4">
+          <WeeklyProgress
+            weekInsights={weekInsights}
+            weeklyGoal={weeklyGoal}
+            userStreak={userStreak}
+          />
+        </div>
+        <div className="bg-white rounded-xl shadow-sm p-4 mb-4">
+          <SharedBooksSection
+            books={recentBooks}
+            onViewBook={(book) => {
+              setSelectedBook(book);
+              setShowPdfViewer(true);
+            }}
+            setCurrentView={setCurrentView}
+            setLibraryDefaultViewMode={setLibraryDefaultViewMode}
+            userData={userData}
+            onDeleteBook={handleDeleteBook}
+          />
+        </div>
+        <div className="bg-white rounded-xl shadow-sm p-4 mb-4">
+          <LegacyStats
+            insightsCount={insights.length}
+            individualsCount={people.length}
+            booksCount={getPublishedBooksCount()}
+          />
+        </div>
       </div>
 
       {showCaptureOptions && (

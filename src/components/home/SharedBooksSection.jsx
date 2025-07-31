@@ -11,7 +11,7 @@ const SharedBooksSection = ({
   onDeleteBook
 }) => {
   return (
-    <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-sm border border-white/50 mb-6">
+    <div className="mb-8">
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-lg font-semibold text-gray-800">Your Shared Books</h3>
         {showViewAll && (
