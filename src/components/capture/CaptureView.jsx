@@ -1230,24 +1230,6 @@ const CaptureView = ({ captureMode, setCurrentView }) => {
           </div>
         </div>
       )}
-
-      {/* Bottom navigation - fixed position */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow z-10 h-[56px]">
-        <div className="max-w-2xl mx-auto flex justify-around items-center h-full">
-          <button onClick={() => setCurrentView('home')} className="text-gray-600 hover:text-blue-500 flex flex-col items-center">
-            <Home className="w-6 h-6" />
-            <span className="text-xs mt-1">Home</span>
-          </button>
-          <button onClick={() => setCurrentView('capture')} className="text-blue-500 flex flex-col items-center">
-            <PlusCircle className="w-6 h-6" />
-            <span className="text-xs mt-1">Capture</span>
-          </button>
-          <button onClick={() => setCurrentView('library')} className="text-gray-600 hover:text-blue-500 flex flex-col items-center">
-            <Library className="w-6 h-6" />
-            <span className="text-xs mt-1">Library</span>
-          </button>
-        </div>
-      </div>
     </div>
   );
 };

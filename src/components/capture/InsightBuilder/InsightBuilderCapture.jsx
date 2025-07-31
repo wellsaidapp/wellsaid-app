@@ -147,19 +147,37 @@ const InsightBuilderCapture = ({ setCurrentView, onComplete }) => {
 
     const typeMessage = (text, isBot = true, delay = 300) => {
       setIsTyping(true);
-      if (isBot) {
-        addToTranscript(text, true);
-      }
 
       const newMessage = {
+        id: generateMessageId(), // Add unique ID
         text,
         isBot,
         timestamp: Date.now(),
         isTyping: isBot
       };
 
+      // Add to transcript only if it's a bot message
+      if (isBot) {
+        setConversationTranscript(prev => {
+          const lastMessage = prev[prev.length - 1];
+          if (lastMessage && lastMessage.text === text && lastMessage.isBot === isBot) {
+            return prev;
+          }
+          return [...prev, newMessage];
+        });
+      }
+
       setTimeout(() => {
-        setMessages(prev => [...prev, newMessage]);
+        setMessages(prev => {
+          // Check for duplicates before adding
+          const lastMessage = prev[prev.length - 1];
+          if (lastMessage && lastMessage.text === text && lastMessage.isBot === isBot) {
+            return prev;
+          }
+          return [...prev, newMessage];
+        });
+        setIsTyping(false);
+        scrollToBottom();
       }, delay);
     };
 
@@ -410,7 +428,7 @@ const InsightBuilderCapture = ({ setCurrentView, onComplete }) => {
     }, []);
 
     return (
-      <div className="fixed inset-0 bg-gradient-to-br from-blue-50 to-indigo-50 overflow-y-auto">
+      <div className="fixed inset-0 bg-gradient-to-br from-blue-50 to-indigo-50 overflow-y-auto z-50">
         {/* Fixed top header */}
         <div className="fixed top-0 left-0 right-0 bg-gradient-to-br from-blue-50 to-indigo-50 z-20 border-b border-gray-100">
           <div className="max-w-2xl mx-auto px-4 pt-6 pb-2 flex justify-between items-start">
@@ -452,9 +470,9 @@ const InsightBuilderCapture = ({ setCurrentView, onComplete }) => {
           </div>
         </div>
 
-        {/* Scrollable message area */}
+        {/* Scrollable message area - with extra bottom padding */}
         <div className="max-w-2xl mx-auto px-4">
-          <div className="pt-[120px] pb-[240px]">
+          <div className="pt-[100px] pb-[240px]">
             <div className="bg-white rounded-2xl shadow-lg p-6 space-y-4">
               {messages.map((message, index) => {
                 const showSparkles = shouldShowSparkles(index);
@@ -561,8 +579,11 @@ const InsightBuilderCapture = ({ setCurrentView, onComplete }) => {
         </div>
 
         {/* Input Area */}
-        <div className="fixed bottom-0 left-0 right-0 z-30 bg-white border-t border-gray-100">
-          <div className="max-w-2xl mx-auto w-full px-4 py-3">
+        {/* Input Area */}
+        <div className="fixed bottom-0 left-0 right-0 z-30 bg-white border-t border-gray-100 pb-[env(safe-area-inset-bottom)]">
+          <div className="max-w-2xl mx-auto w-full px-4 pt-3 pb-4" style={{
+            paddingBottom: 'calc(1rem + env(safe-area-inset-bottom))'
+          }}>
             <div className="flex gap-2 items-center w-full">
               <div className="flex-1 min-w-0">
                 <ChatInput
