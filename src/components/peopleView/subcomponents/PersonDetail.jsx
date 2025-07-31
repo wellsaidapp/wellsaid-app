@@ -316,7 +316,7 @@ const PersonDetail = ({
       </div>
 
       {/* Collections & Insights Section */}
-      <div className="mb-6 p-6 bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm border border-white/50">
+      <div className="mb-6">
         <div className="mb-4">
           <h3 className="text-lg font-semibold text-gray-800">Your Shared Insights</h3>
           <p className="text-sm text-gray-600 mt-1">
