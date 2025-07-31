@@ -88,9 +88,12 @@ const EmailInputStep = ({ onSubmit }) => {
 
 const PinVerification = ({
   email,
+  password,
   onSuccess,
   onResend,
-  initialErrorMessage
+  initialErrorMessage,
+  typeMessage,
+  setIsVerifyingPin
 }) => {
   const [digits, setDigits] = useState(['', '', '', '', '', '']);
   const [error, setError] = useState(initialErrorMessage);
@@ -143,14 +146,35 @@ const PinVerification = ({
 
     setIsSubmitting(true);
     try {
+      // First try to confirm the sign up
       await confirmSignUp({
         username: email,
         confirmationCode: fullCode
       });
+
+      // Then authenticate (using the temp password we generated earlier)
+      // await signIn({
+      //   username: email,
+      //   password: password
+      // });
+
+      // Success flow
+      setIsVerifyingPin(false);
       onSuccess();
+      // Continue with your onboarding flow...
+
     } catch (err) {
       console.error('Verification failed:', err);
-      setError('Invalid verification code. Please try again.');
+
+      if (err.name === 'CodeMismatchException') {
+        setError('Invalid code. Please try again or request a new code.');
+      } else if (err.name === 'ExpiredCodeException') {
+        setError('Code expired. A new one has been sent.');
+        await handleResend();
+      } else {
+        setError('Verification failed. Please try again.');
+      }
+
       setDigits(['', '', '', '', '', '']);
       inputsRef.current[0]?.focus();
     } finally {
@@ -301,18 +325,12 @@ const WellSaidOnboarding = ({ onComplete }) => {
     }
     else if (field === 'email') {
       setMessages(prev => [...prev, { text: value, isBot: false, timestamp: Date.now() }]);
-      typeMessage("Perfect! I've sent you a 6-digit code. Please enter it below:", true, 500);
-      setShowPinInput(true);
 
       try {
-        console.log('Attempting signUp with:', {
-          username: value,
-          password: '***' // Don't log actual password
-        });
-
+        // Always try to sign up first (will work for new users)
         const tempPassword = generateTempPassword();
 
-        const signUpResult = await signUp({
+        await signUp({
           username: value,
           password: tempPassword,
           options: {
@@ -323,27 +341,30 @@ const WellSaidOnboarding = ({ onComplete }) => {
           },
         });
 
-        // ✅ Save password (and email, if not already saved) to state
         setUserData(prev => ({
           ...prev,
           email: value,
           password: tempPassword,
         }));
 
-        console.log('SignUp successful! Result:', {
-          userId: signUpResult.userId,
-          isConfirmed: signUpResult.isConfirmed,
-          nextStep: signUpResult.nextStep
-        });
       } catch (err) {
-        console.error('Error during sign up:', {
-          errorName: err.name,
-          errorMessage: err.message,
-          errorStack: err.stack,
-          errorDetails: err
-        });
-        typeMessage("Oops, something went wrong during sign up. Please try again.", true, 0);
-        setShowPinInput(false);
+        // If user exists, that's fine - we'll just resend the code
+        if (err.name !== 'UsernameExistsException') {
+          console.error('Error during sign up:', err);
+          typeMessage("Oops, something went wrong. Please try again.", true, 0);
+          return;
+        }
+        // No need to show error for existing users
+      }
+
+      // For both new and existing users, send verification code
+      try {
+        await resendSignUpCode({ username: value });
+        typeMessage("A verification code has been sent to your email. Please enter it below:", true, 500);
+        setShowPinInput(true);
+      } catch (resendError) {
+        console.error('Error resending code:', resendError);
+        typeMessage("Failed to send verification code. Please try again.", true, 0);
       }
     }
   };
@@ -780,6 +801,8 @@ const WellSaidOnboarding = ({ onComplete }) => {
         {showPinInput && currentStep === 'registration' && (
           <PinVerification
             email={userData.email}
+            typeMessage={typeMessage}
+            setIsVerifyingPin={setIsVerifyingPin}
             onSuccess={async () => {
               await typeMessage("✓ Verified successfully!", true, 0);
               setIsVerifyingPin(false);
