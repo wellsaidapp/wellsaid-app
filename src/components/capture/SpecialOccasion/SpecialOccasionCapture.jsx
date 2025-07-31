@@ -503,6 +503,12 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
       try {
         setLoadingSparklesIndex(clickedIndex); // 👈 show spinner for this Sparkles button
 
+        // Mark this as the first sparkles interaction if none exists
+        if (activeSparklesIndex === null) {
+          setActiveSparklesIndex(clickedIndex);
+          setSparklesIntroShown(true);
+        }
+
         const history = messages
           .slice(0, clickedIndex + 1)
           .map((m) => ({
@@ -541,25 +547,33 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
         message.text.includes("What do you want to name") ||
         message.text.includes("Alright, let's get back to it") ||
         message.text.includes("Welcome back") ||
-        message.text.includes("Let's begin")
+        message.text.includes("Let's begin") ||
+        message.text.includes("Great! Let's keep going") // Add this new condition
       );
 
-      // Get all conversational bot messages
-      const conversationalBotMessages = messages.filter(m =>
-        m.isBot &&
-        !m.text.includes("Creating") &&
-        !m.text.includes("What do you want to name") &&
-        !m.text.includes("Alright, let's get back to it") &&
-        !m.text.includes("Welcome back") &&
-        !m.text.includes("Let's begin")
+      // Get all conversational bot messages AFTER the last continuation
+      const lastContinuationIndex = messages.findLastIndex(m =>
+        m.text.includes("Great! Let's keep going")
       );
+
+      const conversationalBotMessages = messages
+        .slice(lastContinuationIndex + 1) // Only messages after last continuation
+        .filter(m =>
+          m.isBot &&
+          !m.text.includes("Creating") &&
+          !m.text.includes("What do you want to name") &&
+          !m.text.includes("Alright, let's get back to it") &&
+          !m.text.includes("Welcome back") &&
+          !m.text.includes("Let's begin") &&
+          !m.text.includes("Great! Let's keep going")
+        );
 
       // Find the index of the current message in the filtered list
       const messageIndex = conversationalBotMessages.findIndex(m => m.timestamp === message.timestamp);
 
       // Show sparkles if:
       // 1. It's a conversational message AND
-      // 2. It's the 3rd or later conversational message AND
+      // 2. It's the 3rd or later conversational message since continuation AND
       // 3. No insight has been saved yet (activeSparklesIndex is null) OR
       //    It's a message after the one that first triggered sparkles
       return isConversationalMessage &&
@@ -670,6 +684,10 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
     // };
 
     const handleContinueClick = () => {
+      // Reset conversation tracking state
+      setAiPromptCount(0);
+      setActiveSparklesIndex(null);
+      setSparklesIntroShown(false);
       // Optional: Add a confirmation message to the thread
       setMessages((prev) => [
         ...prev,
@@ -789,6 +807,7 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
         setAiPromptCount(0);
         setActiveSparklesIndex(null);
         setSparklesIntroShown(false);
+        setLoadingSparklesIndex(null);
 
         // ⬇️ Inject system message after modal closes
         setMessages((prevMessages) => [
