@@ -1027,7 +1027,7 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
                       )}
                     </div>
 
-                    {isFirstBotMessage && (
+                    {isFirstBotMessage && occasionData?.isReturning && (
                       <div className="relative top-2 ml-1">
                         <button
                           onClick={() => {
