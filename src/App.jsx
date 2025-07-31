@@ -16,6 +16,7 @@ import SelectPersonView from './components/capture/SpecialOccasion/SelectPersonV
 import CollectionSelectionView from './components/capture/SpecialOccasion/CollectionSelectionView';
 import SpecialOccasionCapture from './components/capture/SpecialOccasion/SpecialOccasionCapture';
 import InsightBuilderCapture from './components/capture/InsightBuilder/InsightBuilderCapture';
+import QuickCreateCapture from './components/capture/QuickCreate/QuickCreateCapture';
 
 const MyComponent = () => {
   const { userCollections, loading } = useUserCollections();
@@ -270,6 +271,14 @@ const WellSaidApp = () => {
             setCurrentView('home');
           }}
         />;
+        case 'quickCreate':  // Add this new case
+          return <QuickCreateCapture
+            setCurrentView={setCurrentView}
+            onComplete={(savedInsight) => {
+              // Handle any post-save logic if needed
+              setCurrentView('home');
+            }}
+          />;
       case 'specialOccasionSelectPerson':
         return (
           <SelectPersonView

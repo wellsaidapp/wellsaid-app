@@ -58,7 +58,7 @@ const CaptureOptionsModal = ({
             onClick={() => {
               setCaptureMode('quick');
               setShowCaptureOptions(false);
-              setCurrentView('capture');
+              setCurrentView('quickCreate');
             }}
             className="w-full bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-2xl p-6 text-left hover:shadow-lg transition-all hover:scale-[1.02]"
           >

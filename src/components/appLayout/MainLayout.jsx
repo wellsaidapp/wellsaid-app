@@ -12,7 +12,8 @@ const MainLayout = ({
   // Define which views should hide the bottom nav
   const hideNavViews = [
     'capture',
-    'insightBuilder'
+    'insightBuilder',
+    'quickCreate'
   ];
 
   // Calculate if nav should be visible
