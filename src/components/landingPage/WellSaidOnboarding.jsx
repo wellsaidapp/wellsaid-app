@@ -89,6 +89,7 @@ const EmailInputStep = ({ onSubmit }) => {
 const PinVerification = ({
   email,
   password,
+  cognitoUsername,
   onSuccess,
   onResend,
   initialErrorMessage,
@@ -152,12 +153,24 @@ const PinVerification = ({
         confirmationCode: fullCode
       });
 
-      // Then authenticate (using the temp password we generated earlier)
-      // await signIn({
-      //   username: email,
-      //   password: password
-      // });
+      // Sign in with the actual Cognito username (UUID)
+      const signInResult = await signIn({
+        username: cognitoUsername, // Use the UUID here
+        password
+      });
 
+      // Verify session
+      let sessionReady = false;
+      for (let i = 0; i < 5; i++) {
+        const session = await fetchAuthSession();
+        if (session.tokens?.idToken) {
+          sessionReady = true;
+          break;
+        }
+        await new Promise(res => setTimeout(res, 250));
+      }
+
+      if (!sessionReady) throw new Error('Session not ready');
       // Success flow
       setIsVerifyingPin(false);
       onSuccess();
@@ -330,8 +343,8 @@ const WellSaidOnboarding = ({ onComplete }) => {
         // Always try to sign up first (will work for new users)
         const tempPassword = generateTempPassword();
 
-        await signUp({
-          username: value,
+        const signUpResult = await signUp({
+          username: value, // Using email as username initially
           password: tempPassword,
           options: {
             userAttributes: {
@@ -345,6 +358,7 @@ const WellSaidOnboarding = ({ onComplete }) => {
           ...prev,
           email: value,
           password: tempPassword,
+          cognitoUsername: signUpResult.userId
         }));
 
       } catch (err) {
@@ -374,111 +388,6 @@ const WellSaidOnboarding = ({ onComplete }) => {
   };
 
   const [isVerifyingPin, setIsVerifyingPin] = useState(false);
-
-  // const handlePinChange = (index, value) => {
-  //   if (value.length <= 1 && /^\d*$/.test(value)) {
-  //     const newPin = [...pinDigits];
-  //     newPin[index] = value;
-  //     setPinDigits(newPin);
-  //
-  //     if (value && index < 5) {
-  //       document.getElementById(`pin-${index + 1}`)?.focus();
-  //     }
-  //
-  //     if (newPin.every(digit => digit !== '')) {
-  //       const fullPin = newPin.join('');
-  //       setUserData(prev => ({ ...prev, pin: fullPin }));
-  //       setIsVerifyingPin(true);
-  //       setShowPinInput(false);
-  //
-  //       const runSequence = async () => {
-  //         const username = userData.email;
-  //         const confirmationCode = fullPin;
-  //         const password = userData.password;
-  //
-  //         console.log('Attempting confirmSignUp with:', {
-  //           username,
-  //           password,
-  //           confirmationCode,
-  //           userData: {
-  //             ...userData,
-  //             pin: '***' // Don’t log full pin
-  //           }
-  //         });
-  //
-  //         try {
-  //           await typeMessage("Verifying your code...", true, 0);
-  //
-  //           const confirmResult = await confirmSignUp({
-  //             username,
-  //             confirmationCode
-  //           });
-  //           console.log('✅ confirmSignUp successful! Result:', confirmResult);
-  //
-  //           const signInResult = await signIn({ username, password });
-  //           console.log("📨 signIn() completed:", signInResult);
-  //
-  //           // ⏳ Wait for session to hydrate
-  //           let sessionReady = false;
-  //           for (let i = 0; i < 10; i++) {
-  //             try {
-  //               const session = await fetchAuthSession();
-  //               const idToken = session.tokens?.idToken?.toString();
-  //
-  //               console.log(
-  //                 `🔍 Session check ${i + 1}:`,
-  //                 idToken ? '✅ ID token present' : '❌ No ID token yet'
-  //               );
-  //
-  //               if (idToken) {
-  //                 sessionReady = true;
-  //                 break;
-  //               }
-  //             } catch (err) {
-  //               console.warn(`⚠️ Error during session fetch on attempt ${i + 1}:`, err);
-  //             }
-  //
-  //             await new Promise(res => setTimeout(res, 250));
-  //           }
-  //
-  //           if (!sessionReady) {
-  //             console.error("❌ Session was not ready after retries");
-  //           } else {
-  //             console.log("🎉 Session is ready — continuing to onboarding completion");
-  //           }
-  //
-  //           await typeMessage("✓ Verified successfully!", true, 0);
-  //           setIsVerifyingPin(false);
-  //
-  //           await new Promise(res => setTimeout(res, 1500));
-  //           setMessages([]);
-  //           setCurrentStep('conversation');
-  //
-  //           await new Promise(res => setTimeout(res, 300));
-  //           await typeMessage("Great! Now let's get to work...", true, 0);
-  //         } catch (err) {
-  //           console.error('❌ Verification failed:', {
-  //             errorName: err.name,
-  //             errorMessage: err.message,
-  //             errorStack: err.stack,
-  //             errorDetails: err,
-  //             inputValues: {
-  //               username,
-  //               confirmationCode
-  //             }
-  //           });
-  //
-  //           await typeMessage("The code was invalid. Please double-check and try again.", true, 0);
-  //           setIsVerifyingPin(false);
-  //           setShowPinInput(true);
-  //         }
-  //       };
-  //
-  //       runSequence();
-  //     }
-  //   }
-  // };
-
   const handleConversationSubmit = () => {
     if (!currentInput.trim()) return;
 
@@ -715,24 +624,6 @@ const WellSaidOnboarding = ({ onComplete }) => {
       }, 2000);
     }
   };
-  // ... (keep all your existing helper functions like handlePinChange, handleConversationSubmit, etc.)
-
-  // const handlePaste = (e) => {
-  //   e.preventDefault();
-  //   const pasted = e.clipboardData.getData('text').trim();
-  //
-  //   if (/^\d{6}$/.test(pasted)) {
-  //     const newDigits = pasted.split('');
-  //     setPinDigits(newDigits);
-  //
-  //     // Optionally save to userData
-  //     const fullPin = newDigits.join('');
-  //     setUserData((prev) => ({ ...prev, pin: fullPin }));
-  //
-  //     // Trigger your PIN verification flow
-  //     runSequence(); // Or verifyCode(fullPin), if that's what you're using
-  //   }
-  // };
 
   return (
     <div className="fixed inset-0 bg-gradient-to-br from-blue-50 to-indigo-50 z-50 overflow-y-auto">
@@ -801,6 +692,8 @@ const WellSaidOnboarding = ({ onComplete }) => {
         {showPinInput && currentStep === 'registration' && (
           <PinVerification
             email={userData.email}
+            password={userData.password}
+            cognitoUsername={userData.cognitoUsername}
             typeMessage={typeMessage}
             setIsVerifyingPin={setIsVerifyingPin}
             onSuccess={async () => {
