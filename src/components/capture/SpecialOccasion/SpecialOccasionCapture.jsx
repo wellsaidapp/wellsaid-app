@@ -1,6 +1,8 @@
 // Imports
 import React, { useState, useEffect, useRef } from 'react';
-import { User, Check, Plus, Mic, Send, Home, PlusCircle, Library, MicOff, ChevronDown, ChevronUp, Save, Sparkles, SendIcon, X } from 'lucide-react';
+import { User, Check, Plus, Mic, Send, Home, PlusCircle,
+  Library, MicOff, ChevronDown, ChevronUp, Save, Sparkles,
+  SendIcon, X, Play } from 'lucide-react';
 import WellSaidIcon from '../../../assets/icons/WellSaidIcon';
 import { useSystemCollections } from '../../../context/SystemCollectionsContext';
 import { fetchAuthSession } from 'aws-amplify/auth';
@@ -76,11 +78,15 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
     const initialized = useRef(false);
     const [isSavingExit, setIsSavingExit] = useState(false);
     const [isSavingInsight, setIsSavingInsight] = useState(false);
-
+    const [hasShownSparklesIntro, setHasShownSparklesIntro] = useState(false);
+    const [aiPromptCount, setAiPromptCount] = useState(0);
+    const [lastInsightIndex, setLastInsightIndex] = useState(null);
     const [conversationTranscript, setConversationTranscript] = useState([]);
     const [insightCount, setInsightCount] = useState(0);
     const [aiMessageCount, setAiMessageCount] = useState(0);
     const generateMessageId = () => Date.now() + Math.random().toString(36).substr(2, 9);
+    const [sparklesIntroShown, setSparklesIntroShown] = useState(false);
+    const [activeSparklesIndex, setActiveSparklesIndex] = useState(null);
 
     const contextSummary = `This collection was created to capture meaningful reflections, stories, and wisdom for a special occasion.`;
     const [trackBotPrompts, setTrackBotPrompts] = useState(false);
@@ -116,7 +122,7 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
             ...prev,
             userCollectionName: occasionData.userCollectionName || 'Untitled'
           }));
-          typeMessage("Alright, let's get back to it.", true); // 👈 Use your placeholder question here
+          typeMessage("Alright, let's get back to it. Press the play button when you're ready to start our conversation.", true); // 👈 Use your placeholder question here
           setConversationState('milestone_type'); // Or jump to next state directly
         } else {
           setHasAskedForName(true);
@@ -350,15 +356,15 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
     };
 
     const handleInputSubmit = async () => {
-      if (!currentInput.trim()) return;
+      const input = currentInput.trim() || "I'm ready to begin";
+
+      if (!input && !occasion.userCollectionName) return;
 
       if (listening) {
         await SpeechRecognition.stopListening();
         setIsRecording(false);
         resetTranscript();
       }
-
-      const input = currentInput.trim();
 
       // Step 1: Handle collection name logic
       if (!occasion.userCollectionName) {
@@ -434,6 +440,7 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
         if (reply) {
           // typeMessage will handle adding bot response to transcript
           typeMessage(reply, true);
+          setAiPromptCount(prev => prev + 1);
         } else {
           typeMessage("Hmm, I didn't catch that. Could you try rephrasing?", true);
         }
@@ -523,16 +530,41 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
     };
 
     const shouldShowSparkles = (index) => {
-      const botMessages = messages.filter((m) => m.isBot && !m.text.includes("Creating") && !m.text.includes("What do you want to name"));
-      const currentMessage = messages[index];
+      const message = messages[index];
 
-      const eligibleIndex = botMessages.indexOf(currentMessage);
-      return eligibleIndex >= 2; // Show after 3rd eligible bot message
-    };
+      // Only show on bot messages that aren't system messages
+      if (!message.isBot || message.type === 'system') return false;
 
-    const isThirdBotMessage = (index) => {
-      const botMessages = messages.filter((m) => m.isBot);
-      return botMessages[2] && messages[index] === botMessages[2];
+      // Filter out non-conversational bot messages
+      const isConversationalMessage = !(
+        message.text.includes("Creating") ||
+        message.text.includes("What do you want to name") ||
+        message.text.includes("Alright, let's get back to it") ||
+        message.text.includes("Welcome back") ||
+        message.text.includes("Let's begin")
+      );
+
+      // Get all conversational bot messages
+      const conversationalBotMessages = messages.filter(m =>
+        m.isBot &&
+        !m.text.includes("Creating") &&
+        !m.text.includes("What do you want to name") &&
+        !m.text.includes("Alright, let's get back to it") &&
+        !m.text.includes("Welcome back") &&
+        !m.text.includes("Let's begin")
+      );
+
+      // Find the index of the current message in the filtered list
+      const messageIndex = conversationalBotMessages.findIndex(m => m.timestamp === message.timestamp);
+
+      // Show sparkles if:
+      // 1. It's a conversational message AND
+      // 2. It's the 3rd or later conversational message AND
+      // 3. No insight has been saved yet (activeSparklesIndex is null) OR
+      //    It's a message after the one that first triggered sparkles
+      return isConversationalMessage &&
+             messageIndex >= 2 &&
+             (activeSparklesIndex === null || index >= activeSparklesIndex);
     };
 
     const openInsightEditorModal = ({ autoGeneratedPrompt = '', autoGeneratedResponse = '' }) => {
@@ -754,6 +786,9 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
         setInsightDraft({ prompt: '', response: '' });
         setShowInsightModal(false);
         setInsightPromptCount(0);
+        setAiPromptCount(0);
+        setActiveSparklesIndex(null);
+        setSparklesIntroShown(false);
 
         // ⬇️ Inject system message after modal closes
         setMessages((prevMessages) => [
@@ -887,7 +922,9 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
             <div className="bg-white rounded-2xl shadow-lg p-6 space-y-4">
               {messages.map((message, index) => {
                 const showSparkles = shouldShowSparkles(index);
+                const isFirstSparkles = showSparkles && activeSparklesIndex === null;
                 const isLastMessage = index === messages.length - 1;
+                const isFirstBotMessage = index === 0 && message.isBot;
 
                 if (message.type === 'continuePrompt') {
                   return (
@@ -971,11 +1008,33 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
                       )}
                     </div>
 
-                    {showSparkles && (
-                      <div className="-mt-2 ml-1">
+                    {isFirstBotMessage && (
+                      <div className="relative top-2 ml-1">
                         <button
-                          onClick={() => handleSparklesClick(index)}
-                          className="p-2 bg-blue-100 hover:bg-blue-200 rounded-full shadow-sm border border-blue-300 transition"
+                          onClick={() => {
+                            // Simulate user response to kick off conversation
+                            handleInputSubmit();
+                          }}
+                          className="p-2 bg-green-100 hover:bg-green-200 rounded-full shadow-sm border border-green-300 transition"
+                          title="Start conversation"
+                        >
+                          <Play className="w-4 h-4 text-green-600" />
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Sparkles button with compact help text */}
+                    {showSparkles && (
+                      <div className="flex items-center gap-1 ml-1">
+                        <button
+                          onClick={() => {
+                            if (isFirstSparkles) {
+                              setSparklesIntroShown(true);
+                              setActiveSparklesIndex(index);
+                            }
+                            handleSparklesClick(index);
+                          }}
+                          className="flex-shrink-0 p-1.5 bg-blue-100 hover:bg-blue-200 rounded-full shadow-sm border border-blue-300 transition"
                           title="Turn this into an Insight Card"
                           disabled={loadingSparklesIndex === index}
                         >
@@ -1003,6 +1062,11 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
                             <Sparkles className="w-4 h-4 text-blue-500" />
                           )}
                         </button>
+                        {isFirstSparkles && !sparklesIntroShown && (
+                          <span className="text-xs text-gray-500 whitespace-nowrap">
+                            Click to reveal AI-generated insight
+                          </span>
+                        )}
                       </div>
                     )}
 
