@@ -86,6 +86,134 @@ const EmailInputStep = ({ onSubmit }) => {
   );
 };
 
+const PinVerification = ({
+  email,
+  onSuccess,
+  onResend,
+  initialErrorMessage
+}) => {
+  const [digits, setDigits] = useState(['', '', '', '', '', '']);
+  const [error, setError] = useState(initialErrorMessage);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isResending, setIsResending] = useState(false);
+  const inputsRef = useRef([]);
+
+  // Handle paste event
+  const handlePaste = (e) => {
+    e.preventDefault();
+    const pastedData = e.clipboardData.getData('text/plain').trim();
+
+    if (/^\d{6}$/.test(pastedData)) {
+      const newDigits = pastedData.split('').slice(0, 6);
+      setDigits(newDigits);
+      handleSubmit(newDigits.join(''));
+    }
+  };
+
+  // Handle digit change
+  const handleDigitChange = (index, value) => {
+    if (!/^\d?$/.test(value)) return;
+
+    const newDigits = [...digits];
+    newDigits[index] = value;
+    setDigits(newDigits);
+    setError(null);
+
+    // Auto-focus next if a digit was entered
+    if (value && index < 5) {
+      inputsRef.current[index + 1]?.focus();
+    }
+
+    // Auto-submit if last digit entered
+    if (index === 5 && value) {
+      handleSubmit(newDigits.join(''));
+    }
+  };
+
+  // Handle backspace
+  const handleKeyDown = (index, e) => {
+    if (e.key === 'Backspace' && !digits[index] && index > 0) {
+      inputsRef.current[index - 1]?.focus();
+    }
+  };
+
+  // Submit handler
+  const handleSubmit = async (fullCode = digits.join('')) => {
+    if (fullCode.length !== 6) return;
+
+    setIsSubmitting(true);
+    try {
+      await confirmSignUp({
+        username: email,
+        confirmationCode: fullCode
+      });
+      onSuccess();
+    } catch (err) {
+      console.error('Verification failed:', err);
+      setError('Invalid verification code. Please try again.');
+      setDigits(['', '', '', '', '', '']);
+      inputsRef.current[0]?.focus();
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Resend code handler
+  const handleResend = async () => {
+    setIsResending(true);
+    try {
+      await onResend();
+      setError('A new code has been sent to your email.');
+    } catch (err) {
+      setError('Failed to resend code. Please try again.');
+    } finally {
+      setIsResending(false);
+    }
+  };
+
+  return (
+    <div className="bg-white rounded-2xl shadow-lg p-6 mb-4">
+      {error && (
+        <div className={`mb-4 p-3 rounded-lg ${
+          error.includes('new code') ? 'bg-blue-50 text-blue-700' : 'bg-red-50 text-red-700'
+        }`}>
+          {error}
+        </div>
+      )}
+
+      <p className="text-center text-gray-600 mb-4">Enter your 6-digit code:</p>
+
+      <div className="flex justify-center gap-2 mb-6">
+        {digits.map((digit, index) => (
+          <input
+            key={index}
+            ref={(el) => (inputsRef.current[index] = el)}
+            type="tel"
+            inputMode="numeric"
+            value={digit}
+            onChange={(e) => handleDigitChange(index, e.target.value)}
+            onPaste={handlePaste}
+            onKeyDown={(e) => handleKeyDown(index, e)}
+            className="w-12 h-12 text-center text-xl font-bold border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none"
+            maxLength={1}
+            disabled={isSubmitting}
+          />
+        ))}
+      </div>
+
+      <div className="text-center">
+        <button
+          onClick={handleResend}
+          disabled={isResending}
+          className="text-blue-600 hover:text-blue-800 text-sm font-medium disabled:opacity-50"
+        >
+          {isResending ? 'Sending...' : 'Resend Code'}
+        </button>
+      </div>
+    </div>
+  );
+};
+
 const WellSaidOnboarding = ({ onComplete }) => {
   // Start directly with registration
   const [currentStep, setCurrentStep] = useState('registration');
@@ -104,7 +232,7 @@ const WellSaidOnboarding = ({ onComplete }) => {
   const [isRecording, setIsRecording] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   const [showPinInput, setShowPinInput] = useState(false);
-  const [pinDigits, setPinDigits] = useState(['', '', '', '', '', '']);
+  // const [pinDigits, setPinDigits] = useState(['', '', '', '', '', '']);
   const [currentPersonInput, setCurrentPersonInput] = useState('');
   const [currentPerson, setCurrentPerson] = useState(null);
   const [showPersonForm, setShowPersonForm] = useState(false);
@@ -226,109 +354,109 @@ const WellSaidOnboarding = ({ onComplete }) => {
 
   const [isVerifyingPin, setIsVerifyingPin] = useState(false);
 
-  const handlePinChange = (index, value) => {
-    if (value.length <= 1 && /^\d*$/.test(value)) {
-      const newPin = [...pinDigits];
-      newPin[index] = value;
-      setPinDigits(newPin);
-
-      if (value && index < 5) {
-        document.getElementById(`pin-${index + 1}`)?.focus();
-      }
-
-      if (newPin.every(digit => digit !== '')) {
-        const fullPin = newPin.join('');
-        setUserData(prev => ({ ...prev, pin: fullPin }));
-        setIsVerifyingPin(true);
-        setShowPinInput(false);
-
-        const runSequence = async () => {
-          const username = userData.email;
-          const confirmationCode = fullPin;
-          const password = userData.password;
-
-          console.log('Attempting confirmSignUp with:', {
-            username,
-            password,
-            confirmationCode,
-            userData: {
-              ...userData,
-              pin: '***' // Don’t log full pin
-            }
-          });
-
-          try {
-            await typeMessage("Verifying your code...", true, 0);
-
-            const confirmResult = await confirmSignUp({
-              username,
-              confirmationCode
-            });
-            console.log('✅ confirmSignUp successful! Result:', confirmResult);
-
-            const signInResult = await signIn({ username, password });
-            console.log("📨 signIn() completed:", signInResult);
-
-            // ⏳ Wait for session to hydrate
-            let sessionReady = false;
-            for (let i = 0; i < 10; i++) {
-              try {
-                const session = await fetchAuthSession();
-                const idToken = session.tokens?.idToken?.toString();
-
-                console.log(
-                  `🔍 Session check ${i + 1}:`,
-                  idToken ? '✅ ID token present' : '❌ No ID token yet'
-                );
-
-                if (idToken) {
-                  sessionReady = true;
-                  break;
-                }
-              } catch (err) {
-                console.warn(`⚠️ Error during session fetch on attempt ${i + 1}:`, err);
-              }
-
-              await new Promise(res => setTimeout(res, 250));
-            }
-
-            if (!sessionReady) {
-              console.error("❌ Session was not ready after retries");
-            } else {
-              console.log("🎉 Session is ready — continuing to onboarding completion");
-            }
-
-            await typeMessage("✓ Verified successfully!", true, 0);
-            setIsVerifyingPin(false);
-
-            await new Promise(res => setTimeout(res, 1500));
-            setMessages([]);
-            setCurrentStep('conversation');
-
-            await new Promise(res => setTimeout(res, 300));
-            await typeMessage("Great! Now let's get to work...", true, 0);
-          } catch (err) {
-            console.error('❌ Verification failed:', {
-              errorName: err.name,
-              errorMessage: err.message,
-              errorStack: err.stack,
-              errorDetails: err,
-              inputValues: {
-                username,
-                confirmationCode
-              }
-            });
-
-            await typeMessage("The code was invalid. Please double-check and try again.", true, 0);
-            setIsVerifyingPin(false);
-            setShowPinInput(true);
-          }
-        };
-
-        runSequence();
-      }
-    }
-  };
+  // const handlePinChange = (index, value) => {
+  //   if (value.length <= 1 && /^\d*$/.test(value)) {
+  //     const newPin = [...pinDigits];
+  //     newPin[index] = value;
+  //     setPinDigits(newPin);
+  //
+  //     if (value && index < 5) {
+  //       document.getElementById(`pin-${index + 1}`)?.focus();
+  //     }
+  //
+  //     if (newPin.every(digit => digit !== '')) {
+  //       const fullPin = newPin.join('');
+  //       setUserData(prev => ({ ...prev, pin: fullPin }));
+  //       setIsVerifyingPin(true);
+  //       setShowPinInput(false);
+  //
+  //       const runSequence = async () => {
+  //         const username = userData.email;
+  //         const confirmationCode = fullPin;
+  //         const password = userData.password;
+  //
+  //         console.log('Attempting confirmSignUp with:', {
+  //           username,
+  //           password,
+  //           confirmationCode,
+  //           userData: {
+  //             ...userData,
+  //             pin: '***' // Don’t log full pin
+  //           }
+  //         });
+  //
+  //         try {
+  //           await typeMessage("Verifying your code...", true, 0);
+  //
+  //           const confirmResult = await confirmSignUp({
+  //             username,
+  //             confirmationCode
+  //           });
+  //           console.log('✅ confirmSignUp successful! Result:', confirmResult);
+  //
+  //           const signInResult = await signIn({ username, password });
+  //           console.log("📨 signIn() completed:", signInResult);
+  //
+  //           // ⏳ Wait for session to hydrate
+  //           let sessionReady = false;
+  //           for (let i = 0; i < 10; i++) {
+  //             try {
+  //               const session = await fetchAuthSession();
+  //               const idToken = session.tokens?.idToken?.toString();
+  //
+  //               console.log(
+  //                 `🔍 Session check ${i + 1}:`,
+  //                 idToken ? '✅ ID token present' : '❌ No ID token yet'
+  //               );
+  //
+  //               if (idToken) {
+  //                 sessionReady = true;
+  //                 break;
+  //               }
+  //             } catch (err) {
+  //               console.warn(`⚠️ Error during session fetch on attempt ${i + 1}:`, err);
+  //             }
+  //
+  //             await new Promise(res => setTimeout(res, 250));
+  //           }
+  //
+  //           if (!sessionReady) {
+  //             console.error("❌ Session was not ready after retries");
+  //           } else {
+  //             console.log("🎉 Session is ready — continuing to onboarding completion");
+  //           }
+  //
+  //           await typeMessage("✓ Verified successfully!", true, 0);
+  //           setIsVerifyingPin(false);
+  //
+  //           await new Promise(res => setTimeout(res, 1500));
+  //           setMessages([]);
+  //           setCurrentStep('conversation');
+  //
+  //           await new Promise(res => setTimeout(res, 300));
+  //           await typeMessage("Great! Now let's get to work...", true, 0);
+  //         } catch (err) {
+  //           console.error('❌ Verification failed:', {
+  //             errorName: err.name,
+  //             errorMessage: err.message,
+  //             errorStack: err.stack,
+  //             errorDetails: err,
+  //             inputValues: {
+  //               username,
+  //               confirmationCode
+  //             }
+  //           });
+  //
+  //           await typeMessage("The code was invalid. Please double-check and try again.", true, 0);
+  //           setIsVerifyingPin(false);
+  //           setShowPinInput(true);
+  //         }
+  //       };
+  //
+  //       runSequence();
+  //     }
+  //   }
+  // };
 
   const handleConversationSubmit = () => {
     if (!currentInput.trim()) return;
@@ -568,22 +696,22 @@ const WellSaidOnboarding = ({ onComplete }) => {
   };
   // ... (keep all your existing helper functions like handlePinChange, handleConversationSubmit, etc.)
 
-  const handlePaste = (e) => {
-    e.preventDefault();
-    const pasted = e.clipboardData.getData('text').trim();
-
-    if (/^\d{6}$/.test(pasted)) {
-      const newDigits = pasted.split('');
-      setPinDigits(newDigits);
-
-      // Optionally save to userData
-      const fullPin = newDigits.join('');
-      setUserData((prev) => ({ ...prev, pin: fullPin }));
-
-      // Trigger your PIN verification flow
-      runSequence(); // Or verifyCode(fullPin), if that's what you're using
-    }
-  };
+  // const handlePaste = (e) => {
+  //   e.preventDefault();
+  //   const pasted = e.clipboardData.getData('text').trim();
+  //
+  //   if (/^\d{6}$/.test(pasted)) {
+  //     const newDigits = pasted.split('');
+  //     setPinDigits(newDigits);
+  //
+  //     // Optionally save to userData
+  //     const fullPin = newDigits.join('');
+  //     setUserData((prev) => ({ ...prev, pin: fullPin }));
+  //
+  //     // Trigger your PIN verification flow
+  //     runSequence(); // Or verifyCode(fullPin), if that's what you're using
+  //   }
+  // };
 
   return (
     <div className="fixed inset-0 bg-gradient-to-br from-blue-50 to-indigo-50 z-50 overflow-y-auto">
@@ -648,27 +776,31 @@ const WellSaidOnboarding = ({ onComplete }) => {
           <div ref={messagesEndRef} />
         </div>
 
-        {/* PIN Input */}
+        {/* Enhanced PIN Verification */}
         {showPinInput && currentStep === 'registration' && (
-          <div className="bg-white rounded-2xl shadow-lg p-6 mb-4">
-            <p className="text-center text-gray-600 mb-4">Enter your 6-digit code:</p>
-            <div className="flex justify-center gap-2">
-              {pinDigits.map((digit, index) => (
-                <input
-                  key={index}
-                  id={`pin-${index}`}
-                  type="tel"
-                  inputMode="numeric"
-                  pattern="[0-9]*"
-                  value={digit}
-                  onChange={(e) => handlePinChange(index, e.target.value)}
-                  onPaste={(e) => handlePaste(e)}
-                  className="w-12 h-12 text-center text-xl font-bold border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:outline-none"
-                  maxLength={1}
-                />
-              ))}
-            </div>
-          </div>
+          <PinVerification
+            email={userData.email}
+            onSuccess={async () => {
+              await typeMessage("✓ Verified successfully!", true, 0);
+              setIsVerifyingPin(false);
+
+              // Your existing success flow:
+              await new Promise(res => setTimeout(res, 1500));
+              setMessages([]);
+              setCurrentStep('conversation');
+              await new Promise(res => setTimeout(res, 300));
+              await typeMessage("Great! Now let's get to work...", true, 0);
+            }}
+            onResend={async () => {
+              try {
+                await resendSignUpCode({ username: userData.email });
+              } catch (err) {
+                console.error('Resend failed:', err);
+                throw err; // Let PinVerification handle the error display
+              }
+            }}
+            initialErrorMessage={isVerifyingPin ? 'Verifying...' : null}
+          />
         )}
 
         {/* Registration Input */}
