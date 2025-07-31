@@ -28,7 +28,7 @@ const CaptureOptionsModal = ({
             onClick={() => {
               setCaptureMode('insight');
               setShowCaptureOptions(false);
-              setCurrentView('capture');
+              setCurrentView('insightBuilder');
             }}
             className="w-full bg-gradient-to-br from-green-500 to-teal-500 text-white rounded-2xl p-6 text-left hover:shadow-lg transition-all hover:scale-[1.02]"
           >

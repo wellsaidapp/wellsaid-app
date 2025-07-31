@@ -15,6 +15,7 @@ import MainLayout from './components/appLayout/MainLayout';
 import SelectPersonView from './components/capture/SpecialOccasion/SelectPersonView';
 import CollectionSelectionView from './components/capture/SpecialOccasion/CollectionSelectionView';
 import SpecialOccasionCapture from './components/capture/SpecialOccasion/SpecialOccasionCapture';
+import InsightBuilderCapture from './components/capture/InsightBuilder/InsightBuilderCapture';
 
 const MyComponent = () => {
   const { userCollections, loading } = useUserCollections();
@@ -114,7 +115,8 @@ const WellSaidApp = () => {
     const modalViews = [
       'specialOccasionSelectPerson',
       'specialOccasionSelectCollections',
-      'capture'
+      'capture',
+      'insightBuilder'
     ];
 
     const modalIsOpen = modalViews.includes(currentView);
@@ -259,6 +261,14 @@ const WellSaidApp = () => {
           collections={userCollections}
           user={userData}
           setCurrentView={setCurrentView}
+        />;
+      case 'insightBuilder':  // Add this new case
+        return <InsightBuilderCapture
+          setCurrentView={setCurrentView}
+          onComplete={(savedInsight) => {
+            // Handle any post-save logic if needed
+            setCurrentView('home');
+          }}
         />;
       case 'specialOccasionSelectPerson':
         return (

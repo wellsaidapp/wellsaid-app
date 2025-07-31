@@ -5,6 +5,7 @@ import { User, Check, Plus, Mic, Send, Home, PlusCircle,
   SendIcon, X, Play } from 'lucide-react';
 import WellSaidIcon from '../../../assets/icons/WellSaidIcon';
 import { useSystemCollections } from '../../../context/SystemCollectionsContext';
+import { useUserCollections } from '../../../context/UserCollectionsContext';
 import { fetchAuthSession } from 'aws-amplify/auth';
 import toast from 'react-hot-toast';
 import ToastMessage from '../../library/BookCreation/ToastMessage';
@@ -87,7 +88,7 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
     const generateMessageId = () => Date.now() + Math.random().toString(36).substr(2, 9);
     const [sparklesIntroShown, setSparklesIntroShown] = useState(false);
     const [activeSparklesIndex, setActiveSparklesIndex] = useState(null);
-
+    const { refreshUserCollections } = useUserCollections();
     const contextSummary = `This collection was created to capture meaningful reflections, stories, and wisdom for a special occasion.`;
     const [trackBotPrompts, setTrackBotPrompts] = useState(false);
     const [insightPromptCount, setInsightPromptCount] = useState(0);
@@ -656,6 +657,7 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
             onDismiss={() => toast.dismiss(t.id)}
           />
         ));
+        await refreshUserCollections();
         return result;
 
       } catch (err) {
