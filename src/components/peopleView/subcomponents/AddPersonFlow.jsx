@@ -38,7 +38,7 @@ const RelationshipModal = ({ name, onSelect, onClose }) => {
             >
               <div className="flex items-center justify-between">
                 <span className="font-medium text-gray-800">{relationship}</span>
-                <ArrowRight size={18} className="text-gray-400" />
+                <ArrowRight className="w-5 h-5 text-white disabled:text-gray-400" />
               </div>
             </button>
           ))}

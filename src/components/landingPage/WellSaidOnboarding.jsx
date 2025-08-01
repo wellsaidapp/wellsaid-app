@@ -50,7 +50,7 @@ const RelationshipModal = ({ name, onSelect, onClose }) => {
             >
               <div className="flex items-center justify-between">
                 <span className="font-medium text-gray-800">{relationship}</span>
-                <ArrowRight size={18} className="text-gray-400" />
+                <ArrowRight className="w-5 h-5 text-white disabled:text-gray-400" />
               </div>
             </button>
           ))}
@@ -224,7 +224,7 @@ const OnboardingAddPersonFlow = ({ onComplete, onCancel }) => {
             <WellSaidIconOnboarding size={50} />
             <div>
               <img src={logo} alt="WellSaid" className="h-7 w-25" />
-              <p className="text-sm text-gray-500">Add a Person</p>
+              <p className="text-[16px] text-gray-500">Add a Person</p>
             </div>
           </div>
           <button onClick={onCancel} className="text-gray-400 hover:text-gray-600">
@@ -237,7 +237,7 @@ const OnboardingAddPersonFlow = ({ onComplete, onCancel }) => {
           <div className="space-y-4">
             {messages.map((msg, idx) => (
               <div key={idx} className={`flex ${msg.isBot ? 'justify-start' : 'justify-end'}`}>
-                <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-2xl text-sm ${
+                <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-2xl text-[16px] ${
                   msg.isBot ? 'bg-gray-100 text-gray-800' : 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white'
                 }`}>
                   {msg.isBot ? (
@@ -292,7 +292,7 @@ const OnboardingAddPersonFlow = ({ onComplete, onCancel }) => {
                   disabled={!inputValue.trim() || isSubmitting}
                   className="p-3 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed"
                 >
-                  <ArrowRight className="w-5 h-5" />
+                  <ArrowRight className="w-5 h-5 text-white disabled:text-gray-400" />
                 </button>
               </>
             ) : (
@@ -320,7 +320,7 @@ const OnboardingAddPersonFlow = ({ onComplete, onCancel }) => {
                   disabled={!inputValue.trim() || isSubmitting}
                   className="p-3 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed"
                 >
-                  <Send className="w-5 h-5" />
+                  <Send className="w-5 h-5 text-white disabled:text-gray-400" />
                 </button>
               </>
             )}
@@ -368,7 +368,7 @@ const NameInputStep = ({ onSubmit }) => {
         onClick={handleSubmit}
         className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white p-3 rounded-xl hover:from-blue-600 hover:to-indigo-600 transition-colors"
       >
-        <ArrowRight className="w-5 h-5" />
+        <ArrowRight className="w-5 h-5 text-white disabled:text-gray-400" />
       </button>
     </>
   );
@@ -404,7 +404,7 @@ const EmailInputStep = ({ onSubmit }) => {
         onClick={handleSubmit}
         className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white p-3 rounded-xl hover:from-blue-600 hover:to-indigo-600 transition-colors"
       >
-        <ArrowRight className="w-5 h-5" />
+        <ArrowRight className="w-5 h-5 text-white disabled:text-gray-400" />
       </button>
     </>
   );
@@ -553,7 +553,7 @@ const PinVerification = ({
         <button
           onClick={handleResend}
           disabled={isResending}
-          className="text-blue-600 hover:text-blue-800 text-sm font-medium disabled:opacity-50"
+          className="text-blue-600 hover:text-blue-800 text-[16px] font-medium disabled:opacity-50"
         >
           {isResending ? 'Sending...' : 'Resend Code'}
         </button>
@@ -946,7 +946,7 @@ const WellSaidOnboarding = ({ onComplete }) => {
                         }}
                       />
                     ) : (
-                      <p className="text-sm">{message.text}</p>
+                      <p className="text-[16px]">{message.text}</p>
                     )
                   )}
                 </div>
@@ -1051,7 +1051,7 @@ const WellSaidOnboarding = ({ onComplete }) => {
                     : 'bg-gray-200 text-gray-400 cursor-not-allowed'
                 }`}
               >
-                <Send className="w-5 h-5" />
+                <Send className="w-5 h-5 text-white disabled:text-gray-400" />
               </button>
             </div>
           </div>
@@ -1069,7 +1069,7 @@ const WellSaidOnboarding = ({ onComplete }) => {
           <div className="bg-white rounded-2xl shadow-lg p-6 mt-4">
             <div className="flex justify-between items-center mb-4">
               <h3 className="font-semibold text-gray-800">People in your circle</h3>
-              <span className="text-sm text-gray-500">{userData.people.length} added</span>
+              <span className="text-[16px] text-gray-500">{userData.people.length} added</span>
             </div>
 
             {userData.people.length > 0 ? (
@@ -1082,7 +1082,7 @@ const WellSaidOnboarding = ({ onComplete }) => {
                     <p className="font-medium text-gray-800">
                       {person.name || `Person ${index + 1}`}
                     </p>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-[16px] text-gray-500">
                       {person.relationship} {person.age && `• ${person.age} years old`}
                     </p>
                   </div>
