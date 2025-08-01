@@ -693,6 +693,7 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
           />
         ));
         await refreshUserCollections();
+        resetCollectionState();
         return result;
 
       } catch (err) {
@@ -810,6 +811,7 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
         const finalSummary = summary || contextSummary;
 
         await handleSaveExit(occasion.userCollectionId, finalSummary, exitData);
+
         setIsSavingExit(false);
         setCurrentView('home');
       } catch (err) {
