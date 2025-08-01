@@ -302,7 +302,7 @@ const InsightBuilderCapture = ({ setCurrentView, onComplete }) => {
         if (!token) throw new Error("No auth token");
 
         const response = await fetch(
-          `https://2rjszrulkb.execute-api.us-east-2.amazonaws.com/dev/ai/insight`,
+          `https://2rjszrulkb.execute-api.us-east-2.amazonaws.com/dev/insights/insightBuilder`,
           {
             method: 'POST',
             headers: {

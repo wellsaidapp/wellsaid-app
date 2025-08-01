@@ -84,25 +84,31 @@ const OnboardingAddPersonFlow = ({ onComplete, onCancel }) => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const typeMessage = (message, isBot = true, delay = 0) => {
+  const typeMessage = (message, isBot = true, options = {}) => {
+    const { delay = 0, typeSpeed = 10 } = options; // default to 10ms per character
+
     return new Promise((resolve) => {
       setTimeout(() => {
-        // Check if this exact message already exists
+        // Avoid duplicate messages
         const messageExists = messages.some(
-          msg => msg.text === message && msg.isBot === isBot
+          (msg) => msg.text === message && msg.isBot === isBot
         );
 
         if (!messageExists) {
           setIsTyping(true);
           setTimeout(() => {
-            setMessages(prev => [...prev, {
-              text: message,
-              isBot,
-              timestamp: Date.now()
-            }]);
+            setMessages((prev) => [
+              ...prev,
+              {
+                text: message,
+                isBot,
+                timestamp: Date.now(),
+              },
+            ]);
             setIsTyping(false);
-          }, Math.min(1500, message.length * 30));
+          }, Math.min(1000, message.length * typeSpeed));
         }
+
         resolve();
       }, delay);
     });
@@ -169,7 +175,7 @@ const OnboardingAddPersonFlow = ({ onComplete, onCancel }) => {
     if (conversationState === 'ask_name') {
       setNewPerson(prev => ({ ...prev, name: value }));
       setShowRelationshipModal(true);
-      await typeMessage(`Got it. What's your relationship with ${value}?`, true, 0);
+      await typeMessage(`Got it. What's your relationship with ${value}?`, true, { typeSpeed: 3 });
     } else if (conversationState === 'ask_relationship') {
       setNewPerson(prev => ({ ...prev, relationship: value }));
       await typeMessage(`Thanks. Anything else you'd like us to know about ${newPerson.name}?`, true, 500);
@@ -881,7 +887,7 @@ const WellSaidOnboarding = ({ onComplete }) => {
       console.error("❌ Failed to save onboarding context:", err);
     }
 
-    await typeMessage(summary, true, 0);
+    await typeMessage(summary, true, { typeSpeed: 5 });
     setIsShowingSummary(true);
   };
 
