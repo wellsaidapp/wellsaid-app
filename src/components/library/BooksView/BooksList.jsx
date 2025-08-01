@@ -107,7 +107,7 @@ const BooksList = ({
 
       {/* Optional Description */}
       <p className="text-sm text-gray-600 mb-4">
-        Curated collections and books you've created to share with your loved ones.
+        Curated books you've created to share with your loved ones.
       </p>
 
       {/* Filter Panel */}

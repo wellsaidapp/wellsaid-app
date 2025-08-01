@@ -58,7 +58,8 @@ export const UserProvider = ({ children }) => {
       // }
 
       setUserData(data);
-      // console.log("✅ Loaded user data:", data);
+
+      console.log("✅ Loaded user data:", data);
     } catch (err) {
       console.error("❌ Failed to load user data:", err.message);
     } finally {

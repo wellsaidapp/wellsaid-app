@@ -263,7 +263,7 @@ const ProfileView = ({ user, insights = [], individuals = [], collections = [], 
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-blue-50 to-indigo-50 pb-20">
       <div className="p-4">
         <UserProfileCard
-          user={{ ...userData, avatarImage: userData?.avatarUrl?.href }}
+          user={{ ...userData, avatar: userData?.avatarImage }}
           insightsCount={insights.length}
           peopleCount={individuals.length}
           booksCount={getPublishedBooksCount()}

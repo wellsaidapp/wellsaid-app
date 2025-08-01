@@ -183,13 +183,12 @@ const CollectionsList = ({
         </div>
       )}
 
-      {/* Empty State */}
       {visibleSystemCollections.length === 0 && activeUserCollections.length === 0 && (
         <div className="mb-6 flex justify-center">
           <div className="bg-gray-100 text-gray-600 text-sm px-4 py-2 rounded-md inline-block">
             {isPersonView
-              ? `No shared collections with ${individuals[0]?.name || 'this person'} yet.`
-              : 'No active collections yet. Create or add insights to collections to see them here.'}
+              ? `Collections shared with ${individuals[0]?.name || 'this person'} will appear here once insights have been added.`
+              : 'Your collections with insights will appear here once you begin capturing.'}
           </div>
         </div>
       )}
