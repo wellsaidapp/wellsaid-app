@@ -14,6 +14,7 @@ const RelationshipModal = ({ name, onSelect, onClose }) => {
     'Son',
     'Relative',
     'Student',
+    'Camper',
     'Friend',
     'Other'
   ];
