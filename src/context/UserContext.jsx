@@ -40,22 +40,22 @@ export const UserProvider = ({ children }) => {
       const cognitoId = user.userId; // or data.cognitoId if your API returns it now
 
       // 🖼 Try loading avatar image from S3
-      const avatarKey = `Users/Active/${cognitoId}/images/${cognitoId}.jpg`;
-
-      try {
-        const { url } = await getUrl({
-          key: avatarKey,
-          options: {
-            accessLevel: 'public', // or 'private' if using that
-            expiresIn: 3600
-          }
-        });
-
-        data.avatarUrl = url;
-      } catch (avatarErr) {
-        console.warn("⚠️ No avatar found or failed to load:", avatarErr.message);
-        data.avatarUrl = null;
-      }
+      // const avatarKey = `Users/Active/${cognitoId}/images/${cognitoId}.jpg`;
+      //
+      // try {
+      //   const { url } = await getUrl({
+      //     key: avatarKey,
+      //     options: {
+      //       accessLevel: 'public', // or 'private' if using that
+      //       expiresIn: 3600
+      //     }
+      //   });
+      //
+      //   data.avatarUrl = url;
+      // } catch (avatarErr) {
+      //   console.warn("⚠️ No avatar found or failed to load:", avatarErr.message);
+      //   data.avatarUrl = null;
+      // }
 
       setUserData(data);
       // console.log("✅ Loaded user data:", data);

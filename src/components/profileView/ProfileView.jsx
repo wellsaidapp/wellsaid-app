@@ -137,16 +137,34 @@ const ProfileView = ({ user, insights = [], individuals = [], collections = [], 
         }
       }).result;
 
-      const { url: avatarUrl } = await getUrl({
-        key: fileName,
-        options: {
-          accessLevel: 'public'
-        }
-      });
+      const region = 'us-east-2'; // Update if your region is different
+      const bucket = 'wellsaidappdeva7ff28b66c7e4c6785e936c0092e78810660a-dev'; // Your actual bucket name
+      const avatarUrl = `https://${bucket}.s3.${region}.amazonaws.com/public/${fileName}`;
 
       // Add timestamp to URL
       const bustedAvatarUrl = `${avatarUrl}?v=${timestamp}`;
       console.log("🖼 Avatar uploaded to:", bustedAvatarUrl);
+
+      // ⬅️ Right after creating bustedAvatarUrl
+      const session = await fetchAuthSession();
+      const idToken = session.tokens?.idToken?.toString();
+
+      if (!idToken) throw new Error("Missing ID token");
+
+      // ✅ Save the avatarImage URL to the user record
+      const response = await fetch('https://2rjszrulkb.execute-api.us-east-2.amazonaws.com/dev/users/avatar', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: idToken
+        },
+        body: JSON.stringify({ avatarImage: bustedAvatarUrl })
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Failed to save avatar image");
+      }
 
       setCurrentUser(prev => ({
         ...prev,
