@@ -1,23 +1,56 @@
 import { useState } from 'react';
 import { ChevronLeft, Bell, BellOff, Mail, Smartphone } from 'lucide-react';
+import { fetchAuthSession } from 'aws-amplify/auth';
+import { useUser } from '../../../context/UserContext';
 
 const NotificationSettings = ({ user, onBack, onUpdateNotificationSettings }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [settings, setSettings] = useState({
-    emailNotifications: user.notificationSettings?.emailNotifications ?? true,
-    pushNotifications: user.notificationSettings?.pushNotifications ?? true,
-    messageAlerts: user.notificationSettings?.messageAlerts ?? true,
-    weeklyDigest: user.notificationSettings?.weeklyDigest ?? true,
-    goalReminders: user.notificationSettings?.goalReminders ?? true,
-    soundEnabled: user.notificationSettings?.soundEnabled ?? false,
-    quietHoursEnabled: user.notificationSettings?.quietHoursEnabled ?? false,
-    quietHoursStart: user.notificationSettings?.quietHoursStart ?? '22:00',
-    quietHoursEnd: user.notificationSettings?.quietHoursEnd ?? '07:00',
+    emailNotifications: user.emailNotifications ?? true,
+    pushNotifications: user.pushNotifications ?? true,
+    weeklyDigest: user.weeklyDigest ?? true,
+    goalReminders: user.goalReminders ?? true,
   });
+  const { refetchUser } = useUser();
+  const [isSaving, setIsSaving] = useState(false);
 
   const handleSave = async () => {
-    await onUpdateNotificationSettings(settings);
-    setIsEditing(false);
+    setIsSaving(true); // start loading
+
+    try {
+      const token = (await fetchAuthSession()).tokens?.idToken?.toString();
+      if (!token) throw new Error("Missing ID token");
+
+      const patchResponse = await fetch(
+        "https://2rjszrulkb.execute-api.us-east-2.amazonaws.com/dev/users/preferences",
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: token,
+          },
+          body: JSON.stringify({
+            emailNotifications: settings.emailNotifications,
+            pushNotifications: settings.pushNotifications,
+            weeklyDigest: settings.weeklyDigest,
+            goalReminders: settings.goalReminders,
+          }),
+        }
+      );
+
+      if (!patchResponse.ok) {
+        const error = await patchResponse.text();
+        throw new Error(`Preference update failed: ${error}`);
+      }
+
+      await refetchUser(true); // optional if you're using user context
+      setIsEditing(false);
+      console.log("✅ Preferences updated");
+    } catch (err) {
+      console.error("❌ Error updating notification preferences:", err);
+    } finally {
+      setIsSaving(false); // stop loading
+    }
   };
 
   const handleCancel = () => {
@@ -162,12 +195,24 @@ const NotificationSettings = ({ user, onBack, onUpdateNotificationSettings }) =>
 
             {isEditing && (
               <div className="flex justify-end pt-4">
-                <button
-                  onClick={handleSave}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                  Save Changes
-                </button>
+              <button
+                onClick={handleSave}
+                disabled={isSaving}
+                className={`px-4 py-2 rounded-lg transition-colors flex items-center justify-center
+                  ${isSaving ? 'bg-blue-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'} text-white`}
+              >
+                {isSaving ? (
+                  <>
+                    <svg className="animate-spin h-4 w-4 mr-2" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+                    </svg>
+                    Saving...
+                  </>
+                ) : (
+                  'Save Changes'
+                )}
+              </button>
               </div>
             )}
           </div>
