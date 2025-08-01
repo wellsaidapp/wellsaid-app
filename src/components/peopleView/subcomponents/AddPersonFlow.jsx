@@ -194,8 +194,8 @@ const AddPersonFlow = ({ onComplete, onCancel, shouldAutoClose = false }) => {
       // ✅ Hydrate people context
       await refetchPeople();
       // Auto-close if configured to do so
-      if (shouldAutoClose && onComplete) {
-        onComplete();
+      if (onComplete) {
+        onComplete(newPerson); // Pass the new person data if needed
       }
       return newPerson;
 
@@ -240,7 +240,7 @@ const AddPersonFlow = ({ onComplete, onCancel, shouldAutoClose = false }) => {
           <div className="space-y-4">
             {messages.map((msg, idx) => (
               <div key={idx} className={`flex ${msg.isBot ? 'justify-start' : 'justify-end'}`}>
-                <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-2xl text-sm ${
+                <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-2xl text-[16px] ${
                   msg.isBot ? 'bg-gray-100 text-gray-800' : 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white'
                 }`}>
                   {msg.isBot ? (
@@ -300,7 +300,7 @@ const AddPersonFlow = ({ onComplete, onCancel, shouldAutoClose = false }) => {
                       disabled={!inputValue.trim() || isSubmitting}
                       className="p-3 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed"
                     >
-                      <ArrowRight className="w-5 h-5" />
+                      <ArrowRight className="w-5 h-5 text-white disabled:text-gray-400" />
                     </button>
                   </>
                 ) : (
@@ -337,7 +337,7 @@ const AddPersonFlow = ({ onComplete, onCancel, shouldAutoClose = false }) => {
                       disabled={!inputValue.trim() || isSubmitting}
                       className="p-3 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed"
                     >
-                      <Send className="w-5 h-5" />
+                      <Send className="w-5 h-5 text-white disabled:text-gray-400" />
                     </button>
                   </>
                 )}
