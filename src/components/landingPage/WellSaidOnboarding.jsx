@@ -612,6 +612,48 @@ const WellSaidOnboarding = ({ onComplete }) => {
     });
   };
 
+  const saveOnboardingContext = async (summary) => {
+    try {
+      const session = await fetchAuthSession();
+      const token = session.tokens?.idToken?.toString();
+
+      if (!token) {
+        console.error('No authentication token available');
+        return null;
+      }
+
+      const response = await fetch(
+        'https://2rjszrulkb.execute-api.us-east-2.amazonaws.com/dev/users/onboarding',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': token,
+          },
+          body: JSON.stringify({
+            contextText: summary,
+            event: 'onboarding' // Explicitly set event type
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(
+          errorData.error ||
+          errorData.message ||
+          `Request failed with status ${response.status}`
+        );
+      }
+
+      console.log("SAVE ONBOARDING CONTEXT:", response.json);
+      return await response.json();
+    } catch (err) {
+      console.error('Error saving onboarding context:', err.message || err);
+      return null;
+    }
+  };
+
   const generateTempPassword = () => {
     return `TempPass${Math.floor(100000 + Math.random() * 900000)}!`;
   };
@@ -735,6 +777,7 @@ const WellSaidOnboarding = ({ onComplete }) => {
       }
 
       const data = await response.json();
+      console.log("AI ONBOARDING CONTEXT:", data);
 
       if (!data?.summary) {
         throw new Error('Received empty summary from server');
@@ -805,16 +848,38 @@ const WellSaidOnboarding = ({ onComplete }) => {
     setMessages([]);
     setIsTyping(true);
     setCurrentStep("summary");
-
     setIsGeneratingSummary(true);
-    const aiSummary = await generateAISummary();
+
+    let aiSummary = null;
+    try {
+      aiSummary = await generateAISummary();
+      if (!aiSummary) {
+        console.warn("⚠️ AI summary generation returned null or empty string.");
+      } else {
+        console.log("✅ AI summary generated successfully.");
+      }
+    } catch (err) {
+      console.error("❌ Error calling generateAISummary:", err);
+    }
+
     setIsGeneratingSummary(false);
 
-    // Fallback to manual summary if AI fails
+    // Fallback summary if AI failed
     const summary = aiSummary || `You're ${userData.name}, and you're here because ${userData.motivation.toLowerCase()}.
       You're interested in ${userData.topics.toLowerCase()}, and you'd like me to ${userData.helpStyle.toLowerCase()}.
       ${userData.people.length > 0 ? `You want to share insights with ${userData.people.length} special ${userData.people.length === 1 ? 'person' : 'people'} in your life. ` : ''}
       I'm excited to help you on this journey!`;
+
+    try {
+      const result = await saveOnboardingContext(summary);
+      if (!result) {
+        console.warn("⚠️ saveOnboardingContext returned no result object.");
+      } else {
+        console.log("✅ Onboarding context saved successfully.");
+      }
+    } catch (err) {
+      console.error("❌ Failed to save onboarding context:", err);
+    }
 
     await typeMessage(summary, true, 0);
     setIsShowingSummary(true);
