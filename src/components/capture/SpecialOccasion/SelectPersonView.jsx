@@ -4,9 +4,10 @@ import PeopleList from '../../peopleView/subcomponents/PeopleList';
 import { useInsights } from '../../../context/InsightContext';
 import { useSystemCollections } from '../../../context/SystemCollectionsContext';
 import { SquareX, X, SquareArrowLeft } from 'lucide-react';
+import AddPersonFlow from '../../peopleView/subcomponents/AddPersonFlow';
 
 const SelectPersonView = ({ onSelectPerson, onBack }) => {
-  const { people } = usePeople();
+  const { people, refetchPeople } = usePeople();
   const { insights } = useInsights();
   const { systemCollections } = useSystemCollections();
   const systemCollectionIds = new Set(systemCollections.map(c => c.id));
@@ -22,6 +23,23 @@ const SelectPersonView = ({ onSelectPerson, onBack }) => {
     }
   };
 
+  const handleAddPersonComplete = async () => {
+    // Refresh the people list
+    await refetchPeople();
+    // Close the add person flow
+    setShowAddPerson(false);
+  };
+
+  if (showAddPerson) {
+    return (
+      <AddPersonFlow
+        onComplete={handleAddPersonComplete}
+        onCancel={() => setShowAddPerson(false)}
+        shouldAutoClose={true}
+      />
+    );
+  }
+
   return (
     <div className="fixed inset-0 bg-gradient-to-br from-blue-50 via-blue-50 to-indigo-50 z-50 flex flex-col">
       {/* Top instruction bar */}
@@ -31,7 +49,7 @@ const SelectPersonView = ({ onSelectPerson, onBack }) => {
             onClick={onBack}
             className="text-gray-500 hover:text-gray-700 mr-4"
           >
-          <SquareArrowLeft size={24} />
+            <SquareArrowLeft size={24} />
           </button>
           <h2 className="text-2xl font-bold">Who is this for?</h2>
         </div>

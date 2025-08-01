@@ -55,7 +55,7 @@ const RelationshipModal = ({ name, onSelect, onClose }) => {
   );
 };
 
-const AddPersonFlow = ({ onComplete, onCancel }) => {
+const AddPersonFlow = ({ onComplete, onCancel, shouldAutoClose = false }) => {
   const { userData } = useUser();
   const { refetchPeople } = usePeople();
   const [conversationState, setConversationState] = useState('ask_name');
@@ -193,7 +193,10 @@ const AddPersonFlow = ({ onComplete, onCancel }) => {
 
       // ✅ Hydrate people context
       await refetchPeople();
-
+      // Auto-close if configured to do so
+      if (shouldAutoClose && onComplete) {
+        onComplete();
+      }
       return newPerson;
 
     } catch (err) {
