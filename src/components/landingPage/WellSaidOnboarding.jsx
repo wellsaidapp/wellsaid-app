@@ -1,6 +1,6 @@
 // Imports
 import React, { useState, useEffect, useRef } from 'react';
-import { User, ArrowRight, Mail, Mic, MicOff, Plus, Check, Send } from 'lucide-react';
+import { User, ArrowRight, Mail, Mic, MicOff, Plus, Check, Send, X, Sparkles } from 'lucide-react';
 import {
   signUp,
   confirmSignUp,
@@ -11,12 +11,327 @@ import {
 } from '@aws-amplify/auth';
 import { toast } from 'react-hot-toast';
 import ToastMessage from '../library/BookCreation/ToastMessage';
+import Typewriter from './utils/Typewriter.jsx';
+import AddPersonFlow from '../peopleView/subcomponents/AddPersonFlow.jsx'; // Import the new AddPersonFlow component
+import { useUser } from '../../context/UserContext';
+import { usePeople } from '../../context/PeopleContext';
 
 // Assets
 import logo from '../../assets/wellsaid.svg';
 import WellSaidIconOnboarding from '../../assets/icons/WellSaidIconOnboarding';
-// Components
-import Typewriter from './utils/Typewriter.jsx';
+
+const RelationshipModal = ({ name, onSelect, onClose }) => {
+  const relationships = [
+    'Daughter',
+    'Son',
+    'Relative',
+    'Student',
+    'Friend',
+    'Other'
+  ];
+
+  return (
+    <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-[100] flex items-end">
+      <div className="w-full bg-white rounded-t-3xl p-6 animate-slide-up">
+        <div className="w-12 h-1 bg-gray-300 rounded-full mx-auto mb-6"></div>
+
+        <h2 className="text-2xl font-bold text-gray-800 mb-2 text-center">
+          Who is {name} to you?
+        </h2>
+        <p className="text-gray-500 text-center mb-6">Choose the closest option</p>
+
+        <div className="space-y-3">
+          {relationships.map((relationship) => (
+            <button
+              key={relationship}
+              onClick={() => onSelect(relationship)}
+              className="w-full p-4 text-left border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
+            >
+              <div className="flex items-center justify-between">
+                <span className="font-medium text-gray-800">{relationship}</span>
+                <ArrowRight size={18} className="text-gray-400" />
+              </div>
+            </button>
+          ))}
+        </div>
+
+        <button
+          onClick={onClose}
+          className="w-full mt-6 py-3 text-gray-500 font-medium rounded-xl hover:bg-gray-50 transition-colors"
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+  );
+};
+
+const OnboardingAddPersonFlow = ({ onComplete, onCancel }) => {
+  const { userData } = useUser();
+  const { refetchPeople } = usePeople();
+  const [conversationState, setConversationState] = useState('ask_name');
+  const [messages, setMessages] = useState([]);
+  const [inputValue, setInputValue] = useState('');
+  const [newPerson, setNewPerson] = useState({ name: '', relationship: '', context: '' });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [isTyping, setIsTyping] = useState(false);
+  const messagesEndRef = useRef(null);
+  const [showRelationshipModal, setShowRelationshipModal] = useState(false);
+  const hasInitialized = useRef(false);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  const typeMessage = (message, isBot = true, delay = 0) => {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        // Check if this exact message already exists
+        const messageExists = messages.some(
+          msg => msg.text === message && msg.isBot === isBot
+        );
+
+        if (!messageExists) {
+          setIsTyping(true);
+          setTimeout(() => {
+            setMessages(prev => [...prev, {
+              text: message,
+              isBot,
+              timestamp: Date.now()
+            }]);
+            setIsTyping(false);
+          }, Math.min(1500, message.length * 30));
+        }
+        resolve();
+      }, delay);
+    });
+  };
+
+  useEffect(() => {
+    if (!hasInitialized.current) {
+      hasInitialized.current = true;
+      typeMessage("Let's add someone important to you.", true, 500);
+      typeMessage("What's their name?", true, 1500);
+    }
+  }, []);
+
+  const savePerson = async (personData) => {
+    try {
+      setIsSubmitting(true);
+      await typeMessage("Saving...", true, 0);
+
+      const session = await fetchAuthSession();
+      const idToken = session.tokens?.idToken?.toString();
+      if (!idToken) throw new Error("Missing ID token");
+
+      const response = await fetch('https://2rjszrulkb.execute-api.us-east-2.amazonaws.com/dev/people', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': idToken
+        },
+        body: JSON.stringify({
+          name: personData.name,
+          relationship: personData.relationship,
+          context: personData.context
+        })
+      });
+
+      if (!response.ok) throw new Error(`Server error: ${response.status}`);
+
+      const newPerson = await response.json();
+
+      await typeMessage(`All set! ${personData.name} has been added.`, true, 0);
+      await new Promise(resolve => setTimeout(resolve, 1200));
+      await refetchPeople();
+
+      // Return the saved person data
+      return newPerson;
+
+    } catch (err) {
+      console.error('❌ Error adding person:', err);
+      await typeMessage("Something went wrong. Please try again later.", true);
+      return null;
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const value = inputValue.trim();
+    if (!value) return;
+
+    setMessages(prev => [...prev, { text: value, isBot: false, timestamp: Date.now() }]);
+    setInputValue('');
+
+    if (conversationState === 'ask_name') {
+      setNewPerson(prev => ({ ...prev, name: value }));
+      setShowRelationshipModal(true);
+      await typeMessage(`Got it. What's your relationship with ${value}?`, true, 0);
+    } else if (conversationState === 'ask_relationship') {
+      setNewPerson(prev => ({ ...prev, relationship: value }));
+      await typeMessage(`Thanks. Anything else you'd like us to know about ${newPerson.name}?`, true, 500);
+      setConversationState('ask_context');
+    } else if (conversationState === 'ask_context') {
+      setNewPerson(prev => ({ ...prev, context: value }));
+      setConversationState('saving');
+
+      // Save the person to backend first
+      const savedPerson = await savePerson({
+        ...newPerson,
+        context: value
+      });
+
+      // Only proceed if save was successful
+      if (savedPerson) {
+        onComplete(savedPerson);
+      } else {
+        // If save failed, reset to ask_name state
+        setConversationState('ask_name');
+      }
+    }
+  };
+
+  const handleRelationshipSelect = async (relationship) => {
+    setShowRelationshipModal(false);
+    setMessages(prev => [...prev, { text: relationship, isBot: false, timestamp: Date.now() }]);
+
+    if (relationship === 'Other') {
+      setConversationState('ask_relationship');
+      await typeMessage(`How would you describe who ${newPerson.name} is to you?`, true, 500);
+    } else {
+      setNewPerson(prev => ({ ...prev, relationship }));
+      await typeMessage(`Thanks. Anything else you'd like us to know about ${newPerson.name}?`, true, 500);
+      setConversationState('ask_context');
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-gradient-to-br from-blue-50 to-indigo-50 z-40 overflow-y-auto">
+      <div className="max-w-2xl mx-auto p-4 flex flex-col">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6 pt-4">
+          <div className="flex items-center gap-3">
+            <WellSaidIconOnboarding size={50} />
+            <div>
+              <img src={logo} alt="WellSaid" className="h-7 w-25" />
+              <p className="text-sm text-gray-500">Add a Person</p>
+            </div>
+          </div>
+          <button onClick={onCancel} className="text-gray-400 hover:text-gray-600">
+            <X className="w-6 h-6" />
+          </button>
+        </div>
+
+        {/* Chat messages */}
+        <div className="flex-1 bg-white rounded-2xl shadow-lg p-6 mb-4 overflow-y-auto">
+          <div className="space-y-4">
+            {messages.map((msg, idx) => (
+              <div key={idx} className={`flex ${msg.isBot ? 'justify-start' : 'justify-end'}`}>
+                <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-2xl text-sm ${
+                  msg.isBot ? 'bg-gray-100 text-gray-800' : 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white'
+                }`}>
+                  {msg.isBot ? (
+                    <Typewriter text={msg.text} />
+                  ) : (
+                    msg.text
+                  )}
+                </div>
+              </div>
+            ))}
+            {isTyping && (
+              <div className="flex justify-start">
+                <div className="bg-gray-100 px-4 py-2 rounded-2xl">
+                  <div className="flex space-x-1">
+                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                  </div>
+                </div>
+              </div>
+            )}
+            <div ref={messagesEndRef} />
+          </div>
+        </div>
+
+        {/* Input form */}
+        <form
+          onSubmit={handleSubmit}
+          className="bg-white rounded-2xl shadow-lg p-4"
+        >
+          <div className="flex gap-2 items-end">
+            {conversationState === 'ask_name' ? (
+              <>
+                <div className="flex-1 relative">
+                  <User className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
+                  <input
+                    type="text"
+                    value={inputValue}
+                    onChange={(e) => setInputValue(e.target.value)}
+                    placeholder="Enter their name"
+                    className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:border-blue-500"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey && inputValue.trim()) {
+                        e.preventDefault();
+                        handleSubmit(e);
+                      }
+                    }}
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={!inputValue.trim() || isSubmitting}
+                  className="p-3 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed"
+                >
+                  <ArrowRight className="w-5 h-5" />
+                </button>
+              </>
+            ) : (
+              <>
+                <textarea
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  placeholder={
+                    conversationState === 'ask_relationship'
+                      ? `What's your relationship with ${newPerson.name}?`
+                      : "Anything else we should know?"
+                  }
+                  className="w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:border-blue-500 resize-none"
+                  rows={2}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      handleSubmit(e);
+                    }
+                  }}
+                  disabled={isSubmitting}
+                />
+                <button
+                  type="submit"
+                  disabled={!inputValue.trim() || isSubmitting}
+                  className="p-3 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed"
+                >
+                  <Send className="w-5 h-5" />
+                </button>
+              </>
+            )}
+          </div>
+        </form>
+
+        {/* Relationship modal */}
+        {showRelationshipModal && (
+          <RelationshipModal
+            name={newPerson.name}
+            onSelect={handleRelationshipSelect}
+            onClose={() => setShowRelationshipModal(false)}
+          />
+        )}
+      </div>
+    </div>
+  );
+};
 
 const NameInputStep = ({ onSubmit }) => {
   const [inputValue, setInputValue] = useState('');
@@ -104,7 +419,6 @@ const PinVerification = ({
   const [isResending, setIsResending] = useState(false);
   const inputsRef = useRef([]);
 
-  // Handle paste event
   const handlePaste = (e) => {
     e.preventDefault();
     const pastedData = e.clipboardData.getData('text/plain').trim();
@@ -116,7 +430,6 @@ const PinVerification = ({
     }
   };
 
-  // Handle digit change
   const handleDigitChange = (index, value) => {
     if (!/^\d?$/.test(value)) return;
 
@@ -125,43 +438,36 @@ const PinVerification = ({
     setDigits(newDigits);
     setError(null);
 
-    // Auto-focus next if a digit was entered
     if (value && index < 5) {
       inputsRef.current[index + 1]?.focus();
     }
 
-    // Auto-submit if last digit entered
     if (index === 5 && value) {
       handleSubmit(newDigits.join(''));
     }
   };
 
-  // Handle backspace
   const handleKeyDown = (index, e) => {
     if (e.key === 'Backspace' && !digits[index] && index > 0) {
       inputsRef.current[index - 1]?.focus();
     }
   };
 
-  // Submit handler
   const handleSubmit = async (fullCode = digits.join('')) => {
     if (fullCode.length !== 6) return;
 
     setIsSubmitting(true);
     try {
-      // First try to confirm the sign up
       await confirmSignUp({
         username: email,
         confirmationCode: fullCode
       });
 
-      // Sign in with the actual Cognito username (UUID)
       const signInResult = await signIn({
-        username: cognitoUsername, // Use the UUID here
+        username: cognitoUsername,
         password
       });
 
-      // Verify session
       let sessionReady = false;
       for (let i = 0; i < 5; i++) {
         const session = await fetchAuthSession();
@@ -173,11 +479,8 @@ const PinVerification = ({
       }
 
       if (!sessionReady) throw new Error('Session not ready');
-      // Success flow
       setIsVerifyingPin(false);
       onSuccess();
-      // Continue with your onboarding flow...
-
     } catch (err) {
       console.error('Verification failed:', err);
 
@@ -197,7 +500,6 @@ const PinVerification = ({
     }
   };
 
-  // Resend code handler
   const handleResend = async () => {
     setIsResending(true);
     try {
@@ -254,7 +556,6 @@ const PinVerification = ({
 };
 
 const WellSaidOnboarding = ({ onComplete }) => {
-  // Start directly with registration
   const [currentStep, setCurrentStep] = useState('registration');
   const [isShowingSummary, setIsShowingSummary] = useState(false);
   const [userData, setUserData] = useState({
@@ -271,40 +572,20 @@ const WellSaidOnboarding = ({ onComplete }) => {
   const [isRecording, setIsRecording] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   const [showPinInput, setShowPinInput] = useState(false);
-  // const [pinDigits, setPinDigits] = useState(['', '', '', '', '', '']);
-  const [currentPersonInput, setCurrentPersonInput] = useState('');
-  const [currentPerson, setCurrentPerson] = useState(null);
   const [showPersonForm, setShowPersonForm] = useState(false);
-  const messagesEndRef = useRef(null);
   const [showChatInput, setShowChatInput] = useState(true);
+  const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
+  const messagesEndRef = useRef(null);
+  const [isVerifyingPin, setIsVerifyingPin] = useState(false);
+  const hasGreeted = useRef(false);
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  const getPlaceholderText = () => {
-    if (currentStep === 'registration') {
-      if (!userData.name) return "Enter your name";
-      if (!userData.email) return "Enter your email";
-    }
-    else if (currentStep === 'conversation') {
-      if (!userData.motivation) return "What brings you to this app?";
-      if (!userData.topics) return "What topics do you want to cover?";
-      if (!userData.helpStyle) return "How can I help you stay on track?";
-    }
-    else if (currentStep === 'people') {
-      if (currentPersonQuestions) {
-        return `What questions for ${currentPerson?.name || 'them'}?`;
-      }
-      return "Describe them to me";
-    }
-    return "Type your response...";
   };
 
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
-
-  const hasGreeted = useRef(false);
 
   useEffect(() => {
     if (!hasGreeted.current && messages.length === 0) {
@@ -325,10 +606,14 @@ const WellSaidOnboarding = ({ onComplete }) => {
             isTyping: false
           }]);
           setIsTyping(false);
-          resolve(); // ✅ Resolve after message is added
-        }, 1500); // Simulated typing time
-      }, delay); // Initial delay before typing starts
+          resolve();
+        }, 1500);
+      }, delay);
     });
+  };
+
+  const generateTempPassword = () => {
+    return `TempPass${Math.floor(100000 + Math.random() * 900000)}!`;
   };
 
   const handleRegistrationSubmit = async (field, value) => {
@@ -362,20 +647,16 @@ const WellSaidOnboarding = ({ onComplete }) => {
           cognitoUsername: signUpResult.userId
         }));
 
-        // ✅ NEW: Code was already sent by signUp
         typeMessage("A verification code has been sent to your email. Please enter it below:", true, 500);
         setShowPinInput(true);
 
       } catch (err) {
         if (err.name === 'UsernameExistsException') {
           try {
-            // ✅ Attempt to resend code
             await resendSignUpCode({ username: value });
-
             typeMessage("A verification code has been sent to your email. Please enter it below:", true, 500);
             setShowPinInput(true);
           } catch (resendError) {
-            // ✅ ⬇️ Place this block inside the catch of resendSignUpCode
             if (
               resendError.name === 'InvalidParameterException' &&
               resendError.message.includes('already confirmed')
@@ -409,24 +690,42 @@ const WellSaidOnboarding = ({ onComplete }) => {
     }
   };
 
-  const generateTempPassword = () => {
-    return `TempPass${Math.floor(100000 + Math.random() * 900000)}!`;
+  // New function to generate AI summary
+  const generateAISummary = async () => {
+    try {
+      const session = await fetchAuthSession();
+      const token = session.tokens?.idToken?.toString();
+
+      const response = await fetch('https://2rjszrulkb.execute-api.us-east-2.amazonaws.com/dev/ai/summary', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: token,
+        },
+        body: JSON.stringify({
+          name: userData.name,
+          motivation: userData.motivation,
+          topics: userData.topics,
+          helpStyle: userData.helpStyle,
+          people: userData.people
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to generate summary');
+      }
+
+      const data = await response.json();
+      return data.summary;
+    } catch (err) {
+      console.error('Error generating AI summary:', err);
+      return null;
+    }
   };
 
-  const [isVerifyingPin, setIsVerifyingPin] = useState(false);
-  const handleConversationSubmit = () => {
+  const handleConversationSubmit = async () => {
     if (!currentInput.trim()) return;
 
-    if (currentStep === 'people') {
-      if (currentPersonQuestions) {
-        handlePersonQuestionSubmit();
-      } else {
-        handlePersonSubmit();
-      }
-      return;
-    }
-
-    // Original conversation flow
     const input = currentInput.trim();
     setMessages(prev => [...prev, { text: input, isBot: false, timestamp: Date.now() }]);
     setCurrentInput('');
@@ -441,214 +740,72 @@ const WellSaidOnboarding = ({ onComplete }) => {
       setUserData(prev => ({ ...prev, helpStyle: input }));
       typeMessage("We're on the last step! Your insight is meant to be shared...", true, 1000);
       setTimeout(() => {
-        typeMessage("Would you like to add someone to your circle now?...", true, 1500);
+        typeMessage("Would you like to add someone to your circle now?", true, 1500);
       }, 2000);
       setCurrentStep('people');
       setShowChatInput(false); // Hide input initially
     }
   };
 
-  // Enhanced person parser
-  const parsePerson = (input) => {
-    const person = {
-      id: Date.now().toString(),
-      name: '',
-      relationship: '',
-      age: '',
-      interests: '',
-      questionPreferences: ''
-    };
-
-    // Basic parsing logic - you can enhance this
-    const lowerInput = input.toLowerCase();
-
-    // Extract relationship
-    if (lowerInput.includes('daughter')) person.relationship = 'daughter';
-    else if (lowerInput.includes('son')) person.relationship = 'son';
-    else if (lowerInput.includes('wife')) person.relationship = 'wife';
-    else if (lowerInput.includes('husband')) person.relationship = 'husband';
-    else if (lowerInput.includes('mother')) person.relationship = 'mother';
-    else if (lowerInput.includes('father')) person.relationship = 'father';
-    else if (lowerInput.includes('friend')) person.relationship = 'friend';
-    else person.relationship = 'family member';
-
-    // Extract name
-    const nameMatch = input.match(/(?:my\s+(?:daughter|son|wife|husband|mother|father|friend)?\s*)([A-Za-z]+)/i);
-    if (nameMatch) person.name = nameMatch[1];
-
-    // Extract age
-    const ageMatch = input.match(/age\s+(\d+)|(\d+)\s+years?\s+old/i);
-    if (ageMatch) person.age = ageMatch[1] || ageMatch[2];
-
-    // Extract interests
-    const interestsMatch = input.match(/loves?\s+([^,]+)/i);
-    if (interestsMatch) person.interests = interestsMatch[1];
-
-    return person;
-  };
-
-  // You'll also need to add this state variable to track current person questions
-  const [currentPersonQuestions, setCurrentPersonQuestions] = useState(null);
-
-  // Modified handleConversationSubmit to handle the people step questions
-  const modifiedHandleConversationSubmit = () => {
-    if (!currentInput.trim()) return;
-
-    // If we're in people step and collecting question preferences
-    if (currentStep === 'people' && currentPersonQuestions) {
-      handlePersonQuestionSubmit();
-      return;
-    }
-
-    // If we're in people step but not collecting questions, treat as person input
-    if (currentStep === 'people' && !currentPersonQuestions) {
-      // This would be handled by handlePersonSubmit instead
-      return;
-    }
-
-    // Original conversation flow
-    const input = currentInput.trim();
-    setMessages(prev => [...prev, { text: input, isBot: false, timestamp: Date.now() }]);
-    setCurrentInput('');
-
-    if (!userData.motivation) {
-      setUserData(prev => ({ ...prev, motivation: input }));
-      typeMessage("Thanks for sharing! Let's talk about the topics you want to cover. Can you spend a few moments telling me about the types of questions or topics you'd like to answer, or use your input to guide our future interactions within the app? Questions and topics can evolve over time, but this will give us a starting point. What kinds of insight would you like to capture?", true, 1000);
-    } else if (!userData.topics) {
-      setUserData(prev => ({ ...prev, topics: input }));
-      typeMessage("Great! Now how can I help you stay on track? How would you like to use this app? Is it something you'd like to use daily or weekly or something you plan to use when preparing for a special occasion? Would you like me to push notifications to you so you stay committed to your plan? How can I help you make use of this app?", true, 1000);
-    } else if (!userData.helpStyle) {
-      setUserData(prev => ({ ...prev, helpStyle: input }));
-      typeMessage("We're on the last step! Your insight is meant to be shared with the people you care most about. WellSaid gives you the opportunity to say what matters to the people who matter. You can add people now using the interface below.", true, 1000);
-      setTimeout(() => {
-        typeMessage("Can you tell me about the person you would like to add?", true, 1500);
-      }, 2000);
-      setCurrentStep('people');
-      setShowPersonForm(true);
-    }
-  };
-
-  // Enhanced person submission handler
-  const handlePersonSubmit = () => {
-    if (!currentInput.trim()) return;
-
-    const personInput = currentInput.trim();
-    setMessages(prev => [...prev, { text: personInput, isBot: false, timestamp: Date.now() }]);
-    setCurrentInput('');
-
-    // Parse the person input
-    const person = parsePerson(personInput);
-
-    // Store the person temporarily (don't add to userData yet)
-    setCurrentPerson(person);
-
-    // Ask about question preferences
-    typeMessage(`Thanks! What kinds of questions would you like to answer for ${person.name || 'them'}?`, true, 500);
-
-    // Set flag to collect question preferences
-    setCurrentPersonQuestions(true);
-  };
-
-  // New handler for person question preferences
-  const handlePersonQuestionSubmit = () => {
-    if (!currentInput.trim()) return;
-
-    const questionInput = currentInput.trim();
-    setMessages(prev => [...prev, { text: questionInput, isBot: false, timestamp: Date.now() }]);
-    setCurrentInput('');
-
-    // Create the complete person object
-    const completePerson = {
-      ...currentPerson,
-      questionPreferences: questionInput
-    };
-
-    // Show confirmation message
-    const confirmationMessage = `Got it! I'll add ${completePerson.name || 'this person'}, your ${completePerson.relationship}${
-      completePerson.age ? ` (age ${completePerson.age})` : ''
-    }${
-      completePerson.interests ? ` who loves ${completePerson.interests}` : ''
-    }. They'll receive insights about: ${questionInput}.`;
-
-    typeMessage(confirmationMessage, true, 500);
-    setShowChatInput(false);
-    setTimeout(() => {
-      typeMessage("Would you like to add another person?", true, 1000);
-    }, 1500);
-
-    // Add the person to userData
-    setUserData(prev => ({
-      ...prev,
-      people: [...prev.people, completePerson]
-    }));
-
-    // Reset the current person state
-    setCurrentPerson(null);
-    setCurrentPersonQuestions(false);
-  };
-
-  const extractName = (text) => {
-    const nameMatch = text.match(/(?:my |named |called )([A-Za-z]+)/i);
-    return nameMatch ? nameMatch[1] : '';
-  };
-
-  const extractRelationship = (text) => {
-    const relationships = ['daughter', 'son', 'wife', 'husband', 'mother', 'father', 'friend', 'partner', 'spouse'];
-    const found = relationships.find(rel => text.toLowerCase().includes(rel));
-    return found || 'person';
-  };
-
-  const extractAge = (text) => {
-    const ageMatch = text.match(/(\d+)\s*(?:years?\s*old|yr)/i);
-    return ageMatch ? parseInt(ageMatch[1]) : null;
-  };
-
-  const extractTopics = (text) => {
-    const topics = [];
-    if (text.includes('school') || text.includes('education')) topics.push('education');
-    if (text.includes('career') || text.includes('work')) topics.push('career');
-    if (text.includes('health') || text.includes('wellness')) topics.push('health');
-    return topics;
-  };
-
-  // Modify the completeOnboarding function
-  const completeOnboarding = () => {
-    // Clear the messages and set loading state
-    setMessages([]);
-    setIsTyping(true);
-    setCurrentStep("summary");
-    // After a brief delay, start typing the summary
-    setTimeout(() => {
-      setIsTyping(false);
-
-      let summary = `You're ${userData.name}, and you're here because ${userData.motivation.toLowerCase()}. `;
-      summary += `You're interested in ${userData.topics.toLowerCase()}, and you'd like me to ${userData.helpStyle.toLowerCase()}. `;
-
-      if (userData.people.length > 0) {
-        summary += `You want to share insights with ${userData.people.length} special ${userData.people.length === 1 ? 'person' : 'people'} in your life. `;
-      }
-
-      summary += "I'm excited to help you on this journey!";
-
-      // Type the summary message
-      typeMessage(summary, true, 0);
-
-      // After the summary is displayed, show the welcome card
-      setTimeout(() => {
-        setIsShowingSummary(true);
-      }, 2000 + summary.length * 30); // Adjust timing based on typewriter speed
-    }, 500);
-  };
-
   const toggleRecording = () => {
     setIsRecording(!isRecording);
-    // In a real app, you'd implement actual voice recording here
     if (!isRecording) {
       setTimeout(() => {
         setIsRecording(false);
         setCurrentInput("This would be transcribed speech...");
       }, 2000);
     }
+  };
+
+  const handleAddPersonClick = () => {
+    setShowPersonForm(true);
+  };
+
+  const handleAddPersonComplete = (newPerson) => {
+    setUserData(prev => ({
+      ...prev,
+      people: [...prev.people, newPerson]
+    }));
+    setShowPersonForm(false);
+    typeMessage(`${newPerson.name} has been added to your circle. Would you like to add another person?`, true, 500);
+  };
+
+  const handleAddPersonCancel = () => {
+    setShowPersonForm(false);
+    hasInitialized.current = false; // Reset initialization
+    typeMessage("Would you like to complete your profile now?", true, 500);
+  };
+
+  const completeOnboarding = async () => {
+    setMessages([]);
+    setIsTyping(true);
+    setCurrentStep("summary");
+
+    setIsGeneratingSummary(true);
+    const aiSummary = await generateAISummary();
+    setIsGeneratingSummary(false);
+
+    // Fallback to manual summary if AI fails
+    const summary = aiSummary || `You're ${userData.name}, and you're here because ${userData.motivation.toLowerCase()}.
+      You're interested in ${userData.topics.toLowerCase()}, and you'd like me to ${userData.helpStyle.toLowerCase()}.
+      ${userData.people.length > 0 ? `You want to share insights with ${userData.people.length} special ${userData.people.length === 1 ? 'person' : 'people'} in your life. ` : ''}
+      I'm excited to help you on this journey!`;
+
+    await typeMessage(summary, true, 0);
+    setIsShowingSummary(true);
+  };
+
+  const getPlaceholderText = () => {
+    if (currentStep === 'registration') {
+      if (!userData.name) return "Enter your name";
+      if (!userData.email) return "Enter your email";
+    }
+    else if (currentStep === 'conversation') {
+      if (!userData.motivation) return "What brings you to this app?";
+      if (!userData.topics) return "What topics do you want to cover?";
+      if (!userData.helpStyle) return "How can I help you stay on track?";
+    }
+    return "Type your response...";
   };
 
   return (
@@ -686,7 +843,6 @@ const WellSaidOnboarding = ({ onComplete }) => {
                       <Typewriter
                         text={message.text}
                         onComplete={() => {
-                          // Update message to mark typing as complete
                           setMessages(prev => prev.map((msg, i) =>
                             i === index ? {...msg, isTyping: false} : msg
                           ));
@@ -714,7 +870,7 @@ const WellSaidOnboarding = ({ onComplete }) => {
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Enhanced PIN Verification */}
+        {/* PIN Verification */}
         {showPinInput && currentStep === 'registration' && (
           <PinVerification
             email={userData.email}
@@ -725,8 +881,6 @@ const WellSaidOnboarding = ({ onComplete }) => {
             onSuccess={async () => {
               await typeMessage("✓ Verified successfully!", true, 0);
               setIsVerifyingPin(false);
-
-              // Your existing success flow:
               await new Promise(res => setTimeout(res, 1500));
               setMessages([]);
               setCurrentStep('conversation');
@@ -738,7 +892,7 @@ const WellSaidOnboarding = ({ onComplete }) => {
                 await resendSignUpCode({ username: userData.email });
               } catch (err) {
                 console.error('Resend failed:', err);
-                throw err; // Let PinVerification handle the error display
+                throw err;
               }
             }}
             initialErrorMessage={isVerifyingPin ? 'Verifying...' : null}
@@ -758,16 +912,16 @@ const WellSaidOnboarding = ({ onComplete }) => {
           </div>
         )}
 
-        {/* Conversation Input - Always show when in conversation or people steps */}
+        {/* Conversation Input */}
         {(currentStep === 'conversation' || (currentStep === 'people' && showChatInput)) && (
           <div className="bg-white rounded-2xl shadow-lg p-4">
             <div className="flex gap-2 items-end">
-              <div className="flex-1">
+              <div className="flex-1 relative">
                 <textarea
                   value={currentInput}
                   onChange={(e) => setCurrentInput(e.target.value)}
                   placeholder={getPlaceholderText()}
-                  className="w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:border-blue-500 resize-none"
+                  className="w-full p-3 pr-10 border border-gray-200 rounded-xl focus:outline-none focus:border-blue-500 resize-none"
                   rows={2}
                   onKeyPress={(e) => {
                     if (e.key === 'Enter' && !e.shiftKey) {
@@ -776,6 +930,12 @@ const WellSaidOnboarding = ({ onComplete }) => {
                     }
                   }}
                 />
+                {isRecording && (
+                  <div className="absolute right-10 bottom-3 flex items-center">
+                    <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse mr-1"></div>
+                    <span className="text-xs text-red-500">Recording</span>
+                  </div>
+                )}
               </div>
               <button
                 onClick={toggleRecording}
@@ -801,7 +961,14 @@ const WellSaidOnboarding = ({ onComplete }) => {
         )}
 
         {/* People Management */}
-        {currentStep === 'people' && (
+        {currentStep === 'people' && showPersonForm && (
+          <OnboardingAddPersonFlow
+            onComplete={handleAddPersonComplete}
+            onCancel={handleAddPersonCancel}
+          />
+        )}
+
+        {currentStep === 'people' && !showPersonForm && (
           <div className="bg-white rounded-2xl shadow-lg p-6 mt-4">
             <div className="flex justify-between items-center mb-4">
               <h3 className="font-semibold text-gray-800">People in your circle</h3>
@@ -810,7 +977,7 @@ const WellSaidOnboarding = ({ onComplete }) => {
 
             {userData.people.length > 0 ? (
               userData.people.map((person, index) => (
-                <div key={person.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg mb-2">
+                <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg mb-2">
                   <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
                     <User className="w-4 h-4 text-blue-600" />
                   </div>
@@ -832,12 +999,7 @@ const WellSaidOnboarding = ({ onComplete }) => {
 
             <div className="flex gap-2 mt-4">
               <button
-                onClick={() => {
-                  setShowChatInput(true); // Show input
-                  setCurrentInput('');
-                  typeMessage("Great! Please tell me about the person. Their name, their age, your relationship to them...anything that will be useful for me to know as I build their profile.", true, 500);
-                  setCurrentPersonQuestions(false);
-                }}
+                onClick={handleAddPersonClick}
                 className="flex-1 bg-gray-100 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-200 transition-colors flex items-center justify-center gap-2"
               >
                 <Plus className="w-4 h-4" />
@@ -864,11 +1026,8 @@ const WellSaidOnboarding = ({ onComplete }) => {
             </p>
             <button
               onClick={() => {
-                // Set authentication state
                 localStorage.setItem('wellsaid-auth-state', 'loggedIn');
-                // Store user data if needed
                 localStorage.setItem('wellsaid-user-data', JSON.stringify(userData));
-                // Call the completion handler
                 onComplete();
               }}
               className="w-full bg-gradient-to-r from-blue-500 to-indigo-500 text-white py-3 px-8 rounded-xl font-medium hover:from-blue-600 hover:to-indigo-600 transition-colors"
