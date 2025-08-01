@@ -26,6 +26,12 @@ const SplashScreen = ({ authState, onAuthComplete, onSkipSplash, refreshBooks })
     }
   }, [stage, authState]);
 
+  useEffect(() => {
+    const forceLogin = () => setStage('login');
+    window.addEventListener('forceShowLogin', forceLogin);
+    return () => window.removeEventListener('forceShowLogin', forceLogin);
+  }, []);
+
   // Handle all rendering cases
   if (authState === 'loggedIn') {
     return <SplashAnimation onComplete={onSkipSplash || (() => {})} />;

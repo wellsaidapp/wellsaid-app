@@ -9,6 +9,8 @@ import {
   confirmSignIn,
   signIn
 } from '@aws-amplify/auth';
+import { toast } from 'react-hot-toast';
+import ToastMessage from '../library/BookCreation/ToastMessage';
 
 // Assets
 import logo from '../../assets/wellsaid.svg';
@@ -367,12 +369,35 @@ const WellSaidOnboarding = ({ onComplete }) => {
       } catch (err) {
         if (err.name === 'UsernameExistsException') {
           try {
-            // ✅ Now resend only if user already exists
+            // ✅ Attempt to resend code
             await resendSignUpCode({ username: value });
 
             typeMessage("A verification code has been sent to your email. Please enter it below:", true, 500);
             setShowPinInput(true);
           } catch (resendError) {
+            // ✅ ⬇️ Place this block inside the catch of resendSignUpCode
+            if (
+              resendError.name === 'InvalidParameterException' &&
+              resendError.message.includes('already confirmed')
+            ) {
+              console.warn('User is already confirmed, redirecting to login.');
+
+              toast.custom((t) => (
+                <ToastMessage
+                  type="cancel"
+                  title="Already Registered"
+                  message="We found your account! Redirecting you to login..."
+                  onDismiss={() => toast.dismiss(t.id)}
+                />
+              ));
+
+              setTimeout(() => {
+                window.dispatchEvent(new Event('forceShowLogin'));
+              }, 2000);
+
+              return;
+            }
+
             console.error('Error resending code:', resendError);
             typeMessage("Failed to send verification code. Please try again.", true, 0);
           }
