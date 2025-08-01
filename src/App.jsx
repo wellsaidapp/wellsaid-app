@@ -245,7 +245,6 @@ const WellSaidApp = () => {
           user={userData}
         />;
       case 'people':
-        if (loadingPeople) return null;
         return <PeopleView
           insights={insights}
           individuals={people}
