@@ -696,29 +696,54 @@ const WellSaidOnboarding = ({ onComplete }) => {
       const session = await fetchAuthSession();
       const token = session.tokens?.idToken?.toString();
 
-      const response = await fetch('https://2rjszrulkb.execute-api.us-east-2.amazonaws.com/dev/ai/summary', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: token,
-        },
-        body: JSON.stringify({
-          name: userData.name,
-          motivation: userData.motivation,
-          topics: userData.topics,
-          helpStyle: userData.helpStyle,
-          people: userData.people
-        }),
-      });
+      if (!token) {
+        console.error('No authentication token available');
+        return null;
+      }
+
+      // Validate we have required data
+      if (!userData?.name || !userData?.motivation || !userData?.topics || !userData?.helpStyle) {
+        console.error('Missing required user data for summary generation');
+        return null;
+      }
+
+      const response = await fetch(
+        'https://2rjszrulkb.execute-api.us-east-2.amazonaws.com/dev/ai/onboardingContext',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': token,
+          },
+          body: JSON.stringify({
+            name: userData.name,
+            motivation: userData.motivation,
+            topics: userData.topics,
+            helpStyle: userData.helpStyle,
+            people: userData.people || [] // Ensure people is always an array
+          }),
+        }
+      );
 
       if (!response.ok) {
-        throw new Error('Failed to generate summary');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(
+          errorData.error ||
+          errorData.message ||
+          `Request failed with status ${response.status}`
+        );
       }
 
       const data = await response.json();
+
+      if (!data?.summary) {
+        throw new Error('Received empty summary from server');
+      }
+
       return data.summary;
     } catch (err) {
-      console.error('Error generating AI summary:', err);
+      console.error('Error generating AI summary:', err.message || err);
+      // You might want to add error handling/show toast notification here
       return null;
     }
   };
