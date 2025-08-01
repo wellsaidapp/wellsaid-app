@@ -160,12 +160,12 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
       }
     }, [occasion.person, occasion.collections, occasionData?.isReturning]); // ✅ Safe dependency
 
-    useEffect(() => {
-      // Reset if occasionData changes to a new person/collection
-      if (occasionData?.person?.id !== occasion.person?.id) {
-        resetCollectionState();
-      }
-    }, [occasionData?.person?.id]);
+    // useEffect(() => {
+    //   // Reset if occasionData changes to a new person/collection
+    //   if (occasionData?.person?.id !== occasion.person?.id) {
+    //     resetCollectionState();
+    //   }
+    // }, [occasionData?.person?.id]);
 
     const callOpenAI = async (userPrompt, systemPrompt, history = []) => {
       try {
