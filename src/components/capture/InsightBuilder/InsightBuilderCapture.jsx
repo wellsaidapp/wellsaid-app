@@ -7,6 +7,8 @@ import toast from 'react-hot-toast';
 import ToastMessage from '../../library/BookCreation/ToastMessage';
 import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
 import Typewriter from '../../landingPage/utils/Typewriter';
+import { useInsights } from '../../../context/InsightContext';
+import { useSystemCollections } from '../../../context/SystemCollectionsContext';
 
 const ChatInput = ({ userInput, setUserInput, onSubmit }) => {
   const textareaRef = useRef();
@@ -68,6 +70,8 @@ const InsightBuilderCapture = ({ setCurrentView, onComplete }) => {
     const messagesEndRef = useRef(null);
     const promptRef = useRef(null);
     const responseRef = useRef(null);
+    const { refreshInsights } = useInsights();
+    const { refreshSystemCollections } = useSystemCollections();
 
     const {
       transcript,
@@ -369,7 +373,8 @@ const InsightBuilderCapture = ({ setCurrentView, onComplete }) => {
         setActiveSparklesIndex(null);
         setSparklesIntroShown(false);
         setLoadingSparklesIndex(null);
-
+        await refreshInsights();
+        await refreshSystemCollections();
         setMessages((prevMessages) => [
           ...prevMessages,
           { isBot: true, text: "Your insight was saved!" },
