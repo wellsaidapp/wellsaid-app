@@ -65,6 +65,7 @@ const QuickCreateCapture = ({ setCurrentView, userContext }) => {
     response: '',
   });
   const [activeSparklesIndex, setActiveSparklesIndex] = useState(null);
+  const [sparklesIntroShown, setSparklesIntroShown] = useState(false);
   const [loadingSparklesIndex, setLoadingSparklesIndex] = useState(null);
   const messagesEndRef = useRef(null);
   const promptRef = useRef(null);
@@ -208,6 +209,10 @@ const QuickCreateCapture = ({ setCurrentView, userContext }) => {
   const handleSparklesClick = async (clickedIndex) => {
     try {
       setLoadingSparklesIndex(clickedIndex);
+      if (activeSparklesIndex === null) {
+        setActiveSparklesIndex(clickedIndex);
+        setSparklesIntroShown(true);
+      }
 
       const history = messages
         .slice(0, clickedIndex + 1)
@@ -238,23 +243,19 @@ const QuickCreateCapture = ({ setCurrentView, userContext }) => {
     const message = messages[index];
     if (!message.isBot) return false;
 
-    // Don't show sparkles on initial greeting
-    const isInitialGreeting = message.text.includes("What's one lesson") ||
-                             message.text.includes("If you could share") ||
-                             message.text.includes("What's something small");
-
-    if (isInitialGreeting) return false;
-
-    // Count how many conversational bot messages we have
-    const conversationalBotMessages = messages.filter(m =>
-      m.isBot &&
-      !m.text.includes("What's one lesson") &&
-      !m.text.includes("If you could share") &&
-      !m.text.includes("What's something small")
+    const isConversationalMessage = !(
+      message.text.includes("What's one lesson") ||
+      message.text.includes("If you could share") ||
+      message.text.includes("What's something small")
     );
 
-    // Only show sparkles after at least 3 conversational responses
-    return conversationalBotMessages.length >= 2 &&
+    const conversationalBotMessages = messages
+      .filter(m => m.isBot && isConversationalMessage);
+
+    const messageIndex = conversationalBotMessages.findIndex(m => m.id === message.id);
+
+    return isConversationalMessage &&
+           messageIndex >= 2 &&
            (activeSparklesIndex === null || index >= activeSparklesIndex);
   };
 
@@ -491,6 +492,7 @@ const QuickCreateCapture = ({ setCurrentView, userContext }) => {
           <div className="bg-white rounded-2xl shadow-lg p-6 space-y-4">
             {messages.map((message, index) => {
               const showSparkles = shouldShowSparkles(index);
+              const isFirstSparkles = showSparkles && activeSparklesIndex === null;
 
               return (
                 <div
@@ -528,7 +530,13 @@ const QuickCreateCapture = ({ setCurrentView, userContext }) => {
                   {showSparkles && (
                     <div className="flex items-center gap-1 ml-1">
                       <button
-                        onClick={() => handleSparklesClick(index)}
+                        onClick={() => {
+                          if (isFirstSparkles) {
+                            setSparklesIntroShown(true);
+                            setActiveSparklesIndex(index);
+                          }
+                          handleSparklesClick(index);
+                        }}
                         className="flex-shrink-0 p-1.5 bg-blue-100 hover:bg-blue-200 rounded-full shadow-sm border border-blue-300 transition"
                         title="Turn this into an Insight Card"
                         disabled={loadingSparklesIndex === index}
@@ -557,6 +565,11 @@ const QuickCreateCapture = ({ setCurrentView, userContext }) => {
                           <Sparkles className="w-4 h-4 text-blue-500" />
                         )}
                       </button>
+                      {isFirstSparkles && !sparklesIntroShown && (
+                        <span className="text-xs text-gray-500 whitespace-nowrap">
+                          Click to reveal AI-generated insight
+                        </span>
+                      )}
                     </div>
                   )}
 
