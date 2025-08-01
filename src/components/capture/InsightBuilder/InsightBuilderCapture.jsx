@@ -298,15 +298,17 @@ const InsightBuilderCapture = ({ setCurrentView, onComplete }) => {
       try {
         const session = await fetchAuthSession();
         const token = session.tokens?.idToken?.toString();
+        if (!token) throw new Error("No auth token found");
 
-        if (!token) throw new Error("No auth token");
+        // STEP 1 — 🧠 Classify the insight into system collections
+        console.log("📤 Sending prompt/response to AI classification Lambda...");
 
-        const response = await fetch(
-          `https://2rjszrulkb.execute-api.us-east-2.amazonaws.com/dev/insights/insightBuilder`,
+        const classifyRes = await fetch(
+          "https://2rjszrulkb.execute-api.us-east-2.amazonaws.com/dev/ai/assignSystemCollections",
           {
-            method: 'POST',
+            method: "POST",
             headers: {
-              'Content-Type': 'application/json',
+              "Content-Type": "application/json",
               Authorization: token,
             },
             body: JSON.stringify({
@@ -316,26 +318,53 @@ const InsightBuilderCapture = ({ setCurrentView, onComplete }) => {
           }
         );
 
-        if (!response.ok) {
-          const errorData = await response.json();
-          toast.custom((t) => (
-            <ToastMessage
-              type="error"
-              title="Error Saving Insight"
-              message={errorData.error || "Unknown error"}
-              onDismiss={() => toast.dismiss(t.id)}
-            />
-          ));
-          return;
+        const classifyJson = await classifyRes.json();
+        console.log("✅ Classification response:", classifyJson);
+
+        if (!classifyRes.ok) {
+          throw new Error(classifyJson.error || "AI classification failed");
         }
 
-        const savedInsight = await response.json();
-        setSessionInsights(prev => [...prev, {
-          prompt: insightDraft.prompt,
-          response: insightDraft.response
-        }]);
+        const collectionIds = classifyJson.relatedCollectionIds;
+        if (!Array.isArray(collectionIds) || collectionIds.length === 0) {
+          throw new Error("AI classification returned no collection IDs");
+        }
 
-        setInsightDraft({ prompt: '', response: '' });
+        // STEP 2 — 💾 Save the insight
+        console.log("💾 Saving insight with classified collection IDs:", collectionIds);
+
+        const saveRes = await fetch(
+          "https://2rjszrulkb.execute-api.us-east-2.amazonaws.com/dev/insights/insightBuilder",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: token,
+            },
+            body: JSON.stringify({
+              prompt: insightDraft.prompt,
+              response: insightDraft.response,
+              collectionIds,
+            }),
+          }
+        );
+
+        const savedInsight = await saveRes.json();
+        console.log("✅ Insight saved:", savedInsight);
+
+        if (!saveRes.ok) {
+          throw new Error(savedInsight.error || "Saving insight failed");
+        }
+
+        // STEP 3 — 🎉 Update UI and state
+        setSessionInsights((prev) => [
+          ...prev,
+          {
+            prompt: insightDraft.prompt,
+            response: insightDraft.response,
+          },
+        ]);
+        setInsightDraft({ prompt: "", response: "" });
         setShowInsightModal(false);
         setActiveSparklesIndex(null);
         setSparklesIntroShown(false);
@@ -343,10 +372,7 @@ const InsightBuilderCapture = ({ setCurrentView, onComplete }) => {
 
         setMessages((prevMessages) => [
           ...prevMessages,
-          {
-            isBot: true,
-            text: "Your insight was saved!",
-          },
+          { isBot: true, text: "Your insight was saved!" },
         ]);
 
         toast.custom((t) => (
@@ -361,8 +387,8 @@ const InsightBuilderCapture = ({ setCurrentView, onComplete }) => {
         if (onComplete) onComplete(savedInsight);
 
       } catch (err) {
-        console.error("Save Insight error:", err);
-        toast.error("Something went wrong saving your insight.");
+        console.error("❌ Save Insight error:", err);
+        toast.error(err.message || "Something went wrong saving your insight.");
       }
     };
 
