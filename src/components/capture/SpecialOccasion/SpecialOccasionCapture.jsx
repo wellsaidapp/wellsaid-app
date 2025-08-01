@@ -740,6 +740,16 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
       }, 300); // slight delay for pacing
     };
 
+    const shouldShowCancelButton = () => {
+      // Scenario 1: New collection workflow before naming
+      const isPreNaming = !occasion.userCollectionName && occasion.person;
+
+      // Scenario 2: Returning to existing collection but not started
+      const isReturningNotStarted = occasionData?.isReturning && !hasPostedMessage;
+
+      return isPreNaming || isReturningNotStarted;
+    };
+
     const handleStopClick = async () => {
       try {
         setIsSavingExit(true);
@@ -879,32 +889,30 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
                 <p className="text-sm text-gray-500">Special Occasion</p>
               </div>
             </div>
-            {(collectionCreated || occasion?.userCollectionName) && (
-              hasPostedMessage ? (
-                <button
-                  onClick={handleStopClick}
-                  disabled={isSavingExit}
-                  className="flex items-center gap-2 px-4 py-2 bg-white rounded-lg shadow-sm hover:bg-gray-50 transition-colors disabled:opacity-60"
-                >
-                  {isSavingExit ? (
-                    <svg className="animate-spin h-5 w-5 text-gray-600" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 00-8 8z" />
-                    </svg>
-                  ) : (
-                    <Save className="w-5 h-5 text-gray-600" />
-                  )}
-                  <span className="text-gray-700 font-medium">{isSavingExit ? 'Saving...' : 'Exit'}</span>
-                </button>
-              ) : (
-                <button
-                  onClick={() => setCurrentView('home')}
-                  className="flex items-center gap-2 px-4 py-2 bg-white rounded-lg shadow-sm hover:bg-gray-50 transition-colors"
-                >
-                  <X className="w-5 h-5 text-gray-600" />
-                  <span className="text-gray-700 font-medium">Cancel</span>
-                </button>
-              )
+            {shouldShowCancelButton() ? (
+              <button
+                onClick={() => setCurrentView('home')}
+                className="flex items-center gap-2 px-4 py-2 bg-white rounded-lg shadow-sm hover:bg-gray-50 transition-colors"
+              >
+                <X className="w-5 h-5 text-gray-600" />
+                <span className="text-gray-700 font-medium">Cancel</span>
+              </button>
+            ) : (
+              <button
+                onClick={handleStopClick}
+                disabled={isSavingExit}
+                className="flex items-center gap-2 px-4 py-2 bg-white rounded-lg shadow-sm hover:bg-gray-50 transition-colors disabled:opacity-60"
+              >
+                {isSavingExit ? (
+                  <svg className="animate-spin h-5 w-5 text-gray-600" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 00-8 8z" />
+                  </svg>
+                ) : (
+                  <Save className="w-5 h-5 text-gray-600" />
+                )}
+                <span className="text-gray-700 font-medium">{isSavingExit ? 'Saving...' : 'Exit'}</span>
+              </button>
             )}
           </div>
 
