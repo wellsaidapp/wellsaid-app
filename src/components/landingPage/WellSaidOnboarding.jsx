@@ -340,11 +340,10 @@ const WellSaidOnboarding = ({ onComplete }) => {
       setMessages(prev => [...prev, { text: value, isBot: false, timestamp: Date.now() }]);
 
       try {
-        // Always try to sign up first (will work for new users)
         const tempPassword = generateTempPassword();
 
         const signUpResult = await signUp({
-          username: value, // Using email as username initially
+          username: value,
           password: tempPassword,
           options: {
             userAttributes: {
@@ -361,24 +360,26 @@ const WellSaidOnboarding = ({ onComplete }) => {
           cognitoUsername: signUpResult.userId
         }));
 
-      } catch (err) {
-        // If user exists, that's fine - we'll just resend the code
-        if (err.name !== 'UsernameExistsException') {
-          console.error('Error during sign up:', err);
-          typeMessage("Oops, something went wrong. Please try again.", true, 0);
-          return;
-        }
-        // No need to show error for existing users
-      }
-
-      // For both new and existing users, send verification code
-      try {
-        await resendSignUpCode({ username: value });
+        // ✅ NEW: Code was already sent by signUp
         typeMessage("A verification code has been sent to your email. Please enter it below:", true, 500);
         setShowPinInput(true);
-      } catch (resendError) {
-        console.error('Error resending code:', resendError);
-        typeMessage("Failed to send verification code. Please try again.", true, 0);
+
+      } catch (err) {
+        if (err.name === 'UsernameExistsException') {
+          try {
+            // ✅ Now resend only if user already exists
+            await resendSignUpCode({ username: value });
+
+            typeMessage("A verification code has been sent to your email. Please enter it below:", true, 500);
+            setShowPinInput(true);
+          } catch (resendError) {
+            console.error('Error resending code:', resendError);
+            typeMessage("Failed to send verification code. Please try again.", true, 0);
+          }
+        } else {
+          console.error('Error during sign up:', err);
+          typeMessage("Oops, something went wrong. Please try again.", true, 0);
+        }
       }
     }
   };
