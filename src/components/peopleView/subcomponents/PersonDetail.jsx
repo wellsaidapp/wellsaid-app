@@ -245,8 +245,8 @@ const PersonDetail = ({
               }}
             />
           ) : (
-            <div className="w-20 h-20 rounded-full bg-gray-400 flex items-center justify-center text-white text-2xl font-medium">
-              {person.avatar}
+            <div className={`w-full h-full bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center`}>
+              <span className="text-white text-2xl font-medium">{person.avatar}</span>
             </div>
           )}
           <button

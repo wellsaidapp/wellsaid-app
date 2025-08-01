@@ -13,7 +13,7 @@ const PersonCard = ({ person, insights, onClick, totalCollectionsCount }) => {
   const collectionPercentage = activeCollections > 0
     ? Math.round((activeCollections / totalCollections) * 100)
     : 0;
-    
+
   return (
     <div
       onClick={onClick}
@@ -28,7 +28,7 @@ const PersonCard = ({ person, insights, onClick, totalCollectionsCount }) => {
               className="w-20 h-20 object-cover rounded-full"
             />
           ) : (
-            <div className={`w-20 h-20 rounded-full bg-gray-400 flex items-center justify-center`}>
+            <div className={`w-full h-full bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center`}>
               <span className="text-white text-2xl font-medium">{person.avatar}</span>
             </div>
           )}

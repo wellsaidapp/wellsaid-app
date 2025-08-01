@@ -103,6 +103,28 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
       response: '',
     });
 
+    const resetCollectionState = () => {
+      setOccasion({
+        person: null,
+        relationship: null,
+        userCollectionId: null,
+        userCollectionName: null,
+        collections: [],
+        type: '',
+        date: '',
+        reflections: [],
+        currentQuestionIndex: 0,
+        questions: [],
+        finalMessage: '',
+        context: null
+      });
+      setHasAskedForName(false);
+      setCollectionCreated(false);
+      initialized.current = false;
+      setMessages([]);
+      setCurrentInput('');
+    };
+
     const promptRef = useRef(null);
     const responseRef = useRef(null);
     const [loadingSparklesIndex, setLoadingSparklesIndex] = useState(null);
@@ -117,20 +139,33 @@ const SpecialOccasionCapture = ({ setCurrentView, occasionData = {}, onComplete 
       if (!initialized.current && occasion.person) {
         initialized.current = true;
 
-        if (occasionData.isReturning) {
-          setHasAskedForName(true); // ✅ Prevent collection name prompt
-          setOccasion((prev) => ({
+        if (occasionData?.isReturning) {  // ✅ Safe access with ?.
+          setHasAskedForName(true);
+          setOccasion(prev => ({
             ...prev,
             userCollectionName: occasionData.userCollectionName || 'Untitled'
           }));
-          typeMessage("Alright, let's get back to it. Press the play button when you're ready to start our conversation.", true); // 👈 Use your placeholder question here
-          setConversationState('milestone_type'); // Or jump to next state directly
+          typeMessage("Alright, let's get back to it. Press the play button when you're ready.", true);
+          setConversationState('milestone_type');
         } else {
-          setHasAskedForName(true);
+          // New collection flow
+          setHasAskedForName(false);
+          setOccasion(prev => ({
+            ...prev,
+            userCollectionName: '',
+            context: null
+          }));
           typeMessage("What do you want to name this collection?", true);
         }
       }
-    }, [occasion.person, occasion.collections, occasionData.isReturning]);
+    }, [occasion.person, occasion.collections, occasionData?.isReturning]); // ✅ Safe dependency
+
+    useEffect(() => {
+      // Reset if occasionData changes to a new person/collection
+      if (occasionData?.person?.id !== occasion.person?.id) {
+        resetCollectionState();
+      }
+    }, [occasionData?.person?.id]);
 
     const callOpenAI = async (userPrompt, systemPrompt, history = []) => {
       try {
