@@ -15,6 +15,7 @@ import Typewriter from './utils/Typewriter.jsx';
 import AddPersonFlow from '../peopleView/subcomponents/AddPersonFlow.jsx'; // Import the new AddPersonFlow component
 import { useUser } from '../../context/UserContext';
 import { usePeople } from '../../context/PeopleContext';
+import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
 
 // Assets
 import logo from '../../assets/wellsaid.svg';
@@ -585,7 +586,12 @@ const WellSaidOnboarding = ({ onComplete }) => {
   const messagesEndRef = useRef(null);
   const [isVerifyingPin, setIsVerifyingPin] = useState(false);
   const hasGreeted = useRef(false);
-
+  const {
+    transcript,
+    listening,
+    resetTranscript,
+    browserSupportsSpeechRecognition
+  } = useSpeechRecognition();
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
@@ -822,15 +828,30 @@ const WellSaidOnboarding = ({ onComplete }) => {
     }
   };
 
-  const toggleRecording = () => {
-    setIsRecording(!isRecording);
-    if (!isRecording) {
-      setTimeout(() => {
-        setIsRecording(false);
-        setCurrentInput("This would be transcribed speech...");
-      }, 2000);
+  const toggleRecording = async () => {
+    if (!browserSupportsSpeechRecognition) {
+      toast.error('Speech recognition is not supported in your browser.');
+      return;
     }
+
+    if (listening) {
+      await SpeechRecognition.stopListening();
+      resetTranscript();
+    } else {
+      resetTranscript();
+      await SpeechRecognition.startListening({
+        continuous: false,
+        language: 'en-US'
+      });
+    }
+    setIsRecording(!listening); // Sync with your local state
   };
+
+  useEffect(() => {
+    if (!listening && transcript && transcript !== currentInput) {
+      setCurrentInput(transcript);
+    }
+  }, [transcript, listening]);
 
   const handleAddPersonClick = () => {
     setShowPersonForm(true);
@@ -1027,20 +1048,16 @@ const WellSaidOnboarding = ({ onComplete }) => {
                     }
                   }}
                 />
-                {isRecording && (
-                  <div className="absolute right-10 bottom-3 flex items-center">
-                    <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse mr-1"></div>
-                    <span className="text-xs text-red-500">Recording</span>
-                  </div>
-                )}
               </div>
               <button
                 onClick={toggleRecording}
                 className={`p-3 rounded-xl transition-colors ${
-                  isRecording ? 'bg-red-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  listening
+                    ? 'bg-red-500 text-white'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                 }`}
               >
-                {isRecording ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
+                {listening ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
               </button>
               <button
                 onClick={handleConversationSubmit}

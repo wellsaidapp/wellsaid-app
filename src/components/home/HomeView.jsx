@@ -3,6 +3,7 @@ import { Lightbulb, ArrowRight, Pencil, Zap, Clock, Sparkles, Calendar, Trophy }
 import { useUser } from '../../context/UserContext';
 import { usePeople } from '../../context/PeopleContext';
 import { useUserCollections } from '../../context/UserCollectionsContext';
+import { useSystemCollections } from '../../context/SystemCollectionsContext';
 import { useInsights } from '../../context/InsightContext';
 import { useBooks } from '../../context/BooksContext';
 import CaptureOptionsModal from '../capture/CaptureOptionsModal';
@@ -29,7 +30,8 @@ const HomeView = ({
 }) => {
   const { userData, loadingUser, refetchUser } = useUser();
   const { people, loadingPeople, refetchPeople } = usePeople();
-  const { userCollections, loading } = useUserCollections();
+  const { systemCollections } = useSystemCollections();
+  const { userCollections } = useUserCollections();
   const [pdfTimestamp, setPdfTimestamp] = useState(null);
   const { insights, loadingInsights, refreshInsights } = useInsights();
   const {
