@@ -23,7 +23,11 @@ const CollectionsList = ({
   onClearFilters,
   isPersonView = false,
   currentPersonId = null,
-  noMatchesFound
+  noMatchesFound,
+  sourceCollection,
+  setSourceCollection,
+  setCaptureMode,
+  setCurrentView
 }) => {
   const [sortDescending, setSortDescending] = useState(true);
   const [showInactiveOptions, setShowInactiveOptions] = useState(false);
@@ -147,6 +151,10 @@ const CollectionsList = ({
                 onEntryDelete={onEntryDelete}
                 onCollectionToggle={onCollectionToggle}
                 onPersonToggle={onPersonToggle}
+                sourceCollection={sourceCollection}
+                setSourceCollection={setSourceCollection}
+                setCaptureMode={setCaptureMode}
+                setCurrentView={setCurrentView}
               />
             ))}
           </div>
@@ -177,6 +185,10 @@ const CollectionsList = ({
                 onEntryDelete={onEntryDelete}
                 onCollectionToggle={onCollectionToggle}
                 onPersonToggle={onPersonToggle}
+                sourceCollection={sourceCollection}
+                setSourceCollection={setSourceCollection}
+                setCaptureMode={setCaptureMode}
+                setCurrentView={setCurrentView}
               />
             ))}
           </div>
@@ -224,6 +236,10 @@ const CollectionsList = ({
                   onEntryDelete={onEntryDelete}
                   onCollectionToggle={onCollectionToggle}
                   onPersonToggle={onPersonToggle}
+                  sourceCollection={sourceCollection}
+                  setSourceCollection={setSourceCollection}
+                  setCaptureMode={setCaptureMode}
+                  setCurrentView={setCurrentView}
                 />
               ))}
             </div>

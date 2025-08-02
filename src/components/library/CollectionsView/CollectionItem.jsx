@@ -21,7 +21,11 @@ const CollectionItem = ({
   onEntryUpdate,
   onEntryDelete,
   onCollectionToggle,
-  onPersonToggle
+  onPersonToggle,
+  sourceCollection,
+  setSourceCollection,
+  setCaptureMode,
+  setCurrentView
 }) => {
   const [isSaving, setIsSaving] = useState(false);
   const { refreshInsights } = useInsights();
@@ -360,7 +364,12 @@ const CollectionItem = ({
               <div className="flex justify-center pb-1">
                 {/* Insight Builder Button */}
                 <button
-                  onClick={() => onAddToCollection(collection, 'builder')}
+                  onClick={() => {
+                    setCaptureMode('insight');
+                    setCurrentView('insightBuilder');
+                    setSourceCollection(collection); // Pass the actual collection
+                    setShowCaptureCard(false);
+                  }}
                   className="w-full max-w-[280px] bg-gradient-to-br from-green-500 to-teal-500 text-white rounded-xl p-4 hover:shadow-lg transition-all hover:scale-[1.02]"
                 >
                   <div className="flex items-center mb-3">

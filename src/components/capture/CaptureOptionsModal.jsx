@@ -12,6 +12,7 @@ const CaptureOptionsModal = ({
   setQuestionSet,
   setCurrentQuestion,
   setCurrentQuestionIndex,
+  setSourceCollection
 }) => {
 
   return (
@@ -29,6 +30,11 @@ const CaptureOptionsModal = ({
               setCaptureMode('insight');
               setShowCaptureOptions(false);
               setCurrentView('insightBuilder');
+              setSourceCollection({
+                name: "Your Thoughts",
+                id: "modal-entry",
+                isSystemCollection: false
+              });
             }}
             className="w-full bg-gradient-to-br from-green-500 to-teal-500 text-white rounded-2xl p-6 text-left hover:shadow-lg transition-all hover:scale-[1.02]"
           >

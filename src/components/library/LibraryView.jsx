@@ -25,7 +25,10 @@ const LibraryView = ({
   individuals,
   currentView,
   setCurrentView,
-  defaultViewMode = 'collections'
+  defaultViewMode = 'collections',
+  sourceCollection,
+  setSourceCollection,
+  setCaptureMode
 }) => {
   // console.log("INDIVIDUALS IN LIBRARY:", individuals);
   const { insights, setInsights, refreshInsights } = useInsights();
@@ -489,6 +492,10 @@ const LibraryView = ({
                   isPersonView={false}
                   filteredInsights={filteredInsights}
                   noMatchesFound={noMatchesFound}
+                  sourceCollection={sourceCollection}
+                  setSourceCollection={setSourceCollection}
+                  setCaptureMode={setCaptureMode}
+                  setCurrentView={setCurrentView}
                 />
               ) : (
                 <BooksList

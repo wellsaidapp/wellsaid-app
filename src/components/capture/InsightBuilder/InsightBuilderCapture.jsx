@@ -50,7 +50,7 @@ const ChatInput = ({ userInput, setUserInput, onSubmit }) => {
   );
 };
 
-const InsightBuilderCapture = ({ setCurrentView, onComplete }) => {
+const InsightBuilderCapture = ({ setCurrentView, sourceCollection, onComplete, setSourceCollection }) => {
     const [sessionInsights, setSessionInsights] = useState([]);
     const [hasPostedMessage, setHasPostedMessage] = useState(false);
     const [isSavingExit, setIsSavingExit] = useState(false);
@@ -72,7 +72,7 @@ const InsightBuilderCapture = ({ setCurrentView, onComplete }) => {
     const responseRef = useRef(null);
     const { refreshInsights } = useInsights();
     const { refreshSystemCollections } = useSystemCollections();
-
+    console.log("SOURCE COLLECTION:", sourceCollection);
     const {
       transcript,
       listening,
@@ -451,12 +451,21 @@ const InsightBuilderCapture = ({ setCurrentView, onComplete }) => {
       }
     }, [showInsightModal, insightDraft.prompt, insightDraft.response]);
 
-    // Start with an initial prompt
     useEffect(() => {
       if (messages.length === 0) {
-        typeMessage("What insight or thought would you like to explore today?", true);
+        let fullMessage = "What insight or thought would you like to explore today";
+
+        // Only append collection name if sourceCollection exists and has a name
+        if (sourceCollection?.name) {
+          fullMessage += ` related to: ${sourceCollection.name}`;
+        }
+
+        // Add question mark
+        fullMessage += "?";
+
+        typeMessage(fullMessage, true);
       }
-    }, []);
+    }, [messages.length, sourceCollection]);
 
     return (
       <div className="fixed inset-0 bg-gradient-to-br from-blue-50 to-indigo-50 overflow-y-auto z-50">
@@ -491,7 +500,10 @@ const InsightBuilderCapture = ({ setCurrentView, onComplete }) => {
               </button>
             ) : (
               <button
-                onClick={() => setCurrentView('home')}
+                onClick={() => {
+                  setCurrentView('home');
+                  setSourceCollection(null); // Add this line
+                }}
                 className="flex items-center gap-2 px-4 py-2 bg-white rounded-lg shadow-sm hover:bg-gray-50 transition-colors"
               >
                 <X className="w-5 h-5 text-gray-600" />

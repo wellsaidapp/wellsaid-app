@@ -80,7 +80,7 @@ const WellSaidApp = () => {
   const { books, refreshBooks } = useBooks();
   const { refetchUser } = useUser();
   const [selectedPerson, setSelectedPerson] = useState(null);
-
+  const [sourceCollection, setSourceCollection] = useState(null);
   const [specialOccasionData, setSpecialOccasionData] = useState({
     person: {
       id: null,
@@ -243,6 +243,9 @@ const WellSaidApp = () => {
           setCurrentView={setCurrentView}
           defaultViewMode={libraryDefaultViewMode}
           user={userData}
+          sourceCollection={sourceCollection}
+          setSourceCollection={setSourceCollection}
+          setCaptureMode={setCaptureMode}
         />;
       case 'people':
         return <PeopleView
@@ -265,9 +268,12 @@ const WellSaidApp = () => {
       case 'insightBuilder':  // Add this new case
         return <InsightBuilderCapture
           setCurrentView={setCurrentView}
+          sourceCollection={sourceCollection}
+          setSourceCollection={setSourceCollection}
           onComplete={(savedInsight) => {
             // Handle any post-save logic if needed
             setCurrentView('home');
+            setSourceCollection(null);
           }}
         />;
         case 'quickCreate':  // Add this new case
