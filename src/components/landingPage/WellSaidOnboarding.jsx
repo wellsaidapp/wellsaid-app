@@ -487,6 +487,7 @@ const PinVerification = ({
       }
 
       if (!sessionReady) throw new Error('Session not ready');
+      window.dispatchEvent(new Event('authChange'));
       setIsVerifyingPin(false);
       onSuccess();
     } catch (err) {

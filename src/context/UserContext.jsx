@@ -10,12 +10,26 @@ export const UserProvider = ({ children }) => {
   const [userData, setUserData] = useState(null);
   const [loadingUser, setLoadingUser] = useState(true);
 
+  const isUserSignedIn = async () => {
+    try {
+      await getCurrentUser();
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
   const fetchUserData = async (suppressSplash = false) => {
 
     if (!suppressSplash) {
       setLoadingUser(true);
     }
     try {
+      const signedIn = await isUserSignedIn();
+      if (!signedIn) {
+        console.log("⏳ User not signed in — skipping user data fetch");
+        return;
+      }
       const user = await getCurrentUser();
       // console.log("🧑 Current Cognito user:", user);
       if (!user) throw new Error("No signed-in user");

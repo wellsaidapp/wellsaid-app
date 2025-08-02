@@ -383,14 +383,6 @@ const LibraryView = ({
   const filteredInsights = isFiltering ? searchResults : insights;
   const noMatchesFound = hasPerformedSearch && isFiltering && searchResults.length === 0;
 
-  // console.log("📚 Books in LibraryView:", books);
-  // console.log("🧮 Sorted Books:", sortedBooks.map(b => ({ id: b.id, name: b.name })));
-  //
-  // Add this to your LibraryView component (where setNewBook is called)
-  // useEffect(() => {
-  //   console.log('📘 newBook state updated:', newBook);
-  // }, [newBook]); // This will run every time newBook changes
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-blue-50 to-indigo-50 pb-20">
       {editingBook && (

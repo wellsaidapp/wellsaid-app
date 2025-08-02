@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState, useCallback } from 'react';
-import { fetchAuthSession } from 'aws-amplify/auth';
+import { fetchAuthSession, getCurrentUser } from 'aws-amplify/auth';
 
 const InsightContext = createContext();
 
@@ -8,6 +8,15 @@ export const useInsights = () => useContext(InsightContext);
 export const InsightProvider = ({ children }) => {
   const [insights, setInsights] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const isUserSignedIn = async () => {
+    try {
+      await getCurrentUser();
+      return true;
+    } catch {
+      return false;
+    }
+  };
 
   const fetchInsights = useCallback(async () => {
     try {
@@ -46,18 +55,27 @@ export const InsightProvider = ({ children }) => {
   }, [fetchInsights]);
 
   useEffect(() => {
-    const handleAuthChange = () => {
-      // console.log("Auth change - refreshing insights");
+    const maybeFetch = async () => {
+      const signedIn = await isUserSignedIn();
+      if (signedIn) {
+        console.log("✅ User is signed in, fetching insights");
+        fetchInsights();
+      } else {
+        console.log("⏳ User not signed in yet, skipping insights fetch");
+      }
+    };
+
+    maybeFetch();
+
+    const listener = () => {
+      console.log("🔁 Auth change detected — refreshing insights");
       fetchInsights();
     };
 
-    // Initial load
-    handleAuthChange();
-
-    // Listen for auth changes
-    window.addEventListener('authChange', handleAuthChange);
-    return () => window.removeEventListener('authChange', handleAuthChange);
+    window.addEventListener('authChange', listener);
+    return () => window.removeEventListener('authChange', listener);
   }, [fetchInsights]);
+
 
   return (
     <InsightContext.Provider value={{

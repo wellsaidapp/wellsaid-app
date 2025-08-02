@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState, useCallback } from 'react';
-import { fetchAuthSession } from 'aws-amplify/auth';
+import { fetchAuthSession, getCurrentUser } from 'aws-amplify/auth';
 
 const UserCollectionsContext = createContext();
 
@@ -8,6 +8,15 @@ export const useUserCollections = () => useContext(UserCollectionsContext);
 export const UserCollectionsProvider = ({ children }) => {
   const [userCollections, setUserCollections] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const isUserSignedIn = async () => {
+    try {
+      await getCurrentUser();
+      return true;
+    } catch {
+      return false;
+    }
+  };
 
   const fetchUserCollections = useCallback(async () => {
     try {
@@ -49,15 +58,23 @@ export const UserCollectionsProvider = ({ children }) => {
   }, [fetchUserCollections]);
 
   useEffect(() => {
+    const maybeFetch = async () => {
+      const signedIn = await isUserSignedIn();
+      if (signedIn) {
+        console.log("✅ User is signed in, fetching user collections");
+        fetchUserCollections();
+      } else {
+        console.log("⏳ User not signed in yet, skipping user collections fetch");
+      }
+    };
+
+    maybeFetch();
+
     const handleAuthChange = () => {
-      // console.log("Auth change - refreshing user collections");
+      console.log("🔁 Auth change detected — trying to refetch user collections");
       fetchUserCollections();
     };
 
-    // Initial load
-    handleAuthChange();
-
-    // Listen for auth changes
     window.addEventListener('authChange', handleAuthChange);
     return () => window.removeEventListener('authChange', handleAuthChange);
   }, [fetchUserCollections]);

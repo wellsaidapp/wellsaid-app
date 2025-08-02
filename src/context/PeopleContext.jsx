@@ -1,6 +1,6 @@
 // context/PeopleContext.jsx
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { fetchAuthSession } from 'aws-amplify/auth';
+import { fetchAuthSession, getCurrentUser } from 'aws-amplify/auth';
 
 export const PeopleContext = createContext();
 
@@ -16,6 +16,15 @@ export const PeopleProvider = ({ children }) => {
 
   const removePerson = (personId) => {
     setPeople((prevPeople) => prevPeople.filter(p => p.id !== personId));
+  };
+
+  const isUserSignedIn = async () => {
+    try {
+      await getCurrentUser();
+      return true;
+    } catch {
+      return false;
+    }
   };
 
   const fetchPeople = useCallback(async () => {
@@ -75,27 +84,25 @@ export const PeopleProvider = ({ children }) => {
   }, [fetchPeople, people]);
 
   useEffect(() => {
-    const checkAuthAndFetch = async () => {
-      try {
-        const session = await fetchAuthSession();
-        if (session.tokens?.idToken) {
-          await fetchPeople();
-        }
-      } catch (err) {
-        console.error('Auth check failed (People):', err);
+    const maybeFetch = async () => {
+      const signedIn = await isUserSignedIn();
+      if (signedIn) {
+        console.log("✅ User is signed in, fetching people");
+        fetchPeople();
+      } else {
+        console.log("⏳ User not signed in yet, skipping people fetch");
       }
     };
 
-    checkAuthAndFetch();
+    maybeFetch();
 
-    const listener = () => checkAuthAndFetch();
+    const listener = () => {
+      console.log("🔁 Auth change detected — refreshing people");
+      fetchPeople();
+    };
+
     window.addEventListener('authChange', listener);
     return () => window.removeEventListener('authChange', listener);
-  }, [fetchPeople]);
-
-  // Initial fetch
-  useEffect(() => {
-    fetchPeople();
   }, [fetchPeople]);
 
   return (

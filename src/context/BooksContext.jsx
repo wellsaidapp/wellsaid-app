@@ -1,7 +1,7 @@
 // BooksContext.jsx
 
 import { createContext, useContext, useEffect, useState, useCallback } from 'react';
-import { fetchAuthSession } from 'aws-amplify/auth';
+import { fetchAuthSession, getCurrentUser } from 'aws-amplify/auth';
 
 const BooksContext = createContext();
 export const useBooks = () => useContext(BooksContext);
@@ -9,6 +9,15 @@ export const useBooks = () => useContext(BooksContext);
 export const BooksProvider = ({ children }) => {
   const [books, setBooks] = useState([]);
   const [loadingBooks, setLoadingBooks] = useState(true);
+
+  const isUserSignedIn = async () => {
+    try {
+      await getCurrentUser();
+      return true;
+    } catch {
+      return false;
+    }
+  };
 
   // 1. Make fetchBooks reusable and dependent on auth
   const fetchBooks = useCallback(async () => {
@@ -61,21 +70,23 @@ export const BooksProvider = ({ children }) => {
 
   // 4. Fetch when mounted AND when auth changes
   useEffect(() => {
-    const checkAuthAndFetch = async () => {
-      try {
-        const session = await fetchAuthSession();
-        if (session.tokens?.idToken) {
-          await fetchBooks();
-        }
-      } catch (err) {
-        console.error("Auth check failed:", err);
+    const maybeFetch = async () => {
+      const signedIn = await isUserSignedIn();
+      if (signedIn) {
+        console.log("✅ User signed in, fetching books...");
+        fetchBooks();
+      } else {
+        console.log("⏳ Skipping book fetch — user not signed in yet");
       }
     };
 
-    checkAuthAndFetch();
+    maybeFetch();
 
-    // Optional: Add event listener for auth changes
-    const listener = () => checkAuthAndFetch();
+    const listener = () => {
+      console.log("🔁 Auth change — refreshing books");
+      fetchBooks();
+    };
+
     window.addEventListener('authChange', listener);
     return () => window.removeEventListener('authChange', listener);
   }, [fetchBooks]);
