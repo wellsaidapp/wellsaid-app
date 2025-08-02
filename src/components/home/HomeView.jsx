@@ -69,24 +69,19 @@ const HomeView = ({
 
   const getStartOfWeekCentral = () => {
     const now = new Date();
-
-    // Get current UTC day (0 = Sunday, 6 = Saturday)
-    const utcDay = now.getUTCDay();
-
-    // How many days since last Saturday?
-    const daysSinceSaturday = (utcDay + 1) % 7; // Saturday = 6 → 0
-
+    const day = now.getDay(); // Local day (0-6)
+    const daysSinceSaturday = (day + 1) % 7; // Days since last Saturday
     const start = new Date(now);
-    start.setUTCDate(now.getUTCDate() - daysSinceSaturday);
-    start.setUTCHours(5, 0, 0, 0); // 12:00 AM Central = 5:00 AM UTC
+    start.setDate(now.getDate() - daysSinceSaturday);
+    start.setHours(0, 0, 0, 0); // 12:00 AM local (Central) time
     return start;
   };
 
   const startOfWeek = getStartOfWeekCentral();
 
   const weekInsights = insights.filter(i => {
-    const parsed = parseISO(i.createdAt);
-    return isAfter(addHours(parsed, 0), startOfWeek);
+    const insightDate = new Date(i.createdAt); // Parse as Central Time
+    return insightDate >= startOfWeek;
   }).length;
 
   const recentBooks = getRecentBooks(2);
