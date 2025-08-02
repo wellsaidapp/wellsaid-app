@@ -351,52 +351,29 @@ const CollectionItem = ({
               <div className="mt-6 mb-4">
                 <div className="bg-gray-50 rounded-lg p-3 border border-gray-200 text-center">
                   <p className="text-sm text-gray-600">
-                    Need help? Try one of the guided capture experiences below.
+                    Need help shaping your thoughts? Try the Insight Builder.
                   </p>
                 </div>
               </div>
 
-              {/* Enhanced Wizard Buttons */}
-              <div className="flex justify-center gap-3 pb-1">
-              {/* Quick Capture Button */}
-                <button
-                  onClick={() => onAddToCollection(collection, 'quick')}
-                  className="w-full max-w-[180px] bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-xl p-5 hover:shadow-lg transition-all hover:scale-[1.02]"
-                >
-                  <div className="flex items-center mb-3">
-                    <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center mr-3">
-                      <Zap size={18} className="text-white" />
-                    </div>
-                    <div className="text-left">
-                      <h3 className="font-semibold text-sm">Quick Capture</h3>
-                      <p className="text-blue-100 text-xs">Thoughtful prompts</p>
-                    </div>
-                  </div>
-                  <p className="text-blue-100 text-xs leading-relaxed mb-3">
-                    Answer thoughtful questions to capture what's on your mind
-                  </p>
-                  <div className="flex items-center text-blue-100 text-xs">
-                    <Clock size={12} className="mr-1" />
-                    <span>5-10 minutes</span>
-                  </div>
-                </button>
-
+              {/* Single Wizard Button */}
+              <div className="flex justify-center pb-1">
                 {/* Insight Builder Button */}
                 <button
                   onClick={() => onAddToCollection(collection, 'builder')}
-                  className="w-full max-w-[180px] bg-gradient-to-br from-green-500 to-teal-500 text-white rounded-xl p-4 hover:shadow-lg transition-all hover:scale-[1.02]"
+                  className="w-full max-w-[280px] bg-gradient-to-br from-green-500 to-teal-500 text-white rounded-xl p-4 hover:shadow-lg transition-all hover:scale-[1.02]"
                 >
-                    <div className="flex items-center mb-3">
+                  <div className="flex items-center mb-3">
                     <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center mr-3">
-                        <Lightbulb size={18} className="text-white" />
-                      </div>
-                      <div className="text-left">
-                        <h3 className="font-semibold text-sm">Insight Builder</h3>
-                        <p className="text-green-100 text-xs">Start with an idea</p>
-                      </div>
+                      <Lightbulb size={18} className="text-white" />
                     </div>
+                    <div className="text-left">
+                      <h3 className="font-semibold text-sm">Insight Builder</h3>
+                      <p className="text-green-100 text-xs">Shape your ideas with AI</p>
+                    </div>
+                  </div>
                   <p className="text-green-100 text-xs leading-relaxed mb-2">
-                    Shape raw thoughts into meaningful takeaways with AI
+                    Transform raw thoughts into meaningful takeaways with guided AI assistance
                   </p>
                   <div className="flex items-center text-green-100 text-xs">
                     <Pencil size={12} className="mr-1" />
